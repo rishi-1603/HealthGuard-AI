@@ -1,8 +1,8 @@
 setup:
-	python scripts/generate_data.py && python scripts/train_models.py
-api:
-	uvicorn app.api.main:app --reload
+	pip install -r requirements.txt
+
 ui:
 	streamlit run app/dashboard/Home.py
- test:
+
+test:
 	pytest -q

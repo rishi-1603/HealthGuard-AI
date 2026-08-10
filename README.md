@@ -1,16 +1,21 @@
 # HealthGuard AI
 
-🚀 Live Dashboard: [https://your-streamlit-url.streamlit.app](https://your-streamlit-url.streamlit.app)  
-📊 Model Metrics: ROC-AUC, PR-AUC, Precision, Recall, F1  
-⚠️ Disclaimer: Synthetic data only. Research/demo use only.
+🚀 Live Dashboard: [https://your-streamlit-url.streamlit.app](https://your-streamlit-url.streamlit.app) *(update this link once deployed)*
+⚠️ Disclaimer: Demo/portfolio analytics only. Not intended for diagnosis, treatment, or clinical decision-making.
 
-An explainable, FHIR-based clinical risk and patient follow-up intelligence platform. 
-HealthGuard AI is designed as a portfolio piece to showcase modern data analytics, predictive modeling, and responsive dashboard design built entirely in Streamlit.
+A hospital outcomes analytics dashboard built entirely in Streamlit. Analyzes a 984-patient
+dataset covering condition, cost, length of stay, readmissions, outcomes, and patient
+satisfaction.
 
 ## Features
-- **Synthetic FHIR Data**: Automatically generates realistic patient records with multi-variate vitals (HR, BP, SpO2), demographics, encounters, and conditions on startup.
-- **Risk Prediction**: Random Forest model trained locally on startup to predict future high-risk adverse events.
-- **Streamlit Dashboard**: A professional, responsive KPI dashboard with Plotly charts and a Patient 360 view all in one application.
+- **KPI overview**: patient count, average age/cost/length of stay, readmission rate,
+  recovery rate, satisfaction score.
+- **Condition analytics**: patient volume, average cost, and readmission rate broken down
+  by condition.
+- **Demographics**: age distribution, gender split, satisfaction distribution.
+- **Cost vs. length-of-stay** scatter plot colored by outcome.
+- **Filterable, sortable, downloadable** patient records table.
+- Sidebar filters for condition, gender, outcome, and age range.
 
 ## Quickstart (Local)
 
@@ -19,23 +24,25 @@ HealthGuard AI is designed as a portfolio piece to showcase modern data analytic
 pip install -r requirements.txt
 ```
 
-2. **Run Dashboard**
+2. **Run the dashboard**
 ```bash
 streamlit run app/dashboard/Home.py
 ```
-*(Note: Data generation and model training will happen automatically on the first run)*
 
-## Deployment Architecture
+The dashboard reads the dataset directly from `data/hospital/hospital_data.csv`, which is
+committed to the repo — no separate backend, database, or setup step required.
 
-```text
-GitHub Repo
-   |
-   |-- Streamlit dashboard deployed on Streamlit Community Cloud
-   |-- Synthetic dataset generated automatically on first boot
-   |-- Model trained automatically on first boot
-```
+## Deployment (Streamlit Community Cloud)
 
-### Streamlit Dashboard Deployment
-- Deploy via Streamlit Community Cloud.
-- Set **Main file path** to `app/dashboard/Home.py`.
-- No environment variables or extra backend services needed!
+- Repository: this repo
+- Branch: `main`
+- Main file path: `app/dashboard/Home.py`
+- No secrets or environment variables needed.
+
+## Legacy FHIR risk-model pipeline
+
+`src/`, `scripts/generate_data.py`, and `scripts/train_models.py` contain an earlier,
+separate prototype: a synthetic FHIR patient generator and a random-forest risk classifier.
+It's independent of the live dashboard above (which uses the hospital outcomes CSV instead)
+and is kept for reference / the `tests/test_smoke.py` smoke test. Run
+`python scripts/generate_data.py && python scripts/train_models.py` if you want to explore it.
