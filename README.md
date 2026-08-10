@@ -1,48 +1,60 @@
-# 🏥 HealthGuard AI
+# HealthGuard AI
 
-**Explainable FHIR-Based Clinical Risk & Patient Follow-Up Intelligence Platform**
+🚀 Live Dashboard: [https://your-streamlit-url](https://your-streamlit-url)  
+⚙️ Live API Docs: [https://your-render-url.onrender.com/docs](https://your-render-url.onrender.com/docs)  
+📊 Model Metrics: ROC-AUC, PR-AUC, Precision, Recall, F1  
+⚠️ Disclaimer: Synthetic data only. Research/demo use only.
 
-A runnable, synthetic-data research prototype for SDE, data, and AI portfolios. It ingests FHIR-shaped resources, creates longitudinal features, trains a risk model, exposes FastAPI endpoints, and serves a Streamlit dashboard. It does **not** diagnose, prescribe, or replace clinicians.
+An explainable, FHIR-based clinical risk and patient follow-up intelligence platform. 
+HealthGuard AI is designed as a portfolio piece to showcase modern data analytics, predictive modeling, and responsive dashboard design.
 
-## What is included
-- Synthetic FHIR R4-shaped Patient, Observation, Encounter, Condition, and MedicationRequest resources
-- Feature engineering and a Random Forest risk model with ROC-AUC, PR-AUC, precision, recall, and F1 metrics
-- Explainable-style reason generation from patient features
-- Fallback-safe local keyword RAG/mock assistant; no API key required
-- FastAPI REST API with OpenAPI docs
-- Streamlit Patient 360 dashboard
-- Docker, Compose, pytest, GitHub Actions, and deployment guides
+## Features
+- **Synthetic FHIR Data**: Generates realistic patient records with multi-variate vitals (HR, BP, SpO2), demographics, encounters, and conditions.
+- **Risk Prediction**: Random Forest model trained to predict future high-risk adverse events.
+- **FastAPI Backend**: Provides endpoints for patient querying, analytics, risk distributions, and model metrics.
+- **Streamlit Dashboard**: A professional, responsive KPI dashboard with Plotly charts and a Patient 360 view.
 
-## Medical disclaimer
-For research and demonstration purposes only. Synthetic data only. Not intended for diagnosis, treatment, triage, emergency medical decision-making, or use with real patient data. Any AI-generated output requires review by a qualified healthcare professional.
+## Quickstart (Local)
 
-## Run locally (exact commands)
+1. **Install dependencies**
 ```bash
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
 pip install -r requirements.txt
-python scripts/generate_data.py && python scripts/train_models.py
-uvicorn app.api.main:app --reload
-# in a second terminal: streamlit run app/dashboard/Home.py
 ```
-API: http://localhost:8000/docs · Dashboard: http://localhost:8501
 
-## Docker
+2. **Generate data and train model**
 ```bash
-docker compose up --build
+python scripts/generate_data.py
+python scripts/train_models.py
 ```
 
-## Deploy a live demo
-1. Push this repository to GitHub.
-2. **Render API:** New Web Service → connect repo → build `pip install -r requirements.txt && python scripts/generate_data.py && python scripts/train_models.py` → start `uvicorn app.api.main:app --host 0.0.0.0 --port $PORT`.
-3. **Streamlit Community Cloud:** New app → choose repo/branch → main file `app/dashboard/Home.py` → deploy. Add secrets only if enabling a real provider.
-4. Update the dashboard's API client if you later switch from local feature execution to the deployed API. A public URL is created by those platforms; this package does not claim to have deployed one.
+3. **Run API**
+```bash
+uvicorn app.api.main:app --reload
+```
 
-## Architecture
-FHIR JSON → validation/features → model artifact → FastAPI → Streamlit. RAG/LLM is behind `src/ai_service.py` and remains safe in mock mode without `LLM_API_KEY`.
+4. **Run Dashboard**
+```bash
+streamlit run app/dashboard/Home.py
+```
 
-## Roadmap / documented stubs
-The repository contains the planned package boundaries for PostgreSQL/pgvector, Redis workers, RBAC, audit logs, drift monitoring, SHAP, and React. Modules not required by this runnable MVP contain explicit `NotImplementedError` stubs; implement them incrementally before using real clinical data.
+## Deployment Architecture
 
-## License
-MIT
+```text
+GitHub Repo
+   |
+   |-- FastAPI backend deployed on Render
+   |-- Streamlit dashboard deployed on Streamlit Community Cloud
+   |-- Synthetic dataset generated during build
+   |-- Model trained during build
+   |-- Dashboard fetches live API data from Render
+```
+
+### Render API Deployment
+- Create a new Web Service on Render and link this repository.
+- Build Command: `pip install -r requirements.txt && python scripts/generate_data.py && python src/models/train.py` (ensure scripts run correctly).
+- Start Command: `uvicorn app.api.main:app --host 0.0.0.0 --port $PORT`
+
+### Streamlit Dashboard Deployment
+- Deploy via Streamlit Community Cloud.
+- Set Main file to `app/dashboard/Home.py`.
+- Add Streamlit secret: `API_BASE_URL = "https://your-render-api-url.onrender.com"`
