@@ -8,12 +8,13 @@ import sys
 import subprocess
 
 # Ensure the root directory is in sys.path
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+ROOT_DIR = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT_DIR))
 
 # Data paths
-BUNDLE_PATH = Path('data/synthetic/bundle.json')
-MODEL_PATH = Path('models/artifacts/risk_model.joblib')
-METRICS_PATH = Path('models/metrics/risk_metrics.json')
+BUNDLE_PATH = ROOT_DIR / 'data/synthetic/bundle.json'
+MODEL_PATH = ROOT_DIR / 'models/artifacts/risk_model.joblib'
+METRICS_PATH = ROOT_DIR / 'models/metrics/risk_metrics.json'
 
 st.set_page_config(
     page_title="HealthGuard AI",
@@ -25,9 +26,9 @@ st.set_page_config(
 @st.cache_resource(show_spinner="Initializing data and models for the first time...")
 def initialize_system():
     if not BUNDLE_PATH.exists():
-        subprocess.run([sys.executable, "scripts/generate_data.py"], check=True)
+        subprocess.run([sys.executable, str(ROOT_DIR / "scripts/generate_data.py")], cwd=str(ROOT_DIR), check=True)
     if not MODEL_PATH.exists() or not METRICS_PATH.exists():
-        subprocess.run([sys.executable, "scripts/train_models.py"], check=True)
+        subprocess.run([sys.executable, str(ROOT_DIR / "scripts/train_models.py")], cwd=str(ROOT_DIR), check=True)
     return True
 
 initialize_system()
