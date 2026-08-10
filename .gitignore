@@ -4,6 +4,6 @@ __pycache__/
 .env
 .pytest_cache/
 .streamlit/secrets.toml
-*.joblib
+# *.joblib (removed so we can commit the model)
 *.db
 .DS_Store
