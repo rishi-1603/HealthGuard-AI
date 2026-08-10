@@ -1,7 +1,18 @@
-"""Planned extension point for HealthGuard AI MVP.
+import os
+import requests
+import streamlit as st
 
-This boundary is intentionally explicit so future production work can be added safely.
-"""
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
-def not_implemented(*args, **kwargs):
-    raise NotImplementedError("This production extension is outside the runnable MVP; see README roadmap.")
+@st.cache_data(ttl=300)
+def get_json(endpoint: str):
+    url = f"{API_BASE_URL}{endpoint}"
+    response = requests.get(url, timeout=20)
+    response.raise_for_status()
+    return response.json()
+
+def post_json(endpoint: str, payload: dict):
+    url = f"{API_BASE_URL}{endpoint}"
+    response = requests.post(url, json=payload, timeout=30)
+    response.raise_for_status()
+    return response.json()

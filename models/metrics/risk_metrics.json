@@ -1,8 +1,8 @@
 {
-  "roc_auc": 1.0,
-  "pr_auc": 1.0,
-  "precision": 1.0,
+  "roc_auc": 0.984,
+  "pr_auc": 0.9434,
+  "precision": 0.9268,
   "recall": 1.0,
-  "f1": 1.0,
-  "n_test": 25
+  "f1": 0.962,
+  "n_test": 125
 }
