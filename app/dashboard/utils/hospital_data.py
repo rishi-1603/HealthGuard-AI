@@ -53,3 +53,24 @@ def apply_filters(df: pd.DataFrame, conditions, genders, outcomes, age_range) ->
         out = out[out.Outcome.isin(outcomes)]
     out = out[(out.Age >= age_range[0]) & (out.Age <= age_range[1])]
     return out
+
+
+def patient_profile(df: pd.DataFrame, patient_id: int) -> dict:
+    row = df[df.Patient_ID == patient_id]
+    if row.empty:
+        return {}
+    r = row.iloc[0]
+    cost_percentile = float((df.Cost < r.Cost).mean() * 100)
+    return {
+        "patient_id": int(r.Patient_ID),
+        "age": int(r.Age),
+        "gender": r.Gender,
+        "condition": r.Condition,
+        "procedure": r.Procedure,
+        "cost": int(r.Cost),
+        "los": int(r.Length_of_Stay),
+        "readmission": r.Readmission,
+        "outcome": r.Outcome,
+        "satisfaction": int(r.Satisfaction),
+        "cost_percentile": round(cost_percentile, 1),
+    }
