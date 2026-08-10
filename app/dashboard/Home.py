@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from app.dashboard.utils.api_client import get_json, post_json
+from app.dashboard.utils import local_data as data
 
 st.set_page_config(
     page_title="HealthGuard AI",
@@ -37,11 +37,10 @@ st.title("🏥 HealthGuard AI")
 st.caption("Explainable FHIR-based clinical risk and patient follow-up intelligence platform.")
 
 try:
-    overview = get_json("/analytics/kpis")
-    patients_data = get_json("/patients")
-    patients = pd.DataFrame(patients_data)
-    metrics = get_json("/analytics/model-metrics")
-    risk_dist = get_json("/analytics/risk-distribution")
+    overview = data.get_kpis()
+    patients = data.load_patients()
+    metrics = data.get_model_metrics()
+    risk_dist = data.get_risk_distribution()
 
     total = overview["total_patients"]
     high = overview["high_risk_patients"]
@@ -108,7 +107,7 @@ try:
     if not patients.empty:
         patient_id = st.selectbox("Select Patient", patients["patient_id"].tolist())
         selected = patients[patients["patient_id"] == patient_id].iloc[0]
-        risk = get_json(f"/patients/{patient_id}/risk")
+        risk = data.get_patient_risk(patient_id)
 
         p1, p2, p3, p4 = st.columns(4)
         p1.metric("Age", int(selected["age"]))
@@ -121,7 +120,7 @@ try:
 
         q = st.text_input("Ask the assistant", "Why is this patient high risk?")
         if st.button("Analyze Patient"):
-            answer = post_json("/assistant/query", {"query": q})
+            answer = data.ask_assistant(q)
             st.write(answer)
     else:
         st.info("No patients available.")
