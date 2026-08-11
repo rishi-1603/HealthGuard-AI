@@ -47,7 +47,7 @@ st.markdown(f"""
     color: {TEXT} !important;
 }}
 .block-container {{
-    padding-top: 1.4rem;
+    padding-top: 2.6rem;
     padding-bottom: 3rem;
     max-width: 1400px;
 }}
@@ -75,6 +75,8 @@ html, body, [class*="css"] {{
     font-size: 1.7rem;
     font-weight: 800;
     color: {TEXT};
+    line-height: 1.35;
+    padding-top: 0.2rem;
 }}
 .hg-page-sub {{
     color: {MUTED};
@@ -122,8 +124,11 @@ html, body, [class*="css"] {{
 .card-heading {{
     color: {TEXT};
     font-weight: 700;
-    font-size: 0.98rem;
-    margin-bottom: 0.6rem;
+    font-size: 1.02rem;
+    margin-bottom: 0.8rem;
+    padding-left: 0.6rem;
+    border-left: 3px solid {CYAN};
+    line-height: 1.3;
 }}
 .profile-row {{
     display: flex;
@@ -189,8 +194,8 @@ try:
 
     df = data.apply_filters(raw, conditions, genders, outcomes, age_range)
 
-    st.markdown('<div class="hg-page-title">Dashboard</div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="hg-page-sub">Cohort analytics across {len(df)} of {len(raw)} patients</div>', unsafe_allow_html=True)
+    st.markdown('<div class="hg-page-title">Hospital Outcomes Intelligence Dashboard</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="hg-page-sub">AI-assisted analytics across {len(df)} of {len(raw)} patients — cost, length of stay, readmissions, and outcomes, with per-patient risk scoring and explainability.</div>', unsafe_allow_html=True)
 
     if df.empty:
         st.warning("No patients match the current filters.")
