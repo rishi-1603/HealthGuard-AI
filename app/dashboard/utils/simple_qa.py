@@ -52,7 +52,13 @@ def answer(df: pd.DataFrame, question: str) -> dict:
         if condition:
             n = (df.Condition == condition).sum()
             return _ok(f"There are **{n} patients** with **{condition}** in the dataset.")
-        return _ok(f"There are **{len(df)} patients** in the current filtered view.")
+        if _is_generic_count_question(q):
+            return _ok(f"There are **{len(df)} patients** in the current filtered view.")
+        # Mentions a subgroup we don't recognize -- don't silently answer the total,
+        # let it escalate to the Gemini fallback instead.
+        return {"ok": False, "text": (
+            "I couldn't match that to a specific condition in this dataset. "
+        )}
 
     if "outcome" in q or "recovered" in q:
         if condition:
@@ -71,9 +77,45 @@ def answer(df: pd.DataFrame, question: str) -> dict:
     }
 
 
+CONDITION_SYNONYMS = {
+    "Diabetes": ["diabetic"],
+    "Heart Disease": ["cardiac disease", "heart problems", "heart condition"],
+    "Heart Attack": ["cardiac arrest", "myocardial infarction"],
+    "Fractured Arm": ["broken arm"],
+    "Fractured Leg": ["broken leg"],
+    "Stroke": ["cerebrovascular"],
+    "Cancer": ["oncology", "tumor"],
+    "Prostate Cancer": ["prostate tumor"],
+    "Hypertension": ["high blood pressure"],
+    "Respiratory Infection": ["lung infection", "chest infection"],
+    "Kidney Stones": ["renal stones"],
+    "Allergic Reaction": ["allergy"],
+    "Osteoarthritis": ["arthritis"],
+}
+
+
+def _is_generic_count_question(q: str) -> bool:
+    stopwords = {
+        "how", "many", "patients", "patient", "are", "there", "is", "the",
+        "count", "number", "of", "total", "in", "dataset", "?", "what's", "what",
+    }
+    words = re.findall(r"[a-z']+", q)
+    leftover = [w for w in words if w not in stopwords]
+    return len(leftover) == 0
+
+
+def _contains_phrase(phrase: str, q: str) -> bool:
+    """Word-boundary match so short terms don't false-positive as substrings
+    of unrelated words (e.g. would-be 'mi' inside 'leukemia')."""
+    return re.search(r"\b" + re.escape(phrase.lower()) + r"\b", q) is not None
+
+
 def _match_condition(df: pd.DataFrame, q: str):
     for c in df.Condition.unique():
-        if c.lower() in q:
+        if _contains_phrase(c, q):
+            return c
+    for c, synonyms in CONDITION_SYNONYMS.items():
+        if c in df.Condition.unique() and any(_contains_phrase(s, q) for s in synonyms):
             return c
     return None
 
