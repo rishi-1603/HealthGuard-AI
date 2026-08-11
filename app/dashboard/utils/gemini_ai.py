@@ -17,7 +17,7 @@ import os
 import pandas as pd
 import streamlit as st
 
-MODEL = "gemini-2.5-flash"
+MODEL = "gemini-3.6-flash"
 
 
 def _get_client():
