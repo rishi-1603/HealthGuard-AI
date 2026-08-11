@@ -202,7 +202,7 @@ try:
     k = st.columns(4)
     kpi_specs = [
         ("👥", INDIGO, "TOTAL PATIENTS", f"{kpis['total_patients']:,}"),
-        ("💰", CYAN, "AVG COST / PATIENT", f"${kpis['avg_cost']:,.0f}"),
+        ("💰", CYAN, "AVG COST / PATIENT", f"₹{kpis['avg_cost']:,.0f}"),
         ("🛏️", AMBER, "AVG LENGTH OF STAY", f"{kpis['avg_los']} days"),
         ("↩️", RED if kpis['readmission_rate'] > 30 else AMBER, "READMISSION RATE", f"{kpis['readmission_rate']}%"),
     ]
@@ -255,7 +255,7 @@ try:
         fig = px.bar(
             cs, x="Condition", y="avg_cost",
             color_discrete_sequence=[INDIGO],
-            labels={"avg_cost": "Avg Cost ($)", "Condition": ""},
+            labels={"avg_cost": "Avg Cost (₹)", "Condition": ""},
         )
         fig.update_traces(marker_line_width=0)
         fig.update_xaxes(tickangle=-40)
@@ -328,10 +328,10 @@ try:
     with p1:
         st.markdown('<div class="chart-card">', unsafe_allow_html=True)
         st.markdown('<div class="card-heading">Patient Profile</div>', unsafe_allow_html=True)
-        pid = st.selectbox("Patient ID", sorted(df.Patient_ID.tolist()))
-        prof = data.patient_profile(df, pid)
+        pcode = st.selectbox("Patient Code", sorted(df.Patient_Code.tolist()))
+        prof = data.patient_profile(df, pcode)
         if prof:
-            row = df[df.Patient_ID == pid].iloc[0]
+            row = df[df.Patient_Code == pcode].iloc[0]
             risk = ai_risk.score_patient(row)
             risk_pct = round(risk["risk_score"] * 100, 1)
             tier_color = {"HIGH": RED, "WATCH": AMBER, "LOW": GREEN}[risk["risk_tier"]]
@@ -401,10 +401,11 @@ try:
             outcome_color = GREEN if prof["outcome"] == "Recovered" else AMBER
             readmit_color = RED if prof["readmission"] == "Yes" else GREEN
             st.markdown(f"""
+            <div class="profile-row"><span class="profile-label">Patient Code</span><span class="profile-value">{prof['patient_code']}</span></div>
             <div class="profile-row"><span class="profile-label">Age / Gender</span><span class="profile-value">{prof['age']} · {prof['gender']}</span></div>
             <div class="profile-row"><span class="profile-label">Condition</span><span class="profile-value">{prof['condition']}</span></div>
             <div class="profile-row"><span class="profile-label">Procedure</span><span class="profile-value">{prof['procedure']}</span></div>
-            <div class="profile-row"><span class="profile-label">Cost</span><span class="profile-value">${prof['cost']:,}</span></div>
+            <div class="profile-row"><span class="profile-label">Cost</span><span class="profile-value">₹{prof['cost']:,}</span></div>
             <div class="profile-row"><span class="profile-label">Length of Stay</span><span class="profile-value">{prof['los']} days</span></div>
             <div class="profile-row"><span class="profile-label">Outcome</span><span class="badge" style="background:{outcome_color}22; color:{outcome_color};">{prof['outcome']}</span></div>
             <div class="profile-row"><span class="profile-label">Readmission</span><span class="badge" style="background:{readmit_color}22; color:{readmit_color};">{prof['readmission']}</span></div>
@@ -415,14 +416,15 @@ try:
     with p2:
         st.markdown('<div class="chart-card">', unsafe_allow_html=True)
         st.markdown('<div class="card-heading">Patient Records</div>', unsafe_allow_html=True)
+        display_cols = ["Patient_Code", "Patient_ID"] + [c for c in df.columns if c not in ("Patient_Code", "Patient_ID")]
         st.dataframe(
-            df.sort_values("Patient_ID").reset_index(drop=True),
+            df[display_cols].sort_values("Patient_Code").reset_index(drop=True),
             width='stretch',
             height=430,
         )
         st.download_button(
             "Download filtered data (CSV)",
-            df.to_csv(index=False).encode("utf-8"),
+            df[display_cols].to_csv(index=False).encode("utf-8"),
             "hospital_data_filtered.csv",
             "text/csv",
         )

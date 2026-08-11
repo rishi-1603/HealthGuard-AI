@@ -45,7 +45,7 @@ def _cohort_context(df: pd.DataFrame) -> str:
     lines = [
         f"Total patients: {kpis['total_patients']}",
         f"Average age: {kpis['avg_age']}",
-        f"Average cost per patient: ${kpis['avg_cost']:,.0f}",
+        f"Average cost per patient: ₹{kpis['avg_cost']:,.0f}",
         f"Average length of stay: {kpis['avg_los']} days",
         f"Overall readmission rate: {kpis['readmission_rate']}%",
         f"Recovered rate: {kpis['recovered_rate']}%",
@@ -54,11 +54,11 @@ def _cohort_context(df: pd.DataFrame) -> str:
         "Top 5 conditions by readmission rate:",
     ]
     for _, r in top_readmit.iterrows():
-        lines.append(f"- {r.Condition}: {r.readmission_rate:.1f}% readmission, {int(r.patients)} patients, ${r.avg_cost:,.0f} avg cost")
+        lines.append(f"- {r.Condition}: {r.readmission_rate:.1f}% readmission, {int(r.patients)} patients, ₹{r.avg_cost:,.0f} avg cost")
     lines.append("")
     lines.append("Top 5 conditions by average cost:")
     for _, r in top_cost.iterrows():
-        lines.append(f"- {r.Condition}: ${r.avg_cost:,.0f} avg cost, {r.readmission_rate:.1f}% readmission")
+        lines.append(f"- {r.Condition}: ₹{r.avg_cost:,.0f} avg cost, {r.readmission_rate:.1f}% readmission")
 
     return "\n".join(lines)
 
@@ -74,7 +74,8 @@ def generate_recommendations(_df_hash: str, context: str) -> dict:
     prompt = f"""You are a hospital operations analyst. Based ONLY on the following real
 cohort statistics, write 3-5 short, concrete, actionable recommendations for hospital
 administrators. Do NOT invent any numbers, patient names, or facts not given below.
-Cite the specific numbers provided when relevant. Keep each recommendation to 1-2 sentences.
+Cite the specific numbers provided when relevant. All costs below are in Indian Rupees --
+always use the ₹ symbol, never $. Keep each recommendation to 1-2 sentences.
 Format as a markdown bulleted list, nothing else.
 
 COHORT STATISTICS:
@@ -97,8 +98,8 @@ def answer_grounded(df: pd.DataFrame, question: str) -> dict:
     context = _cohort_context(df)
     prompt = f"""You are a hospital data analyst assistant. Answer the user's question
 using ONLY the statistics provided below. If the question cannot be answered from this
-data, say so clearly instead of guessing or inventing numbers. Keep your answer to 2-3
-sentences.
+data, say so clearly instead of guessing or inventing numbers. All costs below are in
+Indian Rupees -- always use the ₹ symbol, never $. Keep your answer to 2-3 sentences.
 
 COHORT STATISTICS:
 {context}

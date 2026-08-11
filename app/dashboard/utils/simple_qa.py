@@ -28,13 +28,13 @@ def answer(df: pd.DataFrame, question: str) -> dict:
     if "cost" in q or "expensive" in q or "cheap" in q:
         if condition:
             avg = df[df.Condition == condition].Cost.mean()
-            return _ok(f"The average cost for **{condition}** is **${avg:,.0f}** "
-                       f"(dataset average: ${df.Cost.mean():,.0f}).")
+            return _ok(f"The average cost for **{condition}** is **₹{avg:,.0f}** "
+                       f"(dataset average: ₹{df.Cost.mean():,.0f}).")
         if "highest" in q or "most expensive" in q or "top" in q:
             top = df.groupby("Condition").Cost.mean().sort_values(ascending=False).head(3)
-            lines = "\n".join(f"- **{c}**: ${v:,.0f}" for c, v in top.items())
+            lines = "\n".join(f"- **{c}**: ₹{v:,.0f}" for c, v in top.items())
             return _ok(f"The 3 most expensive conditions on average:\n{lines}")
-        return _ok(f"The average cost across all patients is **${df.Cost.mean():,.0f}**.")
+        return _ok(f"The average cost across all patients is **₹{df.Cost.mean():,.0f}**.")
 
     if "satisfaction" in q:
         if condition:
