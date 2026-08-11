@@ -149,6 +149,12 @@ html, body, [class*="css"] {{
 }}
 [data-testid="stMetricValue"] {{ color: {TEXT}; }}
 hr {{ border-color: {CARD_BORDER}; }}
+[data-testid="stMarkdown"] p,
+[data-testid="stMarkdown"] li,
+[data-testid="stMarkdown"] strong,
+[data-testid="stMarkdown"] span {{
+    color: {TEXT} !important;
+}}
 </style>
 """, unsafe_allow_html=True)
 
