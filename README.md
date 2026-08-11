@@ -7,6 +7,12 @@
 ⚠️ **Disclaimer:** Demo/portfolio analytics only. Not intended for diagnosis, treatment, or clinical decision-making.
 
 ---
+<img width="813" height="432" alt="image" src="https://github.com/user-attachments/assets/77b82599-0807-4be9-a604-eece83dd12b4" />
+<img width="1774" height="873" alt="Healthguard ss-2" src="https://github.com/user-attachments/assets/41fe973d-f452-42e0-902e-3d4be383f1d4" />
+<img width="1672" height="844" alt="Healthguard ss-3" src="https://github.com/user-attachments/assets/2f22eb04-64c8-4a19-8c64-be6d60029e73" />
+<img width="1625" height="863" alt="Healthguard ss-4" src="https://github.com/user-attachments/assets/4d31d41a-4f6c-455a-b3d2-e5101c4c1542" />
+
+
 
 ## 📌 Overview
 
