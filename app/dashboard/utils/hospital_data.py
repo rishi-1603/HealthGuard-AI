@@ -7,7 +7,8 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-DATA_PATH = Path("data/hospital/hospital_data.csv")
+REPO_ROOT = Path(__file__).resolve().parents[3]
+DATA_PATH = REPO_ROOT / "data" / "hospital" / "hospital_data.csv"
 
 
 @st.cache_data(ttl=600)
