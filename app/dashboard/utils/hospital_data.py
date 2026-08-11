@@ -47,7 +47,6 @@ def _assign_patient_codes(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-@st.cache_data(ttl=600)
 def load_patients() -> pd.DataFrame:
     df = pd.read_csv(DATA_PATH)
     df = _assign_patient_codes(df)
@@ -83,6 +82,8 @@ def condition_summary(df: pd.DataFrame) -> pd.DataFrame:
 
 def apply_filters(df: pd.DataFrame, conditions, genders, outcomes, age_range) -> pd.DataFrame:
     out = df.copy()
+    if "Patient_Code" not in out.columns:
+        out = _assign_patient_codes(out)
     if conditions:
         out = out[out.Condition.isin(conditions)]
     if genders:
