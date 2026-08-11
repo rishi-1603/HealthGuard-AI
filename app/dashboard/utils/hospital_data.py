@@ -10,10 +10,47 @@ import streamlit as st
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DATA_PATH = REPO_ROOT / "data" / "hospital" / "hospital_data.csv"
 
+# Two-letter condition codes for patient IDs, e.g. PTDB0001 (Diabetes), PTHD0001 (Heart Disease)
+CONDITION_CODES = {
+    "Heart Disease": "HD",
+    "Diabetes": "DB",
+    "Fractured Arm": "FA",
+    "Stroke": "ST",
+    "Cancer": "CA",
+    "Hypertension": "HT",
+    "Appendicitis": "AP",
+    "Fractured Leg": "FL",
+    "Heart Attack": "HA",
+    "Allergic Reaction": "AR",
+    "Respiratory Infection": "RI",
+    "Prostate Cancer": "PC",
+    "Childbirth": "CB",
+    "Kidney Stones": "KS",
+    "Osteoarthritis": "OA",
+}
+
+
+def _assign_patient_codes(df: pd.DataFrame) -> pd.DataFrame:
+    out = df.copy()
+    out["Patient_Code"] = ""
+    for condition, code in CONDITION_CODES.items():
+        mask = out.Condition == condition
+        n = mask.sum()
+        if n == 0:
+            continue
+        seq = [f"PT{code}{i:04d}" for i in range(1, n + 1)]
+        out.loc[mask, "Patient_Code"] = seq
+    # Any condition not in the mapping (shouldn't happen, but stay safe) gets a generic fallback
+    unmapped = out.Patient_Code == ""
+    if unmapped.any():
+        out.loc[unmapped, "Patient_Code"] = [f"PTXX{i:04d}" for i in range(1, unmapped.sum() + 1)]
+    return out
+
 
 @st.cache_data(ttl=600)
 def load_patients() -> pd.DataFrame:
     df = pd.read_csv(DATA_PATH)
+    df = _assign_patient_codes(df)
     return df
 
 
@@ -56,14 +93,15 @@ def apply_filters(df: pd.DataFrame, conditions, genders, outcomes, age_range) ->
     return out
 
 
-def patient_profile(df: pd.DataFrame, patient_id: int) -> dict:
-    row = df[df.Patient_ID == patient_id]
+def patient_profile(df: pd.DataFrame, patient_code: str) -> dict:
+    row = df[df.Patient_Code == patient_code]
     if row.empty:
         return {}
     r = row.iloc[0]
     cost_percentile = float((df.Cost < r.Cost).mean() * 100)
     return {
         "patient_id": int(r.Patient_ID),
+        "patient_code": r.Patient_Code,
         "age": int(r.Age),
         "gender": r.Gender,
         "condition": r.Condition,
