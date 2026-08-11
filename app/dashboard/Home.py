@@ -7,6 +7,8 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from app.dashboard.utils import hospital_data as data
+from app.dashboard.utils import ai_risk
+from app.dashboard.utils import simple_qa
 
 st.set_page_config(
     page_title="HealthGuard AI | Hospital Outcomes",
@@ -328,28 +330,72 @@ try:
         pid = st.selectbox("Patient ID", sorted(df.Patient_ID.tolist()))
         prof = data.patient_profile(df, pid)
         if prof:
-            fig = go.Figure(go.Indicator(
-                mode="gauge+number",
-                value=prof["cost_percentile"],
-                number={"suffix": "%", "font": {"color": TEXT, "size": 28}},
-                gauge={
-                    "axis": {"range": [0, 100], "tickcolor": MUTED},
-                    "bar": {"color": INDIGO},
-                    "bgcolor": CARD_BG,
-                    "borderwidth": 0,
-                    "steps": [
-                        {"range": [0, 50], "color": "#1E2A44"},
-                        {"range": [50, 80], "color": "#2A2440"},
-                        {"range": [80, 100], "color": "#3A1F2E"},
-                    ],
-                },
-            ))
-            fig.update_layout(
-                height=190, margin=dict(l=20, r=20, t=10, b=0),
-                paper_bgcolor="rgba(0,0,0,0)", font=CHART_FONT,
-            )
-            st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
-            st.caption("Cost percentile vs. cohort")
+            row = df[df.Patient_ID == pid].iloc[0]
+            risk = ai_risk.score_patient(row)
+            risk_pct = round(risk["risk_score"] * 100, 1)
+            tier_color = {"HIGH": RED, "WATCH": AMBER, "LOW": GREEN}[risk["risk_tier"]]
+
+            gauge_col, cost_col = st.columns(2)
+            with gauge_col:
+                fig = go.Figure(go.Indicator(
+                    mode="gauge+number",
+                    value=risk_pct,
+                    number={"suffix": "%", "font": {"color": TEXT, "size": 24}},
+                    gauge={
+                        "axis": {"range": [0, 100], "tickcolor": MUTED},
+                        "bar": {"color": tier_color},
+                        "bgcolor": CARD_BG,
+                        "borderwidth": 0,
+                        "steps": [
+                            {"range": [0, 33], "color": "#12291F"},
+                            {"range": [33, 66], "color": "#2E2410"},
+                            {"range": [66, 100], "color": "#3A1F1F"},
+                        ],
+                    },
+                ))
+                fig.update_layout(
+                    height=160, margin=dict(l=10, r=10, t=10, b=0),
+                    paper_bgcolor="rgba(0,0,0,0)", font=CHART_FONT,
+                )
+                st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+                st.caption(f"AI readmission risk — {risk['risk_tier']}")
+
+            with cost_col:
+                fig = go.Figure(go.Indicator(
+                    mode="gauge+number",
+                    value=prof["cost_percentile"],
+                    number={"suffix": "%", "font": {"color": TEXT, "size": 24}},
+                    gauge={
+                        "axis": {"range": [0, 100], "tickcolor": MUTED},
+                        "bar": {"color": INDIGO},
+                        "bgcolor": CARD_BG,
+                        "borderwidth": 0,
+                        "steps": [
+                            {"range": [0, 50], "color": "#1E2A44"},
+                            {"range": [50, 80], "color": "#2A2440"},
+                            {"range": [80, 100], "color": "#3A1F2E"},
+                        ],
+                    },
+                ))
+                fig.update_layout(
+                    height=160, margin=dict(l=10, r=10, t=10, b=0),
+                    paper_bgcolor="rgba(0,0,0,0)", font=CHART_FONT,
+                )
+                st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+                st.caption("Cost percentile vs. cohort")
+
+            with st.expander("Why this risk score? (top factors)"):
+                for f in risk["top_factors"]:
+                    direction = "↑ raises risk" if f["impact"] > 0 else "↓ lowers risk"
+                    dcolor = RED if f["impact"] > 0 else GREEN
+                    st.markdown(
+                        f"<div style='display:flex; justify-content:space-between; padding:0.25rem 0; font-size:0.85rem;'>"
+                        f"<span>{f['feature']}</span>"
+                        f"<span style='color:{dcolor};'>{direction}</span></div>",
+                        unsafe_allow_html=True,
+                    )
+                st.caption("SHAP values from a RandomForest model trained on this dataset "
+                           "(Age, Gender, Condition, Procedure, Cost, Length of Stay).")
 
             outcome_color = GREEN if prof["outcome"] == "Recovered" else AMBER
             readmit_color = RED if prof["readmission"] == "Yes" else GREEN
@@ -380,6 +426,39 @@ try:
             "text/csv",
         )
         st.markdown('</div>', unsafe_allow_html=True)
+
+    # ---------------- Ask HealthGuard AI ----------------
+    st.markdown('<div class="section-title">Ask HealthGuard AI</div>', unsafe_allow_html=True)
+    st.markdown('<div class="chart-card">', unsafe_allow_html=True)
+    st.caption("Answers are computed directly from this dataset — not generated by an LLM — "
+               "so every number is a real, traceable aggregation. Try: readmission rate, cost, "
+               "length of stay, satisfaction, or outcome, optionally for a specific condition.")
+    question = st.text_input("Ask a question about this dataset", placeholder="e.g. What's the readmission rate for Diabetes?")
+    if question:
+        result = simple_qa.answer(df, question)
+        if result["ok"]:
+            st.success(result["text"])
+        else:
+            st.info(result["text"])
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # ---------------- Model quality note ----------------
+    with st.expander("About the AI risk model"):
+        m = ai_risk.get_metrics()
+        if m:
+            mc1, mc2, mc3 = st.columns(3)
+            mc1.metric("ROC AUC", m.get("roc_auc"))
+            mc2.metric("Precision", m.get("precision"))
+            mc3.metric("Recall", m.get("recall"))
+        st.caption(
+            "This is a RandomForest classifier trained on this dataset's own columns "
+            "(Age, Gender, Condition, Procedure, Cost, Length of Stay) to predict the "
+            "Readmission field. Accuracy looks very high because Condition alone is "
+            "an almost perfect predictor of Readmission in this specific dataset — "
+            "consistent with it being a synthetic/demo dataset rather than noisy real-world "
+            "clinical data. Treat this as a demonstration of the technique, not a validated "
+            "clinical risk model."
+        )
 
     st.divider()
     st.caption("Demo analytics dashboard. Not intended for diagnosis, treatment, or clinical decision-making.")

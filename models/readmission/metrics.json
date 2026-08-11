@@ -1,0 +1,15 @@
+{
+  "roc_auc": 0.9923,
+  "precision": 0.9811,
+  "recall": 0.9811,
+  "f1": 0.9811,
+  "n_test": 197,
+  "features": [
+    "Age",
+    "Gender_enc",
+    "Condition_enc",
+    "Procedure_enc",
+    "Cost",
+    "Length_of_Stay"
+  ]
+}
