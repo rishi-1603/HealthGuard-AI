@@ -243,7 +243,7 @@ try:
             color_discrete_map={"Recovered": GREEN, "Stable": AMBER},
         )
         fig.update_traces(textinfo="percent+label", textfont_color=TEXT)
-        st.plotly_chart(style_fig(fig, height=330), use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(style_fig(fig, height=330), width='stretch', config={"displayModeBar": False})
         st.markdown('</div>', unsafe_allow_html=True)
 
     with c2:
@@ -258,7 +258,7 @@ try:
         )
         fig.update_traces(marker_line_width=0)
         fig.update_xaxes(tickangle=-40)
-        st.plotly_chart(style_fig(fig, height=330, legend=False), use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(style_fig(fig, height=330, legend=False), width='stretch', config={"displayModeBar": False})
         st.markdown('</div>', unsafe_allow_html=True)
 
     with c3:
@@ -302,14 +302,14 @@ try:
         )
         fig.update_xaxes(tickangle=-40)
         fig.update_coloraxes(showscale=False)
-        st.plotly_chart(style_fig(fig, height=320, legend=False), use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(style_fig(fig, height=320, legend=False), width='stretch', config={"displayModeBar": False})
         st.markdown('</div>', unsafe_allow_html=True)
 
     with c5:
         st.markdown('<div class="chart-card">', unsafe_allow_html=True)
         st.markdown('<div class="card-heading">Age Distribution</div>', unsafe_allow_html=True)
         fig = px.histogram(df, x="Age", nbins=15, color_discrete_sequence=[CYAN])
-        st.plotly_chart(style_fig(fig, height=320, legend=False), use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(style_fig(fig, height=320, legend=False), width='stretch', config={"displayModeBar": False})
         st.markdown('</div>', unsafe_allow_html=True)
 
     with c6:
@@ -317,7 +317,7 @@ try:
         st.markdown('<div class="card-heading">Gender Split</div>', unsafe_allow_html=True)
         fig = px.pie(df, names="Gender", hole=0.62, color_discrete_sequence=[INDIGO, AMBER])
         fig.update_traces(textinfo="percent+label", textfont_color=TEXT)
-        st.plotly_chart(style_fig(fig, height=320), use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(style_fig(fig, height=320), width='stretch', config={"displayModeBar": False})
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ---------------- Patient lookup + records ----------------
@@ -357,7 +357,7 @@ try:
                     height=160, margin=dict(l=10, r=10, t=10, b=0),
                     paper_bgcolor="rgba(0,0,0,0)", font=CHART_FONT,
                 )
-                st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+                st.plotly_chart(fig, width='stretch', config={"displayModeBar": False})
                 st.caption(f"AI readmission risk — {risk['risk_tier']}")
 
             with cost_col:
@@ -381,7 +381,7 @@ try:
                     height=160, margin=dict(l=10, r=10, t=10, b=0),
                     paper_bgcolor="rgba(0,0,0,0)", font=CHART_FONT,
                 )
-                st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+                st.plotly_chart(fig, width='stretch', config={"displayModeBar": False})
                 st.caption("Cost percentile vs. cohort")
 
             with st.expander("Why this risk score? (top factors)"):
@@ -416,7 +416,7 @@ try:
         st.markdown('<div class="card-heading">Patient Records</div>', unsafe_allow_html=True)
         st.dataframe(
             df.sort_values("Patient_ID").reset_index(drop=True),
-            use_container_width=True,
+            width='stretch',
             height=430,
         )
         st.download_button(
