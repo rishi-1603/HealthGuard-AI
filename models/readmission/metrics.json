@@ -11,5 +11,8 @@
     "Procedure_enc",
     "Cost",
     "Length_of_Stay"
-  ]
+  ],
+  "condition_baseline_auc": 0.929,
+  "demographics_only_auc": 0.985,
+  "honesty_note": "AUC reflects synthetic-data determinism (Condition -> Readmission is nearly 1:1); see reports/model_honesty.md"
 }

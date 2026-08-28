@@ -23,11 +23,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Generate demo data
-        run: python scripts/generate_data.py
+      - name: Run model honesty audit
+        run: python scripts/model_honesty_audit.py
 
-      - name: Train demo model
-        run: python scripts/train_models.py
+      - name: Run legacy demo pipeline (kept for reference)
+        run: |
+          python scripts/generate_data.py
+          python scripts/train_models.py
 
-      - name: Run tests
+      - name: Run all tests (data quality, model, Q&A grounding, legacy smoke)
         run: pytest -q
