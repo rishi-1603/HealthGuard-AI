@@ -487,18 +487,22 @@ try:
     with st.expander("About the AI risk model"):
         m = ai_risk.get_metrics()
         if m:
-            mc1, mc2, mc3 = st.columns(3)
+            mc1, mc2, mc3, mc4 = st.columns(4)
             mc1.metric("ROC AUC", m.get("roc_auc"))
-            mc2.metric("Precision", m.get("precision"))
-            mc3.metric("Recall", m.get("recall"))
+            mc2.metric("Condition-only baseline", m.get("condition_baseline_auc", "—"))
+            mc3.metric("Precision", m.get("precision"))
+            mc4.metric("Recall", m.get("recall"))
         st.caption(
             "This is a RandomForest classifier trained on this dataset's own columns "
             "(Age, Gender, Condition, Procedure, Cost, Length of Stay) to predict the "
             "Readmission field. Accuracy looks very high because Condition alone is "
             "an almost perfect predictor of Readmission in this specific dataset — "
             "consistent with it being a synthetic/demo dataset rather than noisy real-world "
-            "clinical data. Treat this as a demonstration of the technique, not a validated "
-            "clinical risk model."
+            "clinical data. For scale: a trivial Condition-only lookup table (no ML) already "
+            "scores ~0.93 AUC here, while real-world clinical readmission models typically "
+            "achieve 0.65–0.75. The quantified audit lives in reports/model_honesty.md "
+            "(run scripts/model_honesty_audit.py to regenerate it). Treat this as a "
+            "demonstration of the technique, not a validated clinical risk model."
         )
 
     st.divider()
