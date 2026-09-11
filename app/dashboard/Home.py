@@ -155,6 +155,18 @@ hr {{ border-color: {CARD_BORDER}; }}
 [data-testid="stMarkdown"] span {{
     color: {TEXT} !important;
 }}
+[data-testid="stTabs"] {{ gap: 0.2rem; }}
+button[data-baseweb="tab"] {{
+    background: {CARD_BG};
+    border: 1px solid {CARD_BORDER};
+    border-radius: 12px 12px 0 0;
+    padding: 0.45rem 0.9rem;
+    font-weight: 600;
+}}
+button[data-baseweb="tab"][aria-selected="true"] {{
+    background: {CARD_BORDER};
+    border-bottom: 2px solid {CYAN};
+}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -176,73 +188,35 @@ def style_fig(fig, height=340, legend=True):
     return fig
 
 
-try:
-    raw = data.load_patients()
+def kpi_card(col, icon, color, label, value):
+    col.markdown(f"""
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background:{color}22; color:{color};">{icon}</div>
+        <div class="kpi-label">{label}</div>
+        <div class="kpi-value">{value}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    with st.sidebar:
-        st.markdown(f"""
-        <div class="hg-brand">
-            <div style="font-size:1.5rem;">🛡️</div>
-            <div class="hg-brand-title">HealthGuard AI</div>
-        </div>
-        <div class="hg-brand-sub">Hospital Outcomes Intelligence</div>
-        """, unsafe_allow_html=True)
-        st.markdown("##### Filters")
-        conditions = st.multiselect("Condition", sorted(raw.Condition.unique()))
-        genders = st.multiselect("Gender", sorted(raw.Gender.unique()))
-        outcomes = st.multiselect("Outcome", sorted(raw.Outcome.unique()))
-        age_range = st.slider(
-            "Age range",
-            int(raw.Age.min()), int(raw.Age.max()),
-            (int(raw.Age.min()), int(raw.Age.max()))
-        )
-        st.caption(f"{len(raw)} patients in dataset")
 
-    df = data.apply_filters(raw, conditions, genders, outcomes, age_range)
+# ════════════════════════════════════════════════════════════════════════════
+# TAB RENDERERS
+# ════════════════════════════════════════════════════════════════════════════
 
-    st.markdown('<div class="hg-page-title">Hospital Outcomes Intelligence Dashboard</div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="hg-page-sub">AI-assisted analytics across {len(df)} of {len(raw)} patients — cost, length of stay, readmissions, and outcomes, with per-patient risk scoring and explainability.</div>', unsafe_allow_html=True)
-
-    if df.empty:
-        st.warning("No patients match the current filters.")
-        st.stop()
-
-    kpis = data.get_kpis(df)
-
-    # ---------------- KPI row ----------------
+def render_overview(df, kpis, cond_summary):
+    # ---- KPI rows (8 cards) ----
     k = st.columns(4)
-    kpi_specs = [
-        ("👥", INDIGO, "TOTAL PATIENTS", f"{kpis['total_patients']:,}"),
-        ("💰", CYAN, "AVG COST / PATIENT", f"₹{kpis['avg_cost']:,.0f}"),
-        ("🛏️", AMBER, "AVG LENGTH OF STAY", f"{kpis['avg_los']} days"),
-        ("↩️", RED if kpis['readmission_rate'] > 30 else AMBER, "READMISSION RATE", f"{kpis['readmission_rate']}%"),
-    ]
-    for col, (icon, color, label, value) in zip(k, kpi_specs):
-        col.markdown(f"""
-        <div class="kpi-card">
-            <div class="kpi-icon" style="background:{color}22; color:{color};">{icon}</div>
-            <div class="kpi-label">{label}</div>
-            <div class="kpi-value">{value}</div>
-        </div>
-        """, unsafe_allow_html=True)
+    kpi_card(k[0], "👥", INDIGO, "TOTAL PATIENTS", f"{kpis['total_patients']:,}")
+    kpi_card(k[1], "💰", CYAN, "AVG COST / PATIENT", f"₹{kpis['avg_cost']:,.0f}")
+    kpi_card(k[2], "🛏️", AMBER, "AVG LENGTH OF STAY", f"{kpis['avg_los']} days")
+    kpi_card(k[3], "↩️", RED if kpis['readmission_rate'] > 30 else AMBER, "READMISSION RATE", f"{kpis['readmission_rate']}%")
 
     k2 = st.columns(4)
-    kpi_specs2 = [
-        ("✅", GREEN, "RECOVERED RATE", f"{kpis['recovered_rate']}%"),
-        ("⭐", CYAN, "AVG SATISFACTION", f"{kpis['avg_satisfaction']} / 5"),
-        ("🩺", INDIGO, "CONDITIONS TRACKED", f"{df.Condition.nunique()}"),
-        ("📊", AMBER, "AVG AGE", f"{kpis['avg_age']}"),
-    ]
-    for col, (icon, color, label, value) in zip(k2, kpi_specs2):
-        col.markdown(f"""
-        <div class="kpi-card">
-            <div class="kpi-icon" style="background:{color}22; color:{color};">{icon}</div>
-            <div class="kpi-label">{label}</div>
-            <div class="kpi-value">{value}</div>
-        </div>
-        """, unsafe_allow_html=True)
+    kpi_card(k2[0], "✅", GREEN, "RECOVERED RATE", f"{kpis['recovered_rate']}%")
+    kpi_card(k2[1], "⭐", CYAN, "AVG SATISFACTION", f"{kpis['avg_satisfaction']} / 5")
+    kpi_card(k2[2], "🩺", INDIGO, "CONDITIONS TRACKED", f"{df.Condition.nunique()}")
+    kpi_card(k2[3], "📊", AMBER, "AVG AGE", f"{kpis['avg_age']}")
 
-    # ---------------- Distribution + condition volume ----------------
+    # ---- Distribution + condition volume ----
     st.markdown('<div class="section-title">Patient Distribution</div>', unsafe_allow_html=True)
     c1, c2, c3 = st.columns([1, 1.3, 1])
 
@@ -261,7 +235,6 @@ try:
     with c2:
         st.markdown('<div class="chart-card">', unsafe_allow_html=True)
         st.markdown('<div class="card-heading">Average Cost by Condition</div>', unsafe_allow_html=True)
-        cond_summary = data.condition_summary(df)
         cs = cond_summary.sort_values("avg_cost", ascending=False)
         fig = px.bar(
             cs, x="Condition", y="avg_cost",
@@ -298,9 +271,46 @@ try:
         st.markdown(rows, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # ---------------- Readmission + demographics ----------------
-    st.markdown('<div class="section-title">Readmissions & Demographics</div>', unsafe_allow_html=True)
-    c4, c5, c6 = st.columns(3)
+    # ---- Cost & satisfaction distribution ----
+    st.markdown('<div class="section-title">Cost & Satisfaction Profiles</div>', unsafe_allow_html=True)
+    d1, d2 = st.columns(2)
+    with d1:
+        st.markdown('<div class="chart-card">', unsafe_allow_html=True)
+        st.markdown('<div class="card-heading">Cost Distribution</div>', unsafe_allow_html=True)
+        fig = px.histogram(df, x="Cost", nbins=30, color_discrete_sequence=[CYAN])
+        fig.add_vline(x=df.Cost.mean(), line_dash="dash", line_color=AMBER,
+                      annotation_text=f"mean ₹{df.Cost.mean():,.0f}")
+        st.plotly_chart(style_fig(fig, height=300, legend=False), width='stretch', config={"displayModeBar": False})
+        st.markdown('</div>', unsafe_allow_html=True)
+    with d2:
+        st.markdown('<div class="chart-card">', unsafe_allow_html=True)
+        st.markdown('<div class="card-heading">Satisfaction Distribution</div>', unsafe_allow_html=True)
+        sat = df.Satisfaction.value_counts().sort_index().rename_axis("Satisfaction").reset_index(name="patients")
+        fig = px.bar(sat, x="Satisfaction", y="patients",
+                     color_discrete_sequence=[GREEN])
+        fig.update_traces(marker_line_width=0)
+        st.plotly_chart(style_fig(fig, height=300, legend=False), width='stretch', config={"displayModeBar": False})
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # ---- Computed insight callout ----
+    top_readmit = cond_summary.sort_values("readmission_rate", ascending=False).head(2)
+    r1_name, r1_rate = top_readmit.iloc[0]["Condition"], top_readmit.iloc[0]["readmission_rate"]
+    try:
+        r2_name, r2_rate = top_readmit.iloc[1]["Condition"], top_readmit.iloc[1]["readmission_rate"]
+        readmit_line = f"**{r1_name}** ({r1_rate}%) and **{r2_name}** ({r2_rate}%) drive readmissions"
+    except IndexError:
+        readmit_line = f"**{r1_name}** ({r1_rate}%) drives readmissions"
+    priciest = cond_summary.sort_values("avg_cost", ascending=False).iloc[0]
+    st.info(
+        f"📌 **What the data says (computed live):** {readmit_line}. "
+        f"The priciest pathway is **{priciest.Condition}** at ₹{priciest.avg_cost:,.0f} average cost. "
+        f"Average satisfaction is **{kpis['avg_satisfaction']}/5** across {kpis['total_patients']:,} patients."
+    )
+
+
+def render_clinical(df, cond_summary):
+    st.markdown('<div class="section-title">Readmission Analytics</div>', unsafe_allow_html=True)
+    c4, c5 = st.columns(2)
 
     with c4:
         st.markdown('<div class="chart-card">', unsafe_allow_html=True)
@@ -314,25 +324,126 @@ try:
         )
         fig.update_xaxes(tickangle=-40)
         fig.update_coloraxes(showscale=False)
-        st.plotly_chart(style_fig(fig, height=320, legend=False), width='stretch', config={"displayModeBar": False})
+        st.plotly_chart(style_fig(fig, height=330, legend=False), width='stretch', config={"displayModeBar": False})
         st.markdown('</div>', unsafe_allow_html=True)
 
     with c5:
         st.markdown('<div class="chart-card">', unsafe_allow_html=True)
-        st.markdown('<div class="card-heading">Age Distribution</div>', unsafe_allow_html=True)
-        fig = px.histogram(df, x="Age", nbins=15, color_discrete_sequence=[CYAN])
-        st.plotly_chart(style_fig(fig, height=320, legend=False), width='stretch', config={"displayModeBar": False})
+        st.markdown('<div class="card-heading">Readmission Rate by Procedure (top 10 by volume)</div>', unsafe_allow_html=True)
+        proc = df.groupby("Procedure").agg(
+            patients=("Patient_ID", "count"),
+            readmissions=("Readmission", lambda s: (s == "Yes").sum()),
+        ).reset_index()
+        proc["readmission_rate"] = (proc["readmissions"] / proc["patients"] * 100).round(1)
+        proc = proc.sort_values("patients", ascending=False).head(10).sort_values("readmission_rate")
+        fig = px.bar(
+            proc, y="Procedure", x="readmission_rate", orientation="h",
+            color_discrete_sequence=[RED], text=proc["readmission_rate"],
+            labels={"readmission_rate": "Rate (%)", "Procedure": ""},
+        )
+        fig.update_traces(textposition="outside", marker_line_width=0)
+        st.plotly_chart(style_fig(fig, height=330, legend=False), width='stretch', config={"displayModeBar": False})
         st.markdown('</div>', unsafe_allow_html=True)
 
+    c6, c7 = st.columns(2)
     with c6:
+        st.markdown('<div class="chart-card">', unsafe_allow_html=True)
+        st.markdown('<div class="card-heading">Readmission Rate by Age Group</div>', unsafe_allow_html=True)
+        age_df = df.copy()
+        age_df["Age Group"] = pd.cut(
+            age_df["Age"], bins=[0, 30, 45, 60, 120],
+            labels=["<30", "30–44", "45–59", "60+"],
+        )
+        ag = age_df.groupby("Age Group", observed=True).agg(
+            patients=("Patient_ID", "count"),
+            readmissions=("Readmission", lambda s: (s == "Yes").sum()),
+        ).reset_index()
+        ag["readmission_rate"] = (ag["readmissions"] / ag["patients"] * 100).round(1)
+        fig = px.bar(ag, x="Age Group", y="readmission_rate",
+                     color_discrete_sequence=[AMBER], text=ag["readmission_rate"],
+                     labels={"readmission_rate": "Rate (%)", "Age Group": ""})
+        fig.update_traces(textposition="outside", marker_line_width=0)
+        st.plotly_chart(style_fig(fig, height=300, legend=False), width='stretch', config={"displayModeBar": False})
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with c7:
+        st.markdown('<div class="chart-card">', unsafe_allow_html=True)
+        st.markdown('<div class="card-heading">Average Length of Stay by Condition</div>', unsafe_allow_html=True)
+        los = cond_summary.sort_values("avg_los", ascending=False)
+        fig = px.bar(
+            los, x="Condition", y="avg_los",
+            color_discrete_sequence=[CYAN],
+            labels={"avg_los": "Avg days", "Condition": ""},
+        )
+        fig.update_traces(marker_line_width=0)
+        fig.update_xaxes(tickangle=-40)
+        st.plotly_chart(style_fig(fig, height=300, legend=False), width='stretch', config={"displayModeBar": False})
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # ---- Demographics ----
+    st.markdown('<div class="section-title">Demographics</div>', unsafe_allow_html=True)
+    c8, c9, c10 = st.columns(3)
+    with c8:
+        st.markdown('<div class="chart-card">', unsafe_allow_html=True)
+        st.markdown('<div class="card-heading">Age Distribution</div>', unsafe_allow_html=True)
+        fig = px.histogram(df, x="Age", nbins=15, color_discrete_sequence=[CYAN])
+        st.plotly_chart(style_fig(fig, height=300, legend=False), width='stretch', config={"displayModeBar": False})
+        st.markdown('</div>', unsafe_allow_html=True)
+    with c9:
         st.markdown('<div class="chart-card">', unsafe_allow_html=True)
         st.markdown('<div class="card-heading">Gender Split</div>', unsafe_allow_html=True)
         fig = px.pie(df, names="Gender", hole=0.62, color_discrete_sequence=[INDIGO, AMBER])
         fig.update_traces(textinfo="percent+label", textfont_color=TEXT)
-        st.plotly_chart(style_fig(fig, height=320), width='stretch', config={"displayModeBar": False})
+        st.plotly_chart(style_fig(fig, height=300), width='stretch', config={"displayModeBar": False})
+        st.markdown('</div>', unsafe_allow_html=True)
+    with c10:
+        st.markdown('<div class="chart-card">', unsafe_allow_html=True)
+        st.markdown('<div class="card-heading">Avg Cost by Outcome</div>', unsafe_allow_html=True)
+        oc = df.groupby("Outcome").agg(
+            patients=("Patient_ID", "count"),
+            avg_cost=("Cost", "mean"),
+        ).reset_index()
+        fig = px.bar(oc, x="Outcome", y="avg_cost",
+                     color_discrete_sequence=[GREEN, AMBER],
+                     text=oc["avg_cost"].round(0),
+                     labels={"avg_cost": "Avg cost (₹)", "Outcome": ""})
+        fig.update_traces(textposition="outside", marker_line_width=0)
+        st.plotly_chart(style_fig(fig, height=300, legend=False), width='stretch', config={"displayModeBar": False})
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # ---------------- Patient lookup + records ----------------
+
+def render_patients(df):
+    # ---- Cohort-level views ----
+    st.markdown('<div class="section-title">Cohort Risk & Utilization</div>', unsafe_allow_html=True)
+    r1, r2 = st.columns(2)
+    with r1:
+        st.markdown('<div class="chart-card">', unsafe_allow_html=True)
+        st.markdown('<div class="card-heading">Readmission Risk Across This Cohort</div>', unsafe_allow_html=True)
+        try:
+            probs = ai_risk.score_cohort(df)
+            fig = px.histogram(x=probs, nbins=25, color_discrete_sequence=[INDIGO],
+                               labels={"x": "Modelled readmission probability"})
+            low = int((probs < 0.33).sum()); watch = int(((probs >= 0.33) & (probs < 0.66)).sum()); high = int((probs >= 0.66).sum())
+            fig.add_vline(x=0.33, line_dash="dot", line_color=AMBER)
+            fig.add_vline(x=0.66, line_dash="dot", line_color=RED)
+            st.plotly_chart(style_fig(fig, height=290, legend=False), width='stretch', config={"displayModeBar": False})
+            st.caption(f"🟢 LOW: {low} · 🟡 WATCH: {watch} · 🔴 HIGH: {high} (thresholds 0.33 / 0.66)")
+        except Exception:
+            st.caption("Cohort scoring unavailable — see the model note in the AI Assistant tab.")
+        st.markdown('</div>', unsafe_allow_html=True)
+    with r2:
+        st.markdown('<div class="chart-card">', unsafe_allow_html=True)
+        st.markdown('<div class="card-heading">Cost vs Length of Stay (coloured by readmission)</div>', unsafe_allow_html=True)
+        fig = px.scatter(
+            df, x="Length_of_Stay", y="Cost", color="Readmission",
+            color_discrete_map={"Yes": RED, "No": GREEN},
+            opacity=0.55, hover_data=["Patient_Code", "Condition"],
+            labels={"Length_of_Stay": "Days", "Cost": "Cost (₹)"},
+        )
+        st.plotly_chart(style_fig(fig, height=290), width='stretch', config={"displayModeBar": False})
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # ---- Patient lookup ----
     st.markdown('<div class="section-title">Patient Lookup</div>', unsafe_allow_html=True)
     p1, p2 = st.columns([1, 1.6])
 
@@ -441,6 +552,8 @@ try:
         )
         st.markdown('</div>', unsafe_allow_html=True)
 
+
+def render_ai(df):
     # ---------------- AI Recommendations ----------------
     st.markdown('<div class="section-title">AI Recommendations</div>', unsafe_allow_html=True)
     st.markdown('<div class="chart-card">', unsafe_allow_html=True)
@@ -504,6 +617,60 @@ try:
             "(run scripts/model_honesty_audit.py to regenerate it). Treat this as a "
             "demonstration of the technique, not a validated clinical risk model."
         )
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# MAIN
+# ════════════════════════════════════════════════════════════════════════════
+
+try:
+    raw = data.load_patients()
+
+    with st.sidebar:
+        st.markdown(f"""
+        <div class="hg-brand">
+            <div style="font-size:1.5rem;">🛡️</div>
+            <div class="hg-brand-title">HealthGuard AI</div>
+        </div>
+        <div class="hg-brand-sub">Hospital Outcomes Intelligence</div>
+        """, unsafe_allow_html=True)
+        st.markdown("##### Filters")
+        conditions = st.multiselect("Condition", sorted(raw.Condition.unique()))
+        genders = st.multiselect("Gender", sorted(raw.Gender.unique()))
+        outcomes = st.multiselect("Outcome", sorted(raw.Outcome.unique()))
+        age_range = st.slider(
+            "Age range",
+            int(raw.Age.min()), int(raw.Age.max()),
+            (int(raw.Age.min()), int(raw.Age.max()))
+        )
+        st.caption(f"{len(raw)} patients in dataset")
+
+    df = data.apply_filters(raw, conditions, genders, outcomes, age_range)
+
+    st.markdown('<div class="hg-page-title">Hospital Outcomes Intelligence Dashboard</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="hg-page-sub">AI-assisted analytics across {len(df)} of {len(raw)} patients — cost, length of stay, readmissions, and outcomes, with per-patient risk scoring and explainability.</div>', unsafe_allow_html=True)
+
+    if df.empty:
+        st.warning("No patients match the current filters.")
+        st.stop()
+
+    kpis = data.get_kpis(df)
+    cond_summary = data.condition_summary(df)
+
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "📊 Executive Overview",
+        "🩺 Clinical Analytics",
+        "👤 Patient Intelligence",
+        "🤖 AI Assistant",
+    ])
+    with tab1:
+        render_overview(df, kpis, cond_summary)
+    with tab2:
+        render_clinical(df, cond_summary)
+    with tab3:
+        render_patients(df)
+    with tab4:
+        render_ai(df)
 
     st.divider()
     st.caption("Demo analytics dashboard. Not intended for diagnosis, treatment, or clinical decision-making.")
