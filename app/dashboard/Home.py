@@ -4,6 +4,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import streamlit as st
 import pandas as pd
+import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from app.dashboard.utils import hospital_data as data
@@ -196,6 +197,24 @@ def style_fig(fig, height=340, legend=True):
     fig.update_xaxes(gridcolor=CARD_BORDER, zeroline=False, color=MUTED)
     fig.update_yaxes(gridcolor=CARD_BORDER, zeroline=False, color=MUTED)
     return fig
+
+
+@st.cache_data
+def cohort_shap_importance(df: pd.DataFrame) -> pd.Series:
+    """Mean |SHAP| per feature across the (filtered) cohort — shared logic with
+    scripts/cohort_shap_analysis.py, which generates reports/cohort_shap.md."""
+    model, encoders = ai_risk.load_model()
+    explainer = ai_risk.load_explainer()
+    enc = ai_risk._encode(df, encoders)
+    X = enc[ai_risk.FEATURES]
+    shap_vals = explainer.shap_values(X)
+    if isinstance(shap_vals, list):
+        vals = shap_vals[1]
+    elif np.ndim(shap_vals) == 3:
+        vals = shap_vals[:, :, 1]
+    else:
+        vals = shap_vals
+    return pd.Series(np.abs(vals).mean(axis=0), index=ai_risk.FEATURES).sort_values()
 
 
 def kpi_card(col, icon, color, label, value):
@@ -419,6 +438,48 @@ def render_clinical(df, cond_summary):
                      labels={"avg_cost": "Avg cost (₹)", "Outcome": ""})
         fig.update_traces(textposition="outside", marker_line_width=0)
         st.plotly_chart(style_fig(fig, height=300, legend=False), width='stretch', config={"displayModeBar": False})
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # ---- Cohort explainability ----
+    st.markdown('<div class="section-title">Model Explainability — What Drives Risk Across This Cohort</div>', unsafe_allow_html=True)
+    e1, e2 = st.columns([1.5, 1])
+    with e1:
+        st.markdown('<div class="chart-card">', unsafe_allow_html=True)
+        st.markdown('<div class="card-heading">Average influence per factor (mean |SHAP|)</div>', unsafe_allow_html=True)
+        try:
+            imp = cohort_shap_importance(df)
+            total = imp.sum()
+            imp_df = pd.DataFrame({
+                "Factor": [ai_risk.FEATURE_LABELS.get(f, f) for f in imp.index],
+                "Share": (imp / total * 100).round(1) if total else 0,
+                "value": imp.values,
+            })
+            fig = px.bar(imp_df, y="Factor", x="Share", orientation="h",
+                         color_discrete_sequence=[INDIGO], text=imp_df["Share"],
+                         labels={"Share": "Share of total influence (%)", "Factor": ""})
+            fig.update_traces(textposition="outside", texttemplate="%{text:.1f}%", marker_line_width=0)
+            st.plotly_chart(style_fig(fig, height=310, legend=False), width='stretch', config={"displayModeBar": False})
+        except Exception:
+            st.caption("Cohort explainability unavailable for this filter — see reports/cohort_shap.md.")
+        st.markdown('</div>', unsafe_allow_html=True)
+    with e2:
+        st.markdown('<div class="chart-card">', unsafe_allow_html=True)
+        st.markdown('<div class="card-heading">How to read this</div>', unsafe_allow_html=True)
+        st.markdown(
+            """
+            <p style="color:{TEXT}; font-size:0.88rem; line-height:1.5;">
+            Each bar shows how much a factor moves readmission risk scores across
+            this cohort, averaged over patients (mean |SHAP|).
+            <br><br>
+            <b>Why is influence spread out?</b> Procedure, Cost and Condition carry
+            the same underlying signal (they follow the condition pathway), so the
+            model splits across them and attribution is distributed.
+            <br><br>
+            <b style="color:{AMBER};">⚠ Honest read:</b> on this synthetic dataset
+            the ranking reflects how the data was generated, not clinical evidence.
+            Full write-up: <code>reports/cohort_shap.md</code>.
+            </p>
+            """, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
 
