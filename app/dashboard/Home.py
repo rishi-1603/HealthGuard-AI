@@ -21,10 +21,10 @@ st.set_page_config(
 # ---------------- Palette ----------------
 BG = "#0B1220"
 SIDEBAR_BG = "#0D1526"
-CARD_BG = "#141B2D"
-CARD_BORDER = "#1F2A44"
+CARD_BG = "#182240"
+CARD_BORDER = "#31446E"
 TEXT = "#E8ECF4"
-MUTED = "#8B95A7"
+MUTED = "#9AA7BD"
 INDIGO = "#6366F1"
 CYAN = "#22D3EE"
 GREEN = "#34D399"
@@ -155,17 +155,27 @@ hr {{ border-color: {CARD_BORDER}; }}
 [data-testid="stMarkdown"] span {{
     color: {TEXT} !important;
 }}
-[data-testid="stTabs"] {{ gap: 0.2rem; }}
-button[data-baseweb="tab"] {{
-    background: {CARD_BG};
-    border: 1px solid {CARD_BORDER};
-    border-radius: 12px 12px 0 0;
-    padding: 0.45rem 0.9rem;
-    font-weight: 600;
+[data-testid="stTabs"] {{ gap: 0.45rem; }}
+[data-testid="stTabs"] [role="tab"] {{
+    background: #1D2B4A !important;
+    border: 1px solid #46598A !important;
+    border-radius: 12px;
+    padding: 0.55rem 1.15rem;
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.35);
 }}
-button[data-baseweb="tab"][aria-selected="true"] {{
-    background: {CARD_BORDER};
-    border-bottom: 2px solid {CYAN};
+[data-testid="stTabs"] [role="tab"],
+[data-testid="stTabs"] [role="tab"] * {{
+    color: #FFFFFF !important;
+}}
+[data-testid="stTabs"] [role="tab"]:hover {{
+    background: #2A3B66 !important;
+}}
+[data-testid="stTabs"] [role="tab"][aria-selected="true"] {{
+    background: #2A3B66 !important;
+    border: 1px solid {CYAN} !important;
+    border-bottom: 3px solid {CYAN} !important;
+    box-shadow: 0 0 14px rgba(34, 211, 238, 0.25);
 }}
 </style>
 """, unsafe_allow_html=True)
