@@ -10,7 +10,8 @@ with the model's limits documented as carefully as its features.**
 [🚀 Live Demo](https://healthguard-ai-cyl2viwrsdrrff7pig7u6c.streamlit.app/) ·
 [🧪 25 Automated Tests](tests/) ·
 [📄 Analytics Reports](reports/) ·
-[🔍 Model Honesty Audit](reports/model_honesty.md)
+[🔍 Model Honesty Audit](reports/model_honesty.md) ·
+[⚖️ Fairness Check](reports/fairness_check.md)
 
 </div>
 
@@ -171,6 +172,28 @@ cutting. *Owner: Operations · KPI: cost per episode by pathway.*
 A model scoring 0.99 on a 0.65–0.75 task means the label leaks from the
 features — an audit skill that transfers to every future modelling job.
 **Proof:** [`reports/model_honesty.md`](reports/model_honesty.md).
+
+### Cohort Explainability (SHAP)
+Per-patient "why this score?" panels, plus a **cohort-level view**: mean |SHAP|
+per factor across all 984 patients, in the dashboard's Clinical Analytics tab
+and in [`reports/cohort_shap.md`](reports/cohort_shap.md). The actual ranking
+(Procedure 27.6% · Cost 23.8% · Age 19.9% · Gender 15.8% · Condition 12.4% ·
+LOS 0.5%) shows influence is **diffuse across correlated features** — an
+honest, computed finding, not a hardcoded narrative.
+
+### Fairness Check (Age & Gender)
+Out-of-fold model performance sliced by demographic group
+([`reports/fairness_check.md`](reports/fairness_check.md)). Finding: **AUC
+parity across groups (gaps ≤ 0.006) but a large base-rate disparity** (Female
+43.9% vs Male 7.4% actual readmission — a property of the synthetic data).
+Equal AUC alone cannot certify fairness; the report demonstrates the audit
+method and draws **no fairness conclusion from synthetic data**.
+
+### Data Quality Report
+A documented audit trail of 11 checks (completeness, uniqueness, validity,
+consistency, base-rate stability), with design characteristics reported as
+"Known (by design)" rather than hidden: [`reports/data_quality_report.md`](reports/data_quality_report.md).
+Column-level documentation: [`data/DATA_DICTIONARY.md`](data/DATA_DICTIONARY.md).
 
 ---
 
