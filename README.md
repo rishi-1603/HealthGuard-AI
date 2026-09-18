@@ -1,11 +1,11 @@
 <div align="center">
 
 # 🏥 HealthGuard AI
-### Hospital Outcomes Intelligence Dashboard
+### Explainable Healthcare Analytics & Responsible AI
 
-**An AI-assisted analytics platform that turns raw patient data into real-time KPIs,
-explainable readmission-risk scores, and grounded natural-language insights —
-with the model's limits documented as carefully as its features.**
+**An ML-powered patient risk intelligence platform: RandomForest prediction →
+SHAP explainability → fairness analysis → model honesty audit → grounded
+AI Q&A — every layer documented, tested, and honestly evaluated.**
 
 [🚀 Live Demo](https://healthguard-ai-cyl2viwrsdrrff7pig7u6c.streamlit.app/) ·
 [🧪 25 Automated Tests](tests/) ·
@@ -105,7 +105,7 @@ Column-by-column documentation: [`data/DATA_DICTIONARY.md`](data/DATA_DICTIONARY
 
 ---
 
-## 6. 🧠 The AI Layers — and their guardrails
+## 6. 🧠 Responsible AI Architecture (5 layers)
 
 ### Readmission risk model (with the honest headline)
 A RandomForest predicts per-patient readmission risk and SHAP explains each
