@@ -98,11 +98,16 @@ def test_metrics_json_model_facts():
 
 
 def test_metrics_json_matches_reports():
-    """The semantic layer must not drift from the model audit reports."""
+    """The semantic layer must not drift from the model audit reports.
+
+    Note: CI regenerates reports/model_honesty.md with its own sklearn
+    version, so only version-stable strings are asserted there (the ~0.99
+    framing and the real-world range) — never exact AUC digits. The fairness
+    report is committed (not regenerated), so its exact values are pinned."""
     fair_txt = (ROOT / "reports" / "fairness_check.md").read_text(encoding="utf-8")
     hon_txt = (ROOT / "reports" / "model_honesty.md").read_text(encoding="utf-8")
     assert "43.9%" in fair_txt and "7.4%" in fair_txt and "0.006" in fair_txt
-    assert "0.992" in hon_txt
+    assert "~0.99" in hon_txt and "0.65" in hon_txt
 
 
 # ── dashboard integration ────────────────────────────────────────────────────
