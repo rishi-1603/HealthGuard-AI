@@ -1,0 +1,68 @@
+{
+  "meta": {
+    "project": "HealthGuard AI — Explainable Healthcare Analytics",
+    "description": "Semantic layer — exact definitions of every displayed metric. The dashboard and the AI layer must cite these definitions.",
+    "disclosure": "Synthetic hospital dataset (984 patients, disclosed). Demo analytics — NOT intended for diagnosis, treatment, or clinical decision-making.",
+    "source_data": "data/hospital/hospital_data.csv (984 x 10)",
+    "model_reports": ["reports/fairness_check.md", "reports/model_honesty.md", "reports/cohort_shap.md"]
+  },
+  "metrics": {
+    "patients": {
+      "definition": "Count of patient records in the current filter scope.",
+      "full_dataset_value": 984
+    },
+    "readmission_rate": {
+      "definition": "Share of patients with Readmission = Yes.",
+      "formula": "COUNT(Readmission = 'Yes') / COUNT(*) * 100",
+      "full_dataset_value_pct": 26.8,
+      "readmitted_patients": 264
+    },
+    "avg_length_of_stay": {
+      "definition": "Mean Length_of_Stay in days.",
+      "full_dataset_value_days": 37.7
+    },
+    "avg_cost_per_patient": {
+      "definition": "Mean Cost in rupees.",
+      "full_dataset_value": 8367
+    },
+    "readmission_cost_burden": {
+      "definition": "Cost held by readmitted patients — the operational headline.",
+      "verified": {
+        "readmitted_avg_cost": 13650,
+        "non_readmitted_avg_cost": 6431,
+        "cost_premium_pct": 112.3,
+        "readmitted_total_cost": 3603500,
+        "readmitted_cost_share_pct": 43.8
+      },
+      "caveat": "Association, not causation: readmitted patients are costlier, the data does not prove readmission causes the cost."
+    },
+    "age_bands": {
+      "definition": "18-30, 31-45, 46-60, 61-75, 76+ (exclusive lower, inclusive upper).",
+      "verified_readmit_rates_pct": {"18-30": 0.0, "31-45": 16.7, "46-60": 36.5, "61-75": 25.6, "76+": 50.0}
+    },
+    "outcome": {
+      "definition": "Recovered or Stable at discharge.",
+      "caveat": "No patient died in this synthetic dataset — a generation property, disclosed."
+    },
+    "fairness": {
+      "definition": "Model fairness audit of the readmission model (scripts/fairness_check.py).",
+      "auc_gap_gender": 0.006,
+      "auc_gap_age": 0.003,
+      "base_rate_female_pct": 43.9,
+      "base_rate_male_pct": 7.4,
+      "base_rate_gap_pp": 36.5,
+      "reading": "Tiny AUC gaps do not mean fairness: the dataset's readmission base rate differs sharply by gender. Parity in one metric is not fairness."
+    },
+    "model_honesty": {
+      "definition": "Audit of the headline model metric (scripts/model_honesty_audit.py).",
+      "shipped_rf_auc": 0.992,
+      "condition_only_baseline_auc": 0.93,
+      "real_world_clinical_range": "0.65-0.75",
+      "reading": "AUC ~0.99 is a property of the synthetic generation process (readmission is nearly deterministic given Condition), not predictive skill."
+    },
+    "cohort_shap": {
+      "definition": "Cohort-level SHAP attribution of the readmission model (scripts/cohort_shap_analysis.py).",
+      "top_features_pct": {"Procedure": 27.6, "Cost": 23.8}
+    }
+  }
+}

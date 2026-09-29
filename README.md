@@ -8,12 +8,34 @@ SHAP explainability → fairness analysis → model honesty audit → grounded
 AI Q&A — every layer documented, tested, and honestly evaluated.**
 
 [🚀 Live Demo](https://healthguard-ai-cyl2viwrsdrrff7pig7u6c.streamlit.app/) ·
-[🧪 25 Automated Tests](tests/) ·
+[🧪 44 Automated Tests](tests/) ·
 [📄 Analytics Reports](reports/) ·
 [🔍 Model Honesty Audit](reports/model_honesty.md) ·
 [⚖️ Fairness Check](reports/fairness_check.md)
 
 </div>
+
+## 🎯 Operations Layer *(2026 upgrade)*
+
+> The dashboard now speaks operations, not just model metrics:
+> **what readmissions cost, where risk concentrates, and what the model can honestly claim.**
+
+![Operations context — the cost of readmissions](dashboard/screenshots/day3_ops_context.png)
+
+| Capability | Verified numbers |
+|---|---|
+| 🔴 **Cost-burden strip** | 264 readmitted patients (26.8%) hold ₹36.0L = **43.8% of all hospital cost** — ₹13,650 vs ₹6,431 per patient (**+112.3%**), LOS 39.2d vs 37.1d |
+| 🔍 **NEW tab: Root-Cause Drill** | *All patients 26.8% → Heart Attack 100% → age band* — condition selector, age-band breakdown, cost premium cards, computed findings |
+| ⚖️ **Fairness strip** | AUC gap **0.006** (gender) / **0.003** (age) — plus the disclosed base-rate disparity (Female 43.9% vs Male 7.4%): parity in one metric is not fairness |
+| 🧭 **Model honesty strip** | AUC **0.992** vs **0.93** no-ML baseline — synthetic-data determinism, not predictive skill; real clinical models sit at 0.65–0.75 |
+| 📖 **Semantic layer** | `data/metrics.json` — every displayed metric defined, sourced, and caveated |
+
+✅ **44 automated tests** — including an end-to-end AppTest of the 5-tab dashboard.
+
+![Root-cause drill — condition → age band → cost](dashboard/screenshots/day3_root_cause_drill.png)
+
+---
+
 
 > ⚠️ **Disclaimer:** Demo/portfolio analytics only. Not intended for diagnosis,
 > treatment, or clinical decision-making. The dataset is synthetic.
