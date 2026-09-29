@@ -11,6 +11,7 @@ from app.dashboard.utils import hospital_data as data
 from app.dashboard.utils import ai_risk
 from app.dashboard.utils import simple_qa
 from app.dashboard.utils import gemini_ai
+from app.dashboard.utils import ops_layer
 
 st.set_page_config(
     page_title="HealthGuard AI | Hospital Outcomes",
@@ -244,6 +245,72 @@ def render_overview(df, kpis, cond_summary):
     kpi_card(k2[1], "⭐", CYAN, "AVG SATISFACTION", f"{kpis['avg_satisfaction']} / 5")
     kpi_card(k2[2], "🩺", INDIGO, "CONDITIONS TRACKED", f"{df.Condition.nunique()}")
     kpi_card(k2[3], "📊", AMBER, "AVG AGE", f"{kpis['avg_age']}")
+
+    # ---- Day-3 ops layer: what readmissions cost (computed, not assumed) ----
+    ops = ops_layer.ops_context(df)
+    facts = ops_layer.load_model_facts()
+    st.markdown('<div class="section-title">Operations Context — the cost of readmissions</div>',
+                unsafe_allow_html=True)
+    o1, o2, o3 = st.columns(3)
+    with o1:
+        st.markdown(
+            f"""<div style="border:1px solid rgba(248,113,113,0.35); border-radius:10px;
+                 padding:12px 14px; background:rgba(248,113,113,0.07);">
+              <div style="font-size:0.95rem; font-weight:700; color:{TEXT};">
+                {ops['readmitted_n']} readmitted patients hold ₹{ops['readmitted_total_cost']/1e5:,.1f}L
+                — {ops['readmitted_cost_share_pct']}% of all cost</div>
+              <div style="font-size:0.8rem; color:{MUTED}; margin-top:4px;">
+                {ops['readmission_rate_pct']}% of patients, {ops['readmitted_cost_share_pct']}% of spend —
+                association, not causation (disclosed in data/metrics.json)</div>
+            </div>""", unsafe_allow_html=True)
+    with o2:
+        st.markdown(
+            f"""<div style="border:1px solid {CARD_BORDER}; border-radius:10px;
+                 padding:12px 14px; background:rgba(251,191,36,0.06);">
+              <div style="font-size:0.95rem; font-weight:700; color:{TEXT};">
+                Readmitted cost ₹{ops['readmitted_avg_cost']:,.0f} vs ₹{ops['non_readmitted_avg_cost']:,.0f}
+                (+{ops['cost_premium_pct']}%)</div>
+              <div style="font-size:0.8rem; color:{MUTED}; margin-top:4px;">
+                Avg length of stay {ops['readmitted_avg_los']}d vs {ops['non_readmitted_avg_los']}d
+                (+{ops['los_premium_days']}d) — the operational premium of a readmission</div>
+            </div>""", unsafe_allow_html=True)
+    with o3:
+        top_cond = ops_layer.readmission_by_condition(df).iloc[0]
+        st.markdown(
+            f"""<div style="border:1px solid rgba(99,102,241,0.4); border-radius:10px;
+                 padding:12px 14px; background:rgba(99,102,241,0.07);">
+              <div style="font-size:0.95rem; font-weight:700; color:{TEXT};">
+                Highest readmission rate: {top_cond['Condition']} ({top_cond['readmit_rate_pct']:.0f}%)</div>
+              <div style="font-size:0.8rem; color:{MUTED}; margin-top:4px;">
+                {int(top_cond['patients'])} patients — drill into condition and age bands on the
+                Root-Cause Drill tab</div>
+            </div>""", unsafe_allow_html=True)
+
+    # ---- Fairness strip (model-derived disclosures from the audit) ----
+    st.markdown('<div class="section-title">Fairness &amp; Model Honesty (from the model audit)</div>',
+                unsafe_allow_html=True)
+    f1, f2 = st.columns(2)
+    fair = facts["fairness"]
+    hon = facts["model_honesty"]
+    with f1:
+        st.markdown(
+            f"""<div style="border:1px solid {CARD_BORDER}; border-radius:10px; padding:12px 14px;">
+              <div style="font-size:0.9rem; font-weight:700; color:{TEXT};">
+                Fairness: AUC gap {fair['auc_gap_gender']} (gender) · {fair['auc_gap_age']} (age)</div>
+              <div style="font-size:0.8rem; color:{MUTED}; margin-top:4px;">
+                Disclosed: readmission base rate is {fair['base_rate_female_pct']}% (Female) vs
+                {fair['base_rate_male_pct']}% (Male) — a {fair['base_rate_gap_pp']}-point dataset property.
+                Parity in one metric is not fairness.</div>
+            </div>""", unsafe_allow_html=True)
+    with f2:
+        st.markdown(
+            f"""<div style="border:1px solid {CARD_BORDER}; border-radius:10px; padding:12px 14px;">
+              <div style="font-size:0.9rem; font-weight:700; color:{TEXT};">
+                Model honesty: AUC {hon['shipped_rf_auc']} vs {hon['condition_only_baseline_auc']} no-ML baseline</div>
+              <div style="font-size:0.8rem; color:{MUTED}; margin-top:4px;">
+                The {hon['shipped_rf_auc']} is synthetic-data determinism, not skill — real clinical models
+                sit at {hon['real_world_clinical_range']}. Published in reports/model_honesty.md.</div>
+            </div>""", unsafe_allow_html=True)
 
     # ---- Distribution + condition volume ----
     st.markdown('<div class="section-title">Patient Distribution</div>', unsafe_allow_html=True)
@@ -624,6 +691,101 @@ def render_patients(df):
         st.markdown('</div>', unsafe_allow_html=True)
 
 
+def render_ops_drill(df):
+    """Day-3 root-cause drill: readmission -> condition -> age band -> cost/LOS.
+    Every number computed live from the filtered scope by ops_layer.py."""
+    overall = ops_layer.ops_context(df)
+    by_cond = ops_layer.readmission_by_condition(df)
+    if not len(by_cond):
+        st.info("No patients match the current filters.")
+        return
+
+    st.markdown('<div class="section-title">Root-Cause Drill — readmission &rarr; condition &rarr; age band</div>',
+                unsafe_allow_html=True)
+    st.caption(
+        f"All patients: {overall['readmission_rate_pct']}% readmission "
+        f"({overall['readmitted_n']} of {overall['total_patients']}) — now drill into WHERE it concentrates."
+    )
+
+    cond = st.selectbox(
+        "Condition (sorted by readmission rate, highest first)",
+        by_cond["Condition"].tolist(), index=0,
+    )
+    prof = ops_layer.condition_profile(df, cond)
+    by_band = ops_layer.readmission_by_age_band(df, cond)
+    bands_with_data = by_band[by_band["patients"] > 0]
+    worst = bands_with_data.sort_values("readmit_rate_pct", ascending=False).iloc[0] if len(bands_with_data) else None
+
+    # breadcrumb
+    crumb = (
+        f"**All patients {overall['readmission_rate_pct']}%** &rarr; "
+        f"**{cond} {prof['readmit_rate_pct']}%** (n={prof['patients']})"
+    )
+    if worst is not None and len(bands_with_data) > 1:
+        crumb += f" &rarr; **{worst['Age_Band']} {worst['readmit_rate_pct']}%** (n={int(worst['patients'])})"
+    st.markdown(crumb)
+
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown('<div class="chart-card">', unsafe_allow_html=True)
+        st.markdown('<div class="card-heading">Readmission rate by condition</div>', unsafe_allow_html=True)
+        colors = [RED if c == cond else CARD_BORDER for c in by_cond["Condition"]]
+        fig = px.bar(
+            by_cond, x="Condition", y="readmit_rate_pct",
+            color_discrete_sequence=[INDIGO], labels={"readmit_rate_pct": "Readmission %", "Condition": ""},
+        )
+        fig.update_traces(marker_color=colors, marker_line_width=0)
+        fig.update_xaxes(tickangle=-40)
+        st.plotly_chart(style_fig(fig, height=340, legend=False), width='stretch',
+                        config={"displayModeBar": False})
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with c2:
+        st.markdown('<div class="chart-card">', unsafe_allow_html=True)
+        st.markdown(f'<div class="card-heading">Readmission by age band — {cond}</div>', unsafe_allow_html=True)
+        fig = px.bar(
+            by_band, x="Age_Band", y="readmit_rate_pct",
+            color_discrete_sequence=[CYAN],
+            labels={"readmit_rate_pct": "Readmission %", "Age_Band": ""},
+        )
+        if worst is not None:
+            fig.update_traces(
+                marker_color=[RED if b == worst["Age_Band"] else CYAN for b in by_band["Age_Band"]],
+                marker_line_width=0)
+        else:
+            fig.update_traces(marker_line_width=0)
+        st.plotly_chart(style_fig(fig, height=340, legend=False), width='stretch',
+                        config={"displayModeBar": False})
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # cost / LOS profile for the selected condition
+    p1, p2, p3 = st.columns(3)
+    kpi_card(p1, "💰", RED if prof["readmit_rate_pct"] > overall["readmission_rate_pct"] else GREEN,
+             "READMITTED AVG COST", f"₹{prof['readmitted_avg_cost']:,.0f}")
+    kpi_card(p2, "💰", GREEN, "NON-READMITTED AVG COST", f"₹{prof['non_readmitted_avg_cost']:,.0f}")
+    _prem = ((prof["readmitted_avg_cost"] / prof["non_readmitted_avg_cost"] - 1) * 100
+             if prof["non_readmitted_avg_cost"] else 0)
+    kpi_card(p3, "📈", AMBER, "COST PREMIUM", f"{_prem:+.0f}%")
+
+    # findings (computed sentences — no LLM)
+    findings = (
+        f"**Findings (computed):** {cond} patients readmit at {prof['readmit_rate_pct']}% versus "
+        f"{overall['readmission_rate_pct']}% overall. "
+    )
+    if worst is not None and len(bands_with_data) > 1:
+        findings += (
+            f"Within {cond}, the {worst['Age_Band']} band concentrates risk at {worst['readmit_rate_pct']}% "
+            f"(n={int(worst['patients'])}). "
+        )
+    findings += (
+        f"Readmitted {cond} patients cost ₹{prof['readmitted_avg_cost']:,.0f} on average versus "
+        f"₹{prof['non_readmitted_avg_cost']:,.0f} ({_prem:+.0f}%), with average stays of "
+        f"{prof['readmitted_avg_los']}d versus {prof['non_readmitted_avg_los']}d. "
+        "Association, not causation — definitions in data/metrics.json."
+    )
+    st.info(findings)
+
+
 def render_ai(df):
     # ---------------- AI Recommendations ----------------
     st.markdown('<div class="section-title">AI Recommendations</div>', unsafe_allow_html=True)
@@ -728,9 +890,10 @@ try:
     kpis = data.get_kpis(df)
     cond_summary = data.condition_summary(df)
 
-    tab1, tab2, tab3, tab4 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "📊 Executive Overview",
         "🩺 Clinical Analytics",
+        "🔍 Root-Cause Drill",
         "👤 Patient Intelligence",
         "🤖 AI Assistant",
     ])
@@ -739,8 +902,10 @@ try:
     with tab2:
         render_clinical(df, cond_summary)
     with tab3:
-        render_patients(df)
+        render_ops_drill(df)
     with tab4:
+        render_patients(df)
+    with tab5:
         render_ai(df)
 
     st.divider()
