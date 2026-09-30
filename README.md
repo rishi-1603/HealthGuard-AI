@@ -36,6 +36,29 @@ AI Q&A — every layer documented, tested, and honestly evaluated.**
 
 ---
 
+## 🏗️ Architecture — five responsible-AI layers, each tested and disclosed
+
+```mermaid
+flowchart LR
+    A["984-patient dataset<br/>(synthetic, disclosed)"] --> B["RandomForest<br/>readmission model"]
+    B --> C["SHAP explainability<br/>per-patient + cohort"]
+    C --> D["Fairness check<br/>AUC gap 0.006"]
+    D --> E["Model honesty audit<br/>0.992 vs 0.93 no-ML baseline"]
+    E --> F["Grounded AI Q&A<br/>answers computed, never generated"]
+    B --> G["Ops layer<br/>cost burden + root-cause drill"]
+    G --> H["Streamlit dashboard<br/>44 tests · Docker"]
+```
+
+**Business questions the dashboard answers**
+
+| Question | Where | Verified answer |
+|---|---|---|
+| What do readmissions cost us? | Operations Context strip | 264 patients (26.8%) hold 43.8% of all cost — ₹13,650 vs ₹6,431 per patient (+112.3%) |
+| Where does readmission risk concentrate? | Root-Cause Drill tab | Heart Attack 100% → 76+ age band 50.0% |
+| Is the model fair? | Fairness strip | AUC gap 0.006 (gender) — but base rates 43.9% F vs 7.4% M, disclosed |
+| Can we trust the 0.99 AUC? | Model honesty strip | No — synthetic determinism, not skill (no-ML baseline 0.93) |
+
+
 
 > ⚠️ **Disclaimer:** Demo/portfolio analytics only. Not intended for diagnosis,
 > treatment, or clinical decision-making. The dataset is synthetic.
