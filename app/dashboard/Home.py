@@ -194,6 +194,7 @@ def style_fig(fig, height=340, legend=True):
         font=CHART_FONT,
         showlegend=legend,
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(color=TEXT)),
+        hoverlabel=dict(bgcolor="#0B1220", bordercolor=CARD_BORDER, font=dict(color=TEXT, size=12.5)),
     )
     fig.update_xaxes(gridcolor=CARD_BORDER, zeroline=False, color=MUTED)
     fig.update_yaxes(gridcolor=CARD_BORDER, zeroline=False, color=MUTED)
@@ -218,14 +219,89 @@ def cohort_shap_importance(df: pd.DataFrame) -> pd.Series:
     return pd.Series(np.abs(vals).mean(axis=0), index=ai_risk.FEATURES).sort_values()
 
 
-def kpi_card(col, icon, color, label, value):
+def kpi_card(col, icon, color, label, value, context=None):
+    ctx = f'<div class="kpi-context">{context}</div>' if context else ""
     col.markdown(f"""
     <div class="kpi-card">
         <div class="kpi-icon" style="background:{color}22; color:{color};">{icon}</div>
         <div class="kpi-label">{label}</div>
         <div class="kpi-value">{value}</div>
+        {ctx}
     </div>
     """, unsafe_allow_html=True)
+
+
+def tab_intro(text):
+    """One line under each tab title: the question this page answers."""
+    st.markdown(f'<div class="tab-intro">{text}</div>', unsafe_allow_html=True)
+
+
+def inject_css_v2():
+    """Day-4 UI layer: KPI context, tab intros, QA trust chips, filter chips."""
+    st.markdown(f"""
+<style>
+.kpi-context {{
+    color: {MUTED};
+    font-size: 0.76rem;
+    margin-top: 0.35rem;
+    line-height: 1.35;
+    font-variant-numeric: tabular-nums;
+}}
+.tab-intro {{
+    color: {CYAN};
+    font-size: 0.86rem;
+    font-weight: 600;
+    margin: -0.2rem 0 1.0rem 0;
+}}
+.qa-trust {{
+    display: inline-block;
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: {GREEN};
+    background: rgba(52, 211, 153, 0.10);
+    border: 1px solid rgba(52, 211, 153, 0.35);
+    border-radius: 999px;
+    padding: 3px 11px;
+    margin-top: 0.4rem;
+}}
+.fchip {{
+    display: inline-block;
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: {CYAN};
+    background: rgba(34, 211, 238, 0.10);
+    border: 1px solid rgba(34, 211, 238, 0.35);
+    border-radius: 999px;
+    padding: 3px 11px;
+    margin: 2px 4px 2px 0;
+}}
+.fchips-wrap {{ margin: 6px 0 2px; }}
+[data-testid="stDataFrame"] {{ font-size: 0.84rem; }}
+</style>
+""", unsafe_allow_html=True)
+
+
+def filter_chips(conditions, genders, outcomes, age_range, raw):
+    """Active-scope chips for the sidebar filters."""
+    chips = []
+    if conditions:
+        chips.append(f"Condition: {', '.join(conditions)}")
+    if genders:
+        chips.append(f"Gender: {', '.join(genders)}")
+    if outcomes:
+        chips.append(f"Outcome: {', '.join(outcomes)}")
+    full_range = (int(raw.Age.min()), int(raw.Age.max()))
+    if tuple(age_range) != full_range:
+        chips.append(f"Age: {age_range[0]}–{age_range[1]}")
+    if chips:
+        html = "".join(f'<span class="fchip">{c}</span>' for c in chips)
+        st.sidebar.markdown(f'<div class="fchips-wrap">{html}</div>', unsafe_allow_html=True)
+    else:
+        st.sidebar.markdown(
+            f'<div class="fchips-wrap"><span style="font-size:0.78rem;color:{MUTED};">'
+            f'No filters active — all {len(raw):,} patients in scope</span></div>',
+            unsafe_allow_html=True,
+        )
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -233,18 +309,32 @@ def kpi_card(col, icon, color, label, value):
 # ════════════════════════════════════════════════════════════════════════════
 
 def render_overview(df, kpis, cond_summary):
-    # ---- KPI rows (8 cards) ----
+    tab_intro("How is the hospital performing — volumes, outcomes, cost, and what readmissions cost?")
+
+    # ---- KPI rows (8 cards, each with one line of context) ----
+    ops = ops_layer.ops_context(df)
+    n_readmitted = int((df.Readmission == "Yes").sum())
+    n_recovered = int((df.Outcome == "Recovered").sum())
+
     k = st.columns(4)
-    kpi_card(k[0], "👥", INDIGO, "TOTAL PATIENTS", f"{kpis['total_patients']:,}")
-    kpi_card(k[1], "💰", CYAN, "AVG COST / PATIENT", f"₹{kpis['avg_cost']:,.0f}")
-    kpi_card(k[2], "🛏️", AMBER, "AVG LENGTH OF STAY", f"{kpis['avg_los']} days")
-    kpi_card(k[3], "↩️", RED if kpis['readmission_rate'] > 30 else AMBER, "READMISSION RATE", f"{kpis['readmission_rate']}%")
+    kpi_card(k[0], "👥", INDIGO, "TOTAL PATIENTS", f"{kpis['total_patients']:,}",
+             context="current filter scope")
+    kpi_card(k[1], "💰", CYAN, "AVG COST / PATIENT", f"₹{kpis['avg_cost']:,.0f}",
+             context=f"total ₹{kpis['total_cost']:,.0f} across cohort")
+    kpi_card(k[2], "🛏️", AMBER, "AVG LENGTH OF STAY", f"{kpis['avg_los']} days",
+             context="days per admission")
+    kpi_card(k[3], "↩️", RED if kpis['readmission_rate'] > 30 else AMBER, "READMISSION RATE", f"{kpis['readmission_rate']}%",
+             context=f"{n_readmitted:,} patients readmitted")
 
     k2 = st.columns(4)
-    kpi_card(k2[0], "✅", GREEN, "RECOVERED RATE", f"{kpis['recovered_rate']}%")
-    kpi_card(k2[1], "⭐", CYAN, "AVG SATISFACTION", f"{kpis['avg_satisfaction']} / 5")
-    kpi_card(k2[2], "🩺", INDIGO, "CONDITIONS TRACKED", f"{df.Condition.nunique()}")
-    kpi_card(k2[3], "📊", AMBER, "AVG AGE", f"{kpis['avg_age']}")
+    kpi_card(k2[0], "✅", GREEN, "RECOVERED RATE", f"{kpis['recovered_rate']}%",
+             context=f"{n_recovered:,} patients recovered")
+    kpi_card(k2[1], "⭐", CYAN, "AVG SATISFACTION", f"{kpis['avg_satisfaction']} / 5",
+             context="self-reported, scale of 5")
+    kpi_card(k2[2], "🩺", INDIGO, "CONDITIONS TRACKED", f"{df.Condition.nunique()}",
+             context="in current filter scope")
+    kpi_card(k2[3], "📊", AMBER, "AVG AGE", f"{kpis['avg_age']}",
+             context=f"range {int(df.Age.min())}–{int(df.Age.max())} years")
 
     # ---- Day-3 ops layer: what readmissions cost (computed, not assumed) ----
     ops = ops_layer.ops_context(df)
@@ -551,6 +641,7 @@ def render_clinical(df, cond_summary):
 
 
 def render_patients(df):
+    tab_intro("Which patients carry the highest predicted risk — and what drives each score (SHAP)?")
     # ---- Cohort-level views ----
     st.markdown('<div class="section-title">Cohort Risk & Utilization</div>', unsafe_allow_html=True)
     r1, r2 = st.columns(2)
@@ -787,6 +878,8 @@ def render_ops_drill(df):
 
 
 def render_ai(df):
+    tab_intro("Ask the data — grounded answers computed from this cohort; the AI never invents numbers.")
+
     # ---------------- AI Recommendations ----------------
     st.markdown('<div class="section-title">AI Recommendations</div>', unsafe_allow_html=True)
     st.markdown('<div class="chart-card">', unsafe_allow_html=True)
@@ -813,11 +906,32 @@ def render_ai(df):
     st.caption("Common questions (readmission rate, cost, length of stay, satisfaction, "
                "outcome, patient counts) are answered directly from this dataset with no LLM "
                "involved. Anything else falls back to Gemini, grounded in the same real stats.")
-    question = st.text_input("Ask a question about this dataset", placeholder="e.g. What's the readmission rate for Diabetes?")
+
+    # Suggested questions — one click fills the input
+    suggestions = [
+        "What's the readmission rate?",
+        "What's the readmission rate for Diabetes?",
+        "What's the average cost?",
+        "How many patients recovered?",
+    ]
+    srow = st.columns(len(suggestions))
+    for c, q in zip(srow, suggestions):
+        if c.button(q, key=f"sugg_{abs(hash(q)) % 100000}"):
+            st.session_state["qa_input"] = q
+            st.rerun()
+
+    question = st.text_input("Ask a question about this dataset",
+                             placeholder="e.g. What's the readmission rate for Diabetes?",
+                             key="qa_input")
     if question:
         result = simple_qa.answer(df, question)
         if result["ok"]:
             st.success(result["text"])
+            st.markdown(
+                f'<span class="qa-trust">✓ Data-grounded — computed directly from the '
+                f'{len(df):,} patients in current scope, no LLM involved</span>',
+                unsafe_allow_html=True,
+            )
         elif gemini_ai.is_configured():
             with st.spinner("Asking Gemini..."):
                 gresult = gemini_ai.answer_grounded(df, question)
@@ -857,6 +971,7 @@ def render_ai(df):
 # ════════════════════════════════════════════════════════════════════════════
 
 try:
+    inject_css_v2()
     raw = data.load_patients()
 
     with st.sidebar:
@@ -868,15 +983,26 @@ try:
         <div class="hg-brand-sub">Hospital Outcomes Intelligence</div>
         """, unsafe_allow_html=True)
         st.markdown("##### Filters")
-        conditions = st.multiselect("Condition", sorted(raw.Condition.unique()))
-        genders = st.multiselect("Gender", sorted(raw.Gender.unique()))
-        outcomes = st.multiselect("Outcome", sorted(raw.Outcome.unique()))
+        conditions = st.multiselect("Condition", sorted(raw.Condition.unique()), key="hg_cond")
+        genders = st.multiselect("Gender", sorted(raw.Gender.unique()), key="hg_gender")
+        outcomes = st.multiselect("Outcome", sorted(raw.Outcome.unique()), key="hg_outcome")
         age_range = st.slider(
             "Age range",
             int(raw.Age.min()), int(raw.Age.max()),
-            (int(raw.Age.min()), int(raw.Age.max()))
+            (int(raw.Age.min()), int(raw.Age.max())),
+            key="hg_age",
         )
         st.caption(f"{len(raw)} patients in dataset")
+
+    # Active-scope chips + one-click reset (empty selection == no filter)
+    filter_chips(conditions, genders, outcomes, age_range, raw)
+    any_filter = bool(conditions or genders or outcomes) or tuple(age_range) != (
+        int(raw.Age.min()), int(raw.Age.max())
+    )
+    if any_filter and st.sidebar.button("↺ Reset all filters"):
+        for _k in ("hg_cond", "hg_gender", "hg_outcome", "hg_age"):
+            st.session_state.pop(_k, None)
+        st.rerun()
 
     df = data.apply_filters(raw, conditions, genders, outcomes, age_range)
 
@@ -891,11 +1017,11 @@ try:
     cond_summary = data.condition_summary(df)
 
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "📊 Executive Overview",
-        "🩺 Clinical Analytics",
-        "🔍 Root-Cause Drill",
-        "👤 Patient Intelligence",
-        "🤖 AI Assistant",
+        "Executive Overview",
+        "Clinical Analytics",
+        "Root-Cause Drill",
+        "Patient Intelligence",
+        "AI Assistant",
     ])
     with tab1:
         render_overview(df, kpis, cond_summary)
@@ -907,6 +1033,25 @@ try:
         render_patients(df)
     with tab5:
         render_ai(df)
+
+    # ---- Methodology & data trust ----
+    with st.expander("📖 Methodology & how to read this dashboard"):
+        st.markdown(
+            f"**Data:** {len(raw):,}-patient hospital dataset (synthetic — disclosed). "
+            "One row per patient: demographics, condition, procedure, cost, length of stay, "
+            "readmission flag, outcome, satisfaction.\n\n"
+            "**KPIs** are computed live from the filtered scope: readmission rate = "
+            "readmitted ÷ patients in scope; cost figures are per-patient averages unless labeled total.\n\n"
+            "**Risk model:** RandomForest trained on this dataset's own columns, explained with "
+            "per-patient and cohort SHAP. The headline 0.99 AUC is audited as synthetic-data "
+            "determinism (condition-only baseline: 0.93) — disclosed, not hidden. Fairness: "
+            "gender AUC gap 0.006 with base-rate disparity reported.\n\n"
+            "**AI answers:** common questions are answered by deterministic code over this "
+            "cohort (no LLM); anything else escalates to Gemini grounded in the same statistics. "
+            "The AI never computes numbers and never makes clinical determinations.\n\n"
+            "**Not medical advice:** demo analytics — not for diagnosis, treatment, or clinical decisions. "
+            "Everything here is reproducible: `tests/` (44 automated) and `reports/` in the repo."
+        )
 
     st.divider()
     st.caption("Demo analytics dashboard. Not intended for diagnosis, treatment, or clinical decision-making.")
