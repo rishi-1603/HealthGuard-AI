@@ -149,7 +149,7 @@ Column-by-column documentation: [`data/DATA_DICTIONARY.md`](data/DATA_DICTIONARY
 | **Explainability** | SHAP (TreeExplainer, per-patient factor attribution) |
 | **AI layer** | Google Gemini API (optional, env-keyed, graceful degradation) |
 | **Visualization** | Plotly |
-| **Quality** | pytest (25 tests) · GitHub Actions CI |
+| **Quality** | pytest (44 tests) · GitHub Actions CI |
 | **Deployment** | Streamlit Community Cloud · Docker · Makefile |
 
 ---
@@ -273,7 +273,7 @@ HealthGuard-AI/
 ├── scripts/
 │   ├── train_readmission_model.py
 │   └── model_honesty_audit.py  # quantifies WHY AUC ~0.99
-├── tests/                    # 25 tests: data quality, model, Q&A grounding, legacy smoke
+├── tests/                    # 44 tests: data quality, model, Q&A grounding, legacy smoke
 ├── reports/                  # executive summary, methodology, limitations,
 │                             # decision log, model honesty audit
 ├── src/                      # legacy FHIR prototype (documented, not served)
