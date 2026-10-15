@@ -8,9 +8,9 @@
 
 | Configuration | AUC | What it means |
 |---|---|---|
-| **Shipped RandomForest (all 6 features)** | **0.992** | The headline number |
+| **Shipped RandomForest (all 6 features)** | **0.994** | The headline number |
 | Trivial baseline: per-Condition readmission rate | 0.929 | No ML — a lookup table |
-| Model WITHOUT Condition | 0.986 | Label still leaks via Procedure |
+| Model WITHOUT Condition | 0.991 | Label still leaks via Procedure |
 | Demographics/utilization only (Age/Gender/Cost/LOS) | 0.985 | Label even leaks via Cost/LOS |
 
 ## Diagnosis

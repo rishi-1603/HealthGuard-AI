@@ -9,22 +9,22 @@
 
 | Slice | n | Actual readmit rate | Predicted rate | ROC AUC |
 |---|---|---|---|---|
-| Overall | 984 | 26.8% | 28.4% | 0.998 |
-| Age Under 40 | 231 | 14.3% | 16.0% | 1.000 |
-| Age 40-59 | 425 | 30.8% | 32.7% | 0.997 |
-| Age 60+ | 328 | 30.5% | 31.6% | 1.000 |
-| Gender Female | 524 | 43.9% | 46.2% | 0.999 |
-| Gender Male | 460 | 7.4% | 8.1% | 0.993 |
+| Overall | 984 | 26.8% | 28.8% | 0.998 |
+| Age Under 40 | 231 | 14.3% | 16.5% | 1.000 |
+| Age 40-59 | 425 | 30.8% | 33.0% | 0.996 |
+| Age 60+ | 328 | 30.5% | 32.0% | 1.000 |
+| Gender Female | 524 | 43.9% | 46.7% | 0.999 |
+| Gender Male | 460 | 7.4% | 8.4% | 0.993 |
 
 ## Gap summary
 
-- **AUC gap across age groups:** 0.003
+- **AUC gap across age groups:** 0.004
 - **AUC gap across genders:** 0.006
 
 ## Honest interpretation
 
 1. **The headline finding: AUC parity, but a large base-rate disparity.**
-   ROC AUC gaps across groups are tiny (age 0.003, gender 0.006) —
+   ROC AUC gaps across groups are tiny (age 0.004, gender 0.006) —
    the model discriminates *within* each group equally well. But actual
    readmission rates differ sharply by gender: **Female 43.9% vs Male
    7.4% (a 36.5-point gap)** — a property of the dataset
