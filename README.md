@@ -11,7 +11,9 @@ AI Q&A — every layer documented, tested, and honestly evaluated.**
 [🧪 44 Automated Tests](tests/) ·
 [📄 Analytics Reports](reports/) ·
 [🔍 Model Honesty Audit](reports/model_honesty.md) ·
-[⚖️ Fairness Check](reports/fairness_check.md)
+[⚖️ Fairness Check](reports/fairness_check.md) ·
+[🪪 Model Card](models/readmission/MODEL_CARD.md) ·
+[🎤 Interview Prep](reports/INTERVIEW_PREP.md)
 
 </div>
 
@@ -115,7 +117,9 @@ Grounded insights + honest model documentation
 
 A separate **legacy FHIR prototype** (`src/`, `scripts/generate_data.py`,
 `scripts/train_models.py`) is kept for reference and covered by a smoke test —
-documented in `reports/methodology.md`.
+documented in `reports/methodology.md`. It is pruned to the working modules only
+(FHIR parser, feature pipeline, training script, AI service); the empty
+extension-point stubs were removed rather than shipped as dead code.
 
 ---
 
@@ -269,14 +273,15 @@ HealthGuard-AI/
 │   ├── hospital/             #   hospital_data.csv (served dataset)
 │   ├── synthetic/            #   legacy FHIR bundle
 │   └── DATA_DICTIONARY.md    #   every column documented
-├── models/readmission/       # model + encoders + metrics (committed)
+├── models/readmission/       # model + encoders + metrics + MODEL_CARD.md
 ├── scripts/
 │   ├── train_readmission_model.py
 │   └── model_honesty_audit.py  # quantifies WHY AUC ~0.99
 ├── tests/                    # 44 tests: data quality, model, Q&A grounding, legacy smoke
 ├── reports/                  # executive summary, methodology, limitations,
-│                             # decision log, model honesty audit
-├── src/                      # legacy FHIR prototype (documented, not served)
+│                             # decision log, model honesty, fairness, cohort SHAP,
+│                             # data quality report, analytics questions, interview prep
+├── src/                      # legacy FHIR prototype — working modules only (not served)
 ├── Dockerfile · docker-compose.yml · Makefile
 └── .github/workflows/ci.yml  # CI: deps → audit → all tests
 ```
