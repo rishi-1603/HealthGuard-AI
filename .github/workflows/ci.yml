@@ -26,6 +26,11 @@ jobs:
       - name: Run model honesty audit
         run: python scripts/model_honesty_audit.py
 
+      - name: Run evaluation-depth analyses (calibration, DCA, temporal validation)
+        run: |
+          python scripts/calibration_decision_curve.py
+          python scripts/temporal_validation.py
+
       - name: Run legacy demo pipeline (kept for reference)
         run: |
           python scripts/generate_data.py
