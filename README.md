@@ -12,6 +12,8 @@ AI Q&A — every layer documented, tested, and honestly evaluated.**
 [📄 Analytics Reports](reports/) ·
 [🔍 Model Honesty Audit](reports/model_honesty.md) ·
 [⚖️ Fairness Check](reports/fairness_check.md) ·
+[🎯 Calibration & Decision Curves](reports/calibration_and_decision_curve.md) ·
+[⏳ Temporal Validation](reports/temporal_validation.md) ·
 [🪪 Model Card](models/readmission/MODEL_CARD.md) ·
 [🎤 Interview Prep](reports/INTERVIEW_PREP.md)
 
@@ -34,7 +36,7 @@ AI Q&A — every layer documented, tested, and honestly evaluated.**
 | 🧭 **Ask-the-data panel** | One-click suggested questions; deterministic answers ship with a *✓ Data-grounded* trust chip — no LLM involvement |
 | 📖 **Semantic layer** | `data/metrics.json` — every displayed metric defined, sourced, and caveated |
 
-✅ **44 automated tests** — including an end-to-end AppTest of the 5-tab dashboard.
+✅ **56 automated tests** — including an end-to-end AppTest of the 5-tab dashboard.
 
 ![Root-cause drill — condition → age band → cost](dashboard/screenshots/v2_root_cause_drill.png)
 
@@ -52,7 +54,7 @@ flowchart LR
     D --> E["Model honesty audit<br/>0.992 vs 0.93 no-ML baseline"]
     E --> F["Grounded AI Q&A<br/>answers computed, never generated"]
     B --> G["Ops layer<br/>cost burden + root-cause drill"]
-    G --> H["Streamlit dashboard<br/>44 tests · Docker"]
+    G --> H["Streamlit dashboard<br/>56 tests · Docker"]
 ```
 
 **Business questions the dashboard answers**
@@ -153,7 +155,7 @@ Column-by-column documentation: [`data/DATA_DICTIONARY.md`](data/DATA_DICTIONARY
 | **Explainability** | SHAP (TreeExplainer, per-patient factor attribution) |
 | **AI layer** | Google Gemini API (optional, env-keyed, graceful degradation) |
 | **Visualization** | Plotly |
-| **Quality** | pytest (44 tests) · GitHub Actions CI |
+| **Quality** | pytest (56 tests) · GitHub Actions CI |
 | **Deployment** | Streamlit Community Cloud · Docker · Makefile |
 
 ---
@@ -277,7 +279,7 @@ HealthGuard-AI/
 ├── scripts/
 │   ├── train_readmission_model.py
 │   └── model_honesty_audit.py  # quantifies WHY AUC ~0.99
-├── tests/                    # 44 tests: data quality, model, Q&A grounding, legacy smoke
+├── tests/                    # 56 tests: data quality, model, Q&A grounding, legacy smoke
 ├── reports/                  # executive summary, methodology, limitations,
 │                             # decision log, model honesty, fairness, cohort SHAP,
 │                             # data quality report, analytics questions, interview prep

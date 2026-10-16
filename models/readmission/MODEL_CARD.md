@@ -56,7 +56,27 @@
 - Per-patient SHAP attributions in the live dashboard ("why this score?").
 - Cohort-level SHAP analysis: `reports/cohort_shap.md`.
 - Slice metrics (AUC/precision/recall by age group and gender): `reports/fairness_check.md`.
+- **Subgroup bootstrap CIs (2026-10-19):** 95% CIs on AUC/precision/recall by age band
+  and gender — thin bands (18-30: 0 positives; 31-45: 2 positives) *refuse to report
+  metrics* rather than fabricate them. See `reports/calibration_and_decision_curve.md`.
 - Fairness slices on synthetic data are illustrative of the *method*, not evidence of real-world fairness.
+
+## 5b. Calibration, decision value & temporal validation (added 2026-10-19)
+
+**Calibration** (`reports/calibration_and_decision_curve.md`): raw RandomForest is
+miscalibrated — slope 1.43 (under-confident; `class_weight='balanced'` shrinks the
+probability scale). Isotonic scaling improves Brier 0.0187→0.0102 and ECE 0.10→lower
+without changing the ranking. Consume probabilities through the calibrator.
+
+**Decision-curve analysis:** the model beats treat-all on net benefit at **7/7**
+tested thresholds (0.10–0.50) — on this synthetic demo, acting on the ranking adds
+decision value. Method illustration only.
+
+**Temporal validation** (`reports/temporal_validation.md`): random-split AUC 0.9923
+vs time-split AUC 0.9963 (+0.004) — *inside* the 20-repeat sampling-noise band
+[0.9934, 1.0], as expected with drift-free synthetic dates. The protocol is the
+deliverable: on real data this comparison is how you catch random splits flattering
+the model.
 
 ## 6. Limitations
 

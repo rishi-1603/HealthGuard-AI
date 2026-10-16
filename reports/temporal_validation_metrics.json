@@ -1,0 +1,25 @@
+{
+  "date_disclosure": "synthetic discharge dates, uniform over 2022-2024, INDEPENDENT of outcomes \u2014 method demonstration only",
+  "random_split": {
+    "roc_auc": 0.9923,
+    "pr_auc": 0.9901,
+    "n_train": 787,
+    "n_test": 197,
+    "test_prevalence": 0.269
+  },
+  "temporal_split": {
+    "roc_auc": 0.9963,
+    "pr_auc": 0.9939,
+    "n_train": 688,
+    "n_test": 296,
+    "test_prevalence": 0.25
+  },
+  "temporal_minus_random_auc": 0.004,
+  "random_repeat_band": {
+    "mean": 0.9979,
+    "p2_5": 0.9934,
+    "p97_5": 1.0
+  },
+  "temporal_result_inside_sampling_noise_band": true,
+  "verdict": "Time-split AUC (0.9963) falls INSIDE the random-split sampling-noise band [0.9934, 1.0] \u2014 expected, because the synthetic dates carry no distribution drift. The protocol is the deliverable: on real data this comparison reveals exactly how much random splits flatter your model."
+}

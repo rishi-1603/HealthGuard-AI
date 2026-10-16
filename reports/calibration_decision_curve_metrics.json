@@ -1,0 +1,255 @@
+{
+  "protocol": "fit 64% / calibration 16% / test 20%, stratified, random_state=42",
+  "n_total": 984,
+  "n_fit": 629,
+  "n_cal": 158,
+  "n_test": 197,
+  "calibration": {
+    "raw": {
+      "brier": 0.0187,
+      "ece": 0.0463,
+      "intercept": -0.9778,
+      "slope": 1.4341
+    },
+    "isotonic": {
+      "brier": 0.0102,
+      "ece": 0.0101,
+      "intercept": -0.626,
+      "slope": 0.3261
+    },
+    "prevalence_reference_brier": 0.269,
+    "test_prevalence": 0.269,
+    "reliability_raw": [
+      {
+        "bin": "[0.0,0.1]",
+        "n": 112,
+        "mean_predicted": 0.0034,
+        "observed_rate": 0.0089
+      },
+      {
+        "bin": "[0.1,0.2]",
+        "n": 8,
+        "mean_predicted": 0.1683,
+        "observed_rate": 0.0
+      },
+      {
+        "bin": "[0.2,0.3]",
+        "n": 24,
+        "mean_predicted": 0.2505,
+        "observed_rate": 0.0
+      },
+      {
+        "bin": "[0.3,0.4]",
+        "n": 0,
+        "mean_predicted": null,
+        "observed_rate": null
+      },
+      {
+        "bin": "[0.4,0.5]",
+        "n": 0,
+        "mean_predicted": null,
+        "observed_rate": null
+      },
+      {
+        "bin": "[0.5,0.6]",
+        "n": 0,
+        "mean_predicted": null,
+        "observed_rate": null
+      },
+      {
+        "bin": "[0.6,0.7]",
+        "n": 0,
+        "mean_predicted": null,
+        "observed_rate": null
+      },
+      {
+        "bin": "[0.7,0.8]",
+        "n": 0,
+        "mean_predicted": null,
+        "observed_rate": null
+      },
+      {
+        "bin": "[0.8,0.9]",
+        "n": 8,
+        "mean_predicted": 0.8746,
+        "observed_rate": 0.875
+      },
+      {
+        "bin": "[0.9,1.0]",
+        "n": 45,
+        "mean_predicted": 0.9746,
+        "observed_rate": 1.0
+      }
+    ]
+  },
+  "dca": [
+    {
+      "threshold": 0.1,
+      "model_net_benefit": 0.2453,
+      "treat_all_net_benefit": 0.1878,
+      "treat_none_net_benefit": 0.0
+    },
+    {
+      "threshold": 0.15,
+      "model_net_benefit": 0.2362,
+      "treat_all_net_benefit": 0.14,
+      "treat_none_net_benefit": 0.0
+    },
+    {
+      "threshold": 0.2,
+      "model_net_benefit": 0.2322,
+      "treat_all_net_benefit": 0.0863,
+      "treat_none_net_benefit": 0.0
+    },
+    {
+      "threshold": 0.25,
+      "model_net_benefit": 0.2403,
+      "treat_all_net_benefit": 0.0254,
+      "treat_none_net_benefit": 0.0
+    },
+    {
+      "threshold": 0.3,
+      "model_net_benefit": 0.2618,
+      "treat_all_net_benefit": -0.0442,
+      "treat_none_net_benefit": 0.0
+    },
+    {
+      "threshold": 0.4,
+      "model_net_benefit": 0.2606,
+      "treat_all_net_benefit": -0.2183,
+      "treat_none_net_benefit": 0.0
+    },
+    {
+      "threshold": 0.5,
+      "model_net_benefit": 0.2589,
+      "treat_all_net_benefit": -0.4619,
+      "treat_none_net_benefit": 0.0
+    }
+  ],
+  "subgroup": {
+    "by_age_band": [
+      {
+        "band": "18-30",
+        "n": 20,
+        "n_pos": 0,
+        "warning": "too few patients or too few positives (<5) - no metric reported (a perfect AUC on 2 positives is noise)"
+      },
+      {
+        "band": "31-45",
+        "n": 36,
+        "n_pos": 2,
+        "warning": "too few patients or too few positives (<5) - no metric reported (a perfect AUC on 2 positives is noise)"
+      },
+      {
+        "band": "46-60",
+        "n": 63,
+        "n_pos": 27,
+        "auc": 0.9856,
+        "auc_ci95": [
+          0.9457,
+          1.0
+        ],
+        "precision": 0.963,
+        "precision_ci95": [
+          0.875,
+          1.0
+        ],
+        "recall": 0.963,
+        "recall_ci95": [
+          0.8786,
+          1.0
+        ]
+      },
+      {
+        "band": "61-75",
+        "n": 59,
+        "n_pos": 15,
+        "auc": 1.0,
+        "auc_ci95": [
+          1.0,
+          1.0
+        ],
+        "precision": 1.0,
+        "precision_ci95": [
+          1.0,
+          1.0
+        ],
+        "recall": 1.0,
+        "recall_ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      {
+        "band": "76-+",
+        "n": 19,
+        "n_pos": 9,
+        "auc": 1.0,
+        "auc_ci95": [
+          1.0,
+          1.0
+        ],
+        "precision": 1.0,
+        "precision_ci95": [
+          1.0,
+          1.0
+        ],
+        "recall": 1.0,
+        "recall_ci95": [
+          1.0,
+          1.0
+        ]
+      }
+    ],
+    "by_gender": [
+      {
+        "gender": "Female",
+        "n": 103,
+        "n_pos": 47,
+        "auc": 0.9992,
+        "auc_ci95": [
+          0.9962,
+          1.0
+        ],
+        "precision": 0.9792,
+        "precision_ci95": [
+          0.9286,
+          1.0
+        ],
+        "recall": 1.0,
+        "recall_ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      {
+        "gender": "Male",
+        "n": 94,
+        "n_pos": 6,
+        "auc": 0.9811,
+        "auc_ci95": [
+          0.9235,
+          1.0
+        ],
+        "precision": 1.0,
+        "precision_ci95": [
+          1.0,
+          1.0
+        ],
+        "recall": 0.8333,
+        "recall_ci95": [
+          0.4286,
+          1.0
+        ]
+      }
+    ]
+  },
+  "verdict": {
+    "raw_slope": 1.4341,
+    "raw_model_miscalibrated": true,
+    "isotonic_improves_brier": true,
+    "model_beats_treat_all_at": 7,
+    "n_thresholds_tested": 7,
+    "recommendation": "Methodically: the model's ranking adds decision value over treat-all/treat-none at most thresholds, and isotonic calibration makes its probabilities usable. Clinically: nothing here transfers \u2014 the label is synthetic-deterministic and the honesty audit's warning stands."
+  }
+}
