@@ -35,9 +35,14 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
+
+try:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    HAS_MPL = True
+except ImportError:          # Streamlit Cloud / slim envs: figure is optional
+    HAS_MPL = False
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.isotonic import IsotonicRegression
 from sklearn.linear_model import LogisticRegression
@@ -258,7 +263,10 @@ def main():
 
     REPORT_PATH.write_text(write_report(metrics))
     METRICS_PATH.write_text(json.dumps(metrics, indent=2))
-    make_figure(metrics, y_test, p_raw_test, p_iso_test)
+    if HAS_MPL:
+        make_figure(metrics, y_test, p_raw_test, p_iso_test)
+    else:
+        print("matplotlib not installed - skipping figure (report + metrics unaffected)")
     print(f"Brier raw {brier_raw} -> isotonic {brier_iso} | slope raw {slope_raw} -> {slope_iso}")
     print(f"DCA: model beats treat-all at {model_wins}/{len(DCA_THRESHOLDS)} thresholds")
     print(f"Wrote {REPORT_PATH.name} + {METRICS_PATH.name}")
