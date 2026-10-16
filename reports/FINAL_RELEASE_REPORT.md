@@ -34,3 +34,22 @@
 
 ## H. Deployment
 Live: https://healthguard-ai-cyl2viwrsdrrff7pig7u6c.streamlit.app/ (verified 200 after release) · Docker + Makefile available
+
+---
+
+## Release v2 (2026-10-21) — evaluation-depth week (Days 2–6)
+
+| Evidence | Status |
+|---|---|
+| Calibration + cost-based thresholds / decision curves | Published + CI-pinned |
+| Naive-baseline / rules-vs-ML / temporal comparisons | Published with honest verdicts |
+| Error analysis with concrete failure cases | `reports/error_analysis.md` |
+| Metric-registry entries for every new metric | `data/metrics.json` |
+| New analysis scripts run in CI on every push | ✅ |
+| Interview-prep eval-depth Q&A | ✅ |
+
+**Test totals:** E-Commerce 84 · Zomato 80 · HealthGuard 56 (220 combined, all green).
+
+**Notable honest findings shipped this week:** churn calibration slope 0.39 → isotonic fix; t\*=0.10 beats contact-all; forecast ensemble loses to drift baseline (MASE 0.68 vs 0.47); shipped 95% CI covers 9.5%; rules tie ML at investigation cut sizes; readmission model errors sit exactly in the generator's stochastic conditions.
+
+**Status unchanged:** READY / READY WITH DISCLOSED LIMITATIONS — nothing this week weakened a claim; several were tightened downward on purpose.
