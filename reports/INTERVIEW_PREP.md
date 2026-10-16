@@ -94,3 +94,11 @@ An explainable healthcare-analytics platform: readmission risk scoring with per-
 8. **How do the three trust reports interact?** `model_honesty.md` (is the metric real?), `fairness_check.md` (does it behave evenly across groups?), `cohort_shap.md` (what drives the scores?) — together they answer "can this be trusted, where does it fail, and why."
 9. **What did you deliberately NOT do?** No fine-tuned LLM, no multi-agent stack, no fake "99% accurate clinical AI" claims — each would add noise without evidence.
 10. **How do you defend a project whose model is 'bad'?** The model isn't bad — the metric is uninformative, and proving that is the contribution. The system around it (explainability, grounding, evaluation discipline) is what transfers to real work.
+
+## Evaluation Depth — Day 5 additions (2026-10-19)
+
+1. **Are your readmission probabilities calibrated?** No — raw RF slope 1.43 (under-confident; `class_weight='balanced'` shrinks the probability scale). Isotonic scaling improves Brier 0.0187→0.0102. The diagnosis came from a reliability curve on a held-out test slice, not assumption.
+2. **What is decision-curve analysis and why did you run it?** Net benefit = TP/n − FP/n·t/(1−t) across thresholds — it answers "does acting on this model beat acting on everyone or no one?" The model beats treat-all at 7/7 tested thresholds (0.10–0.50). Method demonstration on synthetic data — the analysis shape is what a hospital analytics team requires.
+3. **How do you handle tiny subgroups?** Bootstrap 95% CIs — and hard refusal rules: the 18-30 band (0 positives) and 31-45 band (2 positives) report NO metric. A perfect AUC on 2 positives is noise; saying so is the discipline.
+4. **What did temporal validation show?** With drift-free synthetic dates (disclosed), time-split AUC 0.9963 vs random 0.9923 — inside the 20-repeat sampling-noise band [0.9934, 1.0]. The protocol is the deliverable: on real data, that comparison catches random splits flattering the model.
+5. **Your model has 2 errors in 197 test patients. Impressive?** No — the error analysis shows both errors sit exactly where the generator is stochastic (a 50%-readmit condition) or exceptional (a 1.5%-rate condition's rare readmission). The model mirrors the data process; that's why the honesty audit, not the AUC, is the headline.
