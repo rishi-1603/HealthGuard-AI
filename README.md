@@ -1,351 +1,137 @@
-<div align="center">
+# HealthGuard AI — Hospital Operations Analytics & Model Evaluation
 
-# 🏥 HealthGuard AI
-### Explainable Healthcare Analytics & Responsible AI
+**An analytics-first healthcare portfolio prototype** for exploring synthetic outcomes, costs, length of stay, and subgroup patterns in a filterable dashboard—with a separately evaluated readmission model and explicit model-honesty checks.
 
-**An ML-powered patient risk intelligence platform: RandomForest prediction →
-SHAP explainability → fairness analysis → model honesty audit → grounded
-AI Q&A — every layer documented, tested, and honestly evaluated.**
+[Live demo](https://healthguard-ai-cyl2viwrsdrrff7pig7u6c.streamlit.app/) · [Executive summary](reports/executive_summary.md) · [Data dictionary](data/DATA_DICTIONARY.md) · [Model honesty audit](reports/model_honesty.md) · [Calibration and decision curves](reports/calibration_and_decision_curve.md) · [Temporal validation](reports/temporal_validation.md) · [Model card](models/readmission/MODEL_CARD.md) · [Tests](tests/) · [Release gates](docs/RELEASE_GATES.md)
 
-[🚀 Live Demo](https://healthguard-ai-cyl2viwrsdrrff7pig7u6c.streamlit.app/) ·
-[🧪 44 Automated Tests](tests/) ·
-[📄 Analytics Reports](reports/) ·
-[🔍 Model Honesty Audit](reports/model_honesty.md) ·
-[⚖️ Fairness Check](reports/fairness_check.md) ·
-[🎯 Calibration & Decision Curves](reports/calibration_and_decision_curve.md) ·
-[⏳ Temporal Validation](reports/temporal_validation.md) ·
-[🪪 Model Card](models/readmission/MODEL_CARD.md) ·
-[🎤 Interview Prep](reports/INTERVIEW_PREP.md)
+[![CI](https://github.com/rishi-1603/HealthGuard-AI/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/rishi-1603/HealthGuard-AI/actions/workflows/ci.yml)
 
-</div>
+> **Safety and data notice:** This project uses **984 synthetic patient records**. It contains no real patient data and is not intended for diagnosis, treatment, care prioritization, or clinical decision-making. All outcome, cost, subgroup, and model metrics are illustrative properties of the generated dataset—not evidence of patient benefit or clinical validity.
 
-## 🎯 Operations Layer *(2026 upgrade)*
+## Executive summary
 
-> The dashboard now speaks operations, not just model metrics:
-> **what readmissions cost, where risk concentrates, and what the model can honestly claim.**
+The primary deliverable is an operations-style analytics dashboard: a reviewer can filter outcomes, compare cost and length of stay, inspect condition and demographic breakdowns, and trace displayed figures to a shared metric registry. A model and SHAP explanations are included as a supporting Data Science layer; the project’s main evaluation finding is that the unusually high AUC is explained by the synthetic label-generation process.
 
-![Hospital Outcomes Intelligence — KPI cards with context lines](dashboard/screenshots/v2_outcomes_overview.png)
+**Role emphasis:** Data Analyst first (metric definitions, data-quality checks, outcome and cost analysis, subgroup comparisons, dashboard communication); applied Data Science second (model validation, calibration, decision-curve analysis, explainability, temporal protocol, and error analysis).
 
-| Capability | Verified numbers |
-|---|---|
-| 🔴 **Cost-burden strip** | 264 readmitted patients (26.8%) hold ₹36.0L = **43.8% of all hospital cost** — ₹13,650 vs ₹6,431 per patient (**+112.3%**), LOS 39.2d vs 37.1d |
-| 🔍 **Root-Cause Drill tab** | *All patients 26.8% → Heart Attack 100% → age band* — condition selector, age-band breakdown, cost premium cards, computed findings |
-| ⚖️ **Fairness strip** | AUC gap **0.006** (gender) / **0.003** (age) — plus the disclosed base-rate disparity (Female 43.9% vs Male 7.4%): parity in one metric is not fairness |
-| 🧭 **Model honesty strip** | AUC **0.992** vs **0.93** no-ML baseline — synthetic-data determinism, not predictive skill; real clinical models sit at 0.65–0.75 |
-| 🏷️ **KPI context lines** | Every KPI card carries its comparison on its face (patients readmitted, cohort total cost, age range) — computed from the current scope |
-| 🧭 **Ask-the-data panel** | One-click suggested questions; deterministic answers ship with a *✓ Data-grounded* trust chip — no LLM involvement |
-| 📖 **Semantic layer** | `data/metrics.json` — every displayed metric defined, sourced, and caveated |
+## At a glance
 
-✅ **56 automated tests** — including an end-to-end AppTest of the 5-tab dashboard.
+| Area | Dataset result | Correct interpretation |
+|---|---:|---|
+| Readmission records | **264 / 984 (26.8%)** | Synthetic outcome rate; not a hospital benchmark |
+| Cost concentration | Readmitted records account for **₹36.0 lakh (43.8%)** of total recorded cost | Association in generated data—not evidence that readmission caused the cost |
+| Average cost | **₹13,650** for readmitted vs. **₹6,431** for non-readmitted records | Descriptive comparison; not case-mix adjusted |
+| Model honesty | Protocol-specific Random Forest AUCs are **0.992–0.994**; the condition-only lookup baseline is **0.929** | The label is nearly determined by the synthetic condition pathway; the AUC is not clinical predictive skill |
+| Probability quality | Brier **0.0187 → 0.0102** after isotonic calibration on a separate evaluation protocol | Improvement on this synthetic split; not evidence of clinical utility |
+| Temporal check | Time-split AUC **0.9963**, within the random-split sampling-noise band **[0.9934, 1.0000]** | Synthetic dates are independent of outcomes; no real temporal generalization is demonstrated |
 
-![Root-cause drill — condition → age band → cost](dashboard/screenshots/v2_root_cause_drill.png)
+Metric definitions and caveats are maintained in [`data/metrics.json`](data/metrics.json). The model, calibration, and temporal reports use distinct documented evaluation protocols; do not combine their metrics as though they came from one split.
 
-![Ask the data — suggested questions and a data-grounded trust chip](dashboard/screenshots/v2_ask_the_data.png)
+## 1. Analytics workflow and dashboard
 
----
+### Questions explored
 
-## 🏗️ Architecture — five responsible-AI layers, each tested and disclosed
-
-```mermaid
-flowchart LR
-    A["984-patient dataset<br/>(synthetic, disclosed)"] --> B["RandomForest<br/>readmission model"]
-    B --> C["SHAP explainability<br/>per-patient + cohort"]
-    C --> D["Fairness check<br/>AUC gap 0.006"]
-    D --> E["Model honesty audit<br/>0.992 vs 0.93 no-ML baseline"]
-    E --> F["Grounded AI Q&A<br/>answers computed, never generated"]
-    B --> G["Ops layer<br/>cost burden + root-cause drill"]
-    G --> H["Streamlit dashboard<br/>56 tests · Docker"]
-```
-
-**Business questions the dashboard answers**
-
-| Question | Where | Verified answer |
+| Operations / analyst question | Dashboard or report | What the analysis supports |
 |---|---|---|
-| What do readmissions cost us? | Operations Context strip | 264 patients (26.8%) hold 43.8% of all cost — ₹13,650 vs ₹6,431 per patient (+112.3%) |
-| Where does readmission risk concentrate? | Root-Cause Drill tab | Heart Attack 100% → 76+ age band 50.0% |
-| Is the model fair? | Fairness strip | AUC gap 0.006 (gender) — but base rates 43.9% F vs 7.4% M, disclosed |
-| Can we trust the 0.99 AUC? | Model honesty strip | No — synthetic determinism, not skill (no-ML baseline 0.93) |
+| What outcomes, costs, and utilization appear in the dataset? | KPI panel and descriptive summaries | A consistent view of volume, readmission, cost, length of stay, recovery, and satisfaction |
+| How do outcomes vary across condition, age, and gender? | Filterable breakdowns and condition/age drill-down | Identify where the synthetic records concentrate; use as a prompt for further investigation, not a causal explanation |
+| What cost burden is associated with readmission status? | Cost-burden view | Quantify group differences and state the association without claiming cause |
+| Can a user ask a question and trace the answer? | Data-grounded Q&A panel | Supported answers are computed from the active data slice; ungroundable questions are refused or routed to a clearly labelled optional fallback |
+| Are dashboard numbers and assumptions discoverable? | `data/metrics.json`, data dictionary, and data-quality report | Definitions, provenance, and known generator properties are visible rather than buried in code |
 
+### Selected descriptive findings
 
+- **Cost concentration:** 264 records marked readmitted represent 26.8% of the dataset and account for 43.8% of recorded cost. Their mean cost is ₹13,650 versus ₹6,431 for other records. The data is synthetic, and this comparison is neither causal nor adjusted for case mix.
+- **Condition concentration:** the generated outcome is strongly associated with condition and its one-to-one procedure mapping. This is a property of the generator and is the reason the model audit is central to the project.
+- **Subgroup caution:** synthetic gender base rates differ sharply (43.9% female vs. 7.4% male). Similar AUCs across groups do not establish fairness; the project reports the disparity and makes no fairness claim about real populations.
 
-> ⚠️ **Disclaimer:** Demo/portfolio analytics only. Not intended for diagnosis,
-> treatment, or clinical decision-making. The dataset is synthetic.
+### Dashboard preview
 
----
+[Open the live demo](https://healthguard-ai-cyl2viwrsdrrff7pig7u6c.streamlit.app/)
 
-## 1. 🚀 Live Project
+![Hospital outcomes overview](dashboard/screenshots/v2_outcomes_overview.png)
 
-**Dashboard (deployed on Streamlit Community Cloud):**
+![Condition and age breakdown](dashboard/screenshots/v2_root_cause_drill.png)
 
-> ### 👉 https://healthguard-ai-cyl2viwrsdrrff7pig7u6c.streamlit.app/
+The Streamlit app includes outcome and cost summaries, patient-level views, SHAP explanations, cohort analysis, data-grounded questions, and operational context. Any patient-level risk view is a demonstration on synthetic records—not a clinical recommendation.
 
-**GitHub Repository:**
+## 2. Data and measurement
 
-> ### 👉 https://github.com/rishi-1603/HealthGuard-AI
-
----
-
-## 2. 💼 Business Problem
-
-Hospital operations leadership has three recurring blind spots:
-
-| # | Question | Where it's answered |
-|---|---|---|
-| 1 | What do our patient outcomes, costs, and utilization actually look like? | KPI panel + condition/demographic analytics |
-| 2 | Which patients are likely to be readmitted — and *why* that score? | RandomForest risk model + SHAP per-patient explanations |
-| 3 | Can non-analysts ask questions of the data without waiting days? | Grounded Q&A (computed from data, not generated prose) |
-
-**The design principle that shapes everything:** in a healthcare context, an
-**unverifiable AI answer is worse than no answer.** So numbers come from the
-data or not at all; the LLM is a clearly-labelled fallback, never the source
-of statistics.
-
----
-
-## 3. 🔄 Project Overview
-
-```
-data/hospital/hospital_data.csv  (984-patient synthetic outcomes)
-        ↓
-Streamlit dashboard
-   ├── KPI panel & filters (condition / gender / outcome / age)
-   ├── Condition, demographic, cost & outcome analytics
-   ├── RandomForest readmission model + SHAP explainability
-   ├── Grounded Q&A (template + real aggregation)
-   └── Optional Gemini layer (labelled fallback for open-ended questions)
-        ↓
-Grounded insights + honest model documentation
-```
-
-A separate **legacy FHIR prototype** (`src/`, `scripts/generate_data.py`,
-`scripts/train_models.py`) is kept for reference and covered by a smoke test —
-documented in `reports/methodology.md`. It is pruned to the working modules only
-(FHIR parser, feature pipeline, training script, AI service); the empty
-extension-point stubs were removed rather than shipped as dead code.
-
----
-
-## 4. 📦 Dataset
-
-984 patients × 10 columns · 15 conditions · 15 procedures (1:1 mapping) · synthetic.
-
-| Metric | Value |
+| Item | Description |
 |---|---|
-| Patients | 984 |
-| Average age | 53.8 years |
-| Average cost | ₹8,367 |
-| Average length of stay | 37.7 days |
-| Readmission rate | 26.8% |
-| Recovery rate | 60.1% |
-| Satisfaction | 3.60 / 5 |
+| Source | Seeded synthetic generator; no hospital or patient source system |
+| Population | 984 generated records, one row per synthetic patient |
+| Shape | 10 columns; 15 conditions and 15 procedures with a 1:1 mapping |
+| Limitations | No real admission history, comorbidities, medications, laboratory results, or post-discharge timeline |
+| Data documentation | [`data/DATA_DICTIONARY.md`](data/DATA_DICTIONARY.md) |
+| Quality checks | [`reports/data_quality_report.md`](reports/data_quality_report.md) |
+| Metric registry | [`data/metrics.json`](data/metrics.json) |
 
-Column-by-column documentation: [`data/DATA_DICTIONARY.md`](data/DATA_DICTIONARY.md)
+The registry is the canonical location for user-facing metric definitions and caveats. Cost differences are descriptive; the dataset is not case-mix adjusted, and it cannot establish that a clinical pathway caused a cost or outcome.
 
----
+## 3. Applied Data Science (supporting layer)
 
-## 5. 🛠 Tech Stack
+### Model and honesty audit
 
-**Only what the repository genuinely uses.**
+The shipped Random Forest uses six demographic, condition, procedure, cost, and length-of-stay features. The stand-alone model artifact and its same-split honesty audit report ROC-AUC **0.994** on a stratified 80/20 split (197 held-out records). The dashboard metric registry pins **0.992**, while the separate random split in temporal validation is **0.9923**; these protocol-specific values are kept distinct rather than averaged. The honesty audit obtains **0.929** from a per-condition lookup without ML and **0.985** from demographics/utilization features alone. Procedure is a one-to-one proxy for condition, and the generated outcome is nearly deterministic for many conditions.
 
-| Layer | Tools |
-|---|---|
-| **App** | Python · Streamlit |
-| **Data** | pandas |
-| **ML** | scikit-learn (RandomForest) |
-| **Explainability** | SHAP (TreeExplainer, per-patient factor attribution) |
-| **AI layer** | Google Gemini API (optional, env-keyed, graceful degradation) |
-| **Visualization** | Plotly |
-| **Quality** | pytest (56 tests) · GitHub Actions CI |
-| **Deployment** | Streamlit Community Cloud · Docker · Makefile |
+**Interpretation:** this is a synthetic target-structure demonstration—not proof of real predictive skill. The audit distinguishes generator-driven target determinism from a claim of clinical accuracy. See [`reports/model_honesty.md`](reports/model_honesty.md) and [`models/readmission/MODEL_CARD.md`](models/readmission/MODEL_CARD.md).
 
----
+### Calibration and decision-curve analysis
 
-## 6. 🧠 Responsible AI Architecture (5 layers)
+On a separate fit/calibration/test split (64/16/20; 197 test records), the raw model has Brier score **0.0187**, 10-bin ECE **0.0463**, and calibration slope **1.4341**. Isotonic calibration reduces Brier to **0.0102** and ECE to **0.0101** on that evaluation. Decision-curve analysis finds higher net benefit than treat-all at 7 tested thresholds from 0.10 to 0.50. These are method results on synthetic labels; they do not establish that acting on the scores would benefit patients.
 
-### Readmission risk model (with the honest headline)
-A RandomForest predicts per-patient readmission risk and SHAP explains each
-score ("why this risk?"). **The headline metric is AUC ≈ 0.99 — and that
-number is not skill.** In this synthetic dataset, readmission is essentially
-determined by the condition pathway:
+### Subgroups, temporal validation, and errors
 
-| Configuration | AUC |
-|---|---|
-| Shipped RandomForest | **0.992** |
-| Trivial baseline (per-condition lookup, no ML) | 0.929 |
-| Demographics/utilization only | 0.985 |
+- **Subgroup uncertainty:** bootstrap confidence intervals are shown only when sample-size rules are met. Age bands with fewer than five positive cases are explicitly refused rather than assigned unstable metrics.
+- **Fairness:** the reported AUC gaps are small (0.006 by gender; 0.003 by age), but the dataset has a 36.5 percentage-point gender base-rate difference. One parity metric is not a fairness conclusion. See [`reports/fairness_check.md`](reports/fairness_check.md).
+- **Temporal protocol:** random-split AUC is 0.9923 and time-split AUC is 0.9963; the time-split result falls inside the random-split noise band. Dates were generated independently of outcomes, so the protocol—not a generalization claim—is the useful artifact. See [`reports/temporal_validation.md`](reports/temporal_validation.md).
+- **Error analysis:** two held-out errors map to the synthetic generator’s stochastic cases. See [`reports/error_analysis.md`](reports/error_analysis.md).
+- **Explainability:** SHAP describes how the fitted model uses its inputs; it does not identify real clinical causes or validate the model. See [`reports/cohort_shap.md`](reports/cohort_shap.md).
 
-Real clinical readmission models score **0.65–0.75**. The full quantified audit
-lives in [`reports/model_honesty.md`](reports/model_honesty.md), is regenerable
-via `scripts/model_honesty_audit.py`, and the same caveat appears in the live
-UI. *A suspiciously perfect metric, found and documented, is the strongest
-signal of judgment a portfolio can show.*
+## 4. Reproduce locally
 
-### Grounded Q&A (anti-hallucination by design)
-- Keyword-matched templates compute answers **directly from the filtered data** —
-  every number is a traceable aggregation
-- Unrecognized subgroups **refuse and escalate** to the labelled Gemini
-  fallback rather than silently answering the wrong question
-- CI-enforced: [`tests/test_qa_grounding.py`](tests/test_qa_grounding.py)
-  verifies every answerable percentage matches a dataset-computable value
-
-### Gemini layer (optional)
-Used only for open-ended questions and cohort recommendations, grounded in the
-current filter's statistics. Enabled via `GOOGLE_API_KEY`; without it the app
-runs fully minus those two features. No key is ever hardcoded.
-
----
-
-## 7. 🧩 Feature Modules
-
-- 📊 **KPI panel** — volume, age, cost, LOS, readmission, recovery, satisfaction
-- 🩺 **Condition analytics** — volume, cost, readmission by diagnosis
-- 👥 **Demographics** — age distribution, gender split, satisfaction
-- 💰 **Cost vs LOS** — segmented by outcome
-- 🔍 **Patient lookup** — searchable profile with risk gauge, cost percentile, explainability panel
-- 🧠 **AI risk scoring** — per-patient score + SHAP "top factors"
-- 💬 **Ask HealthGuard AI** — grounded Q&A + labelled Gemini fallback
-- 🤖 **AI recommendations** — cohort action items grounded in filtered stats
-- 📥 **Records table** — filterable, sortable, CSV export
-- 🎚️ **Sidebar filters** — condition, gender, outcome, age range
-
----
-
-## 8. 💡 Key Insights (illustrative — synthetic data)
-
-### Insight 1 — Readmissions are almost entirely a cardiac-pathway story
-Heart Attack (100% readmit) and Heart Disease (~98.5%) drive nearly all
-readmissions; 9 of 15 conditions readmit at 0%.
-**Action (on real data):** target transitional-care programs at cardiac
-discharges. *Owner: Care Transitions · KPI: 30-day cardiac readmission rate.*
-
-### Insight 2 — Cost and LOS track the condition pathway
-The expensive, long-stay pathways are the same ones that readmit.
-**Action (on real data):** case-mix-adjusted pathway review before cost
-cutting. *Owner: Operations · KPI: cost per episode by pathway.*
-
-### Insight 3 — The perfect AUC is itself the finding
-A model scoring 0.99 on a 0.65–0.75 task means the label leaks from the
-features — an audit skill that transfers to every future modelling job.
-**Proof:** [`reports/model_honesty.md`](reports/model_honesty.md).
-
-### Cohort Explainability (SHAP)
-Per-patient "why this score?" panels, plus a **cohort-level view**: mean |SHAP|
-per factor across all 984 patients, in the dashboard's Clinical Analytics tab
-and in [`reports/cohort_shap.md`](reports/cohort_shap.md). The actual ranking
-(Procedure 27.6% · Cost 23.8% · Age 19.9% · Gender 15.8% · Condition 12.4% ·
-LOS 0.5%) shows influence is **diffuse across correlated features** — an
-honest, computed finding, not a hardcoded narrative.
-
-### Fairness Check (Age & Gender)
-Out-of-fold model performance sliced by demographic group
-([`reports/fairness_check.md`](reports/fairness_check.md)). Finding: **AUC
-parity across groups (gaps ≤ 0.006) but a large base-rate disparity** (Female
-43.9% vs Male 7.4% actual readmission — a property of the synthetic data).
-Equal AUC alone cannot certify fairness; the report demonstrates the audit
-method and draws **no fairness conclusion from synthetic data**.
-
-### Data Quality Report
-A documented audit trail of 11 checks (completeness, uniqueness, validity,
-consistency, base-rate stability), with design characteristics reported as
-"Known (by design)" rather than hidden: [`reports/data_quality_report.md`](reports/data_quality_report.md).
-Column-level documentation: [`data/DATA_DICTIONARY.md`](data/DATA_DICTIONARY.md).
-
----
-
-## 9. 📸 Dashboard Preview
-
-**[➡ Open the live demo](https://healthguard-ai-cyl2viwrsdrrff7pig7u6c.streamlit.app/)**
-
-<img width="813" height="432" alt="image" src="https://github.com/user-attachments/assets/77b82599-0807-4be9-a604-eece83dd12b4" />
-<img width="1774" height="873" alt="Healthguard ss-2" src="https://github.com/user-attachments/assets/41fe973d-f452-42e0-902e-3d4be383f1d4" />
-<img width="1672" height="844" alt="Healthguard ss-3" src="https://github.com/user-attachments/assets/2f22eb04-64c8-4a19-8c64-be6d60029e73" />
-<img width="1625" height="863" alt="Healthguard ss-4" src="https://github.com/user-attachments/assets/4d31d41a-4f6c-455a-b3d2-e5101c4c1542" />
-
----
-
-## 10. 🏗 Project Architecture
-
-```
-HealthGuard-AI/
-├── app/dashboard/            # THE PRODUCT (Streamlit app)
-│   ├── Home.py               #   main page
-│   ├── components/           #   charts, metrics, patient card, risk badge
-│   └── utils/                #   data, model+SHAP, grounded Q&A, Gemini
-├── data/
-│   ├── hospital/             #   hospital_data.csv (served dataset)
-│   ├── synthetic/            #   legacy FHIR bundle
-│   └── DATA_DICTIONARY.md    #   every column documented
-├── models/readmission/       # model + encoders + metrics + MODEL_CARD.md
-├── scripts/
-│   ├── train_readmission_model.py
-│   └── model_honesty_audit.py  # quantifies WHY AUC ~0.99
-├── tests/                    # 56 tests: data quality, model, Q&A grounding, legacy smoke
-├── reports/                  # executive summary, methodology, limitations,
-│                             # decision log, model honesty, fairness, cohort SHAP,
-│                             # data quality report, analytics questions, interview prep
-├── src/                      # legacy FHIR prototype — working modules only (not served)
-├── Dockerfile · docker-compose.yml · Makefile
-└── .github/workflows/ci.yml  # CI: deps → audit → all tests
-```
-
----
-
-## 11. ▶️ How to Run
+The CI workflow uses Python 3.11. From the repository root:
 
 ```bash
-git clone https://github.com/rishi-1603/HealthGuard-AI.git
-cd HealthGuard-AI
-pip install -r requirements.txt
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+python -m pip install -r requirements.txt
 
-streamlit run app/dashboard/Home.py        # the dashboard (no setup needed)
+# Launch the dashboard
+streamlit run app/dashboard/Home.py
 
-# optional: enable Gemini features
-export GOOGLE_API_KEY=your_key             # never committed; .env.example documents it
+# Regenerate evaluation reports
+python scripts/model_honesty_audit.py
+python scripts/calibration_decision_curve.py
+python scripts/temporal_validation.py
 
-# verify everything
-python scripts/model_honesty_audit.py      # regenerate the honesty report
-python -m pytest tests/ -v                 # 25 checks
+# Run all automated checks
+python -m pytest -q
 ```
 
-Docker alternative: `docker-compose up` (see `docker-compose.yml`).
+An optional Gemini fallback can be configured through the platform’s secrets or an environment variable; the core descriptive dashboard and grounded Q&A are designed to run without an API key. Never commit credentials. The project also includes a Dockerfile and Compose configuration for local execution.
 
----
+## Repository map
 
-## 12. 🎓 Key Learnings
+```text
+├── app/dashboard/       # Streamlit application and analytics components
+├── data/                # synthetic hospital records, dictionary, metric registry
+├── models/readmission/  # model, encoders, metrics, and model card
+├── scripts/             # training, calibration, fairness, temporal, and honesty analyses
+├── reports/             # executive, data-quality, model, fairness, and error reports
+├── docs/                # architecture, evaluation, governance, and release checks
+├── tests/               # 56 automated tests, including Q&A and evaluation-depth checks
+└── Dockerfile           # containerized local run
+```
 
-- **A perfect metric is a debugging signal** — AUC 0.99 meant the label was
-  encoded in the features; quantifying *why* (baseline 0.93 lookup) taught me
-  more than the model itself
-- **Grounding beats generation** for any analytics Q&A where numbers must be
-  quotable — compute from data, use the LLM only as a labelled fallback
-- **Explainability is a UX requirement** in high-stakes domains — per-patient
-  SHAP factors make a score auditable by the person affected by it
-- **Testing the product, not just the code** — data-quality, model-consistency,
-  and Q&A-grounding tests pin the actual user-facing claims
-- **Degrading gracefully** — the app is fully useful with zero API keys
+## Limitations and safety boundary
 
----
+- No real patients or clinical source data are included; all reported metrics are synthetic.
+- The outcome is strongly encoded by the generated condition/procedure pathway. High AUC is not evidence of clinical skill.
+- Cost, age, and subgroup comparisons are descriptive and can reflect generator choices; they do not establish causality, fairness, or patient benefit.
+- The one-row-per-patient table has no true longitudinal admissions timeline. The synthetic time split cannot establish temporal generalization.
+- The Q&A layer supports a bounded set of data questions; the optional Gemini response is a labelled best-effort fallback, not a source of validated medical advice.
+- This repository is for analytics and model-evaluation demonstration only. Do not use it to diagnose, treat, triage, or make decisions about real patients.
 
-## 13. 🔮 Future Improvements
-
-- Re-run the pipeline on a real (de-identified) outcomes dataset and publish
-  the honest AUC alongside the system
-- Calibration curves + decision-curve analysis for the risk model
-- Time-to-readmission survival modelling once temporal data exists
-- Role-based access and audit logging for multi-user deployment
-- Feedback loop: capture Q&A answers that failed to match, expand templates
-
----
-
-## 📄 License & Disclaimer
-
-Demo/portfolio project. **Not intended for diagnosis, treatment, or clinical
-decision-making.** The dataset is synthetic; the AI features are demonstrations
-of technique, not validated clinical tools.
-
-<div align="center">
-
-**⭐ Star this repo if it helped you ·
-[🚀 Open the Live Demo](https://healthguard-ai-cyl2viwrsdrrff7pig7u6c.streamlit.app/) ⭐**
-
-</div>
+For full methodology and assumptions, see [`reports/assumptions_and_limitations.md`](reports/assumptions_and_limitations.md) and [`reports/methodology.md`](reports/methodology.md). The release checklist is [`docs/RELEASE_GATES.md`](docs/RELEASE_GATES.md); latest audited suite: **56 tests passed** (2026-10-17).
