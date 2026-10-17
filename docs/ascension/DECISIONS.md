@@ -74,3 +74,37 @@ itself?"**
 
 ### Regression check
 `pytest tests/` → **105 passed**. All 91 original tests untouched and green.
+
+---
+
+## U3 — Fairness Trade-off Curve (Day 2)
+
+### The question
+fairness_check.py disclosed the gender error-rate gap. Disclosure is day one:
+**can we reduce it, and what does that cost?**
+
+### What was built
+| File | Purpose |
+|---|---|
+| `scripts/fairness_tradeoff.py` | 19-point threshold sweep (0.05→0.95) with per-group TPR/FPR/selection rates; two priced mitigations; impossibility disclosure |
+| `tests/test_fairness_tradeoff.py` | 10 tests pinning every number + math identities + the impossibility pin |
+| `reports/fairness_tradeoff.json/.md` | The decision artifact |
+
+### Verified findings (pinned by tests)
+- Deployed t=0.50: recall 99.2%, **TPR gap 0.0588** (F 1.00 vs M 0.941), demographic-parity gap 0.375
+- **Mitigation A** (single threshold t=0.85): TPR gap **0.0284** (halved) at
+  Δrecall −2.65pp — the price of fairness, in one number
+- **Mitigation B** (group thresholds F 0.85 / M 0.05): TPR gap **0.001** — but
+  **FPR gap jumps to 0.1082** and precision falls to 83.4%
+- **The impossibility is pinned as a test**: closing the TPR gap necessarily
+  re-opens the FPR gap when base rates differ (43.9% vs 7.4%) — the
+  Chouldechova/Kleinberg result visible in our own numbers. The report says
+  this out loud instead of selling mitigation B as a free lunch.
+
+### Bugs caught during this work (disclosed)
+1. None in code; one in framing: the first draft of the report called
+   mitigation B "near-perfect fairness" — corrected to disclose the FPR-gap
+   trade-off before commit.
+
+### Regression check
+`pytest tests/` → **115 passed**. All previous tests untouched and green.
