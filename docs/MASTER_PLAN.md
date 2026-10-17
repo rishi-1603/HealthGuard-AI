@@ -26,7 +26,7 @@ Streamlit dashboard, Docker packaging.
 - Decision-curve analysis across thresholds: 7/7 model wins (0.10-0.50)
 - Subgroup metrics with bootstrap CIs + refusal rules: same report
 - Temporal validation protocol: reports/temporal_validation.md
-- 56/56 tests green (verified 2026-10-17)
+- 132/132 tests green (verified 2026-10-18)
 
 ## Key links
 - Live demo: https://healthguard-ai-cyl2viwrsdrrff7pig7u6c.streamlit.app/
