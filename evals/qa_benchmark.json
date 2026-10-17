@@ -1,0 +1,24 @@
+{
+  "description": "Benchmark for the grounded Q&A layer (app/dashboard/utils/simple_qa.py). Answerable questions carry a recompute spec — expected numbers are derived from the dataset AT EVAL TIME, never hardcoded. Out-of-scope and false-premise questions must REFUSE, never fabricate.",
+  "answerable": [
+    {"question": "What is the overall readmission rate?", "recompute": {"metric": "readmission_rate"}},
+    {"question": "What is the readmission rate for heart attack?", "recompute": {"metric": "readmission_rate", "condition": "Heart Attack"}},
+    {"question": "What is the readmission rate for diabetes?", "recompute": {"metric": "readmission_rate", "condition": "Diabetes"}},
+    {"question": "What is the average cost for heart disease?", "recompute": {"metric": "avg_cost", "condition": "Heart Disease"}},
+    {"question": "What is the average length of stay?", "recompute": {"metric": "avg_stay"}},
+    {"question": "What is the average satisfaction?", "recompute": {"metric": "avg_satisfaction"}},
+    {"question": "How many patients have diabetes?", "recompute": {"metric": "count", "condition": "Diabetes"}},
+    {"question": "What are the most expensive conditions?", "recompute": {"metric": "top3_cost"}}
+  ],
+  "unanswerable_out_of_scope": [
+    "What is the capital of France?",
+    "Write me a poem about hospitals",
+    "What will the stock market do tomorrow?"
+  ],
+  "false_premise_traps": [
+    {"question": "What is the readmission rate for lung cancer?", "note": "no lung cancer condition exists — must refuse"},
+    {"question": "What is the readmission rate for brain transplant?", "note": "fabricated condition — must refuse"},
+    {"question": "How many patients had COVID?", "note": "not in dataset — must refuse"}
+  ],
+  "notes": "The grounded path answers from real aggregations only. The optional Gemini fallback is labelled; this benchmark scores the deterministic grounded path that runs without any API key."
+}

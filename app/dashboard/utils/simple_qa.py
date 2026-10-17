@@ -12,10 +12,51 @@ import re
 import pandas as pd
 
 
+def _unmatched_condition_phrase(df: pd.DataFrame, q: str):
+    """Detect a condition-specific question about a condition that does not exist.
+
+    'readmission rate for lung cancer' must REFUSE — answering with the overall
+    rate would be a confident answer to a question the data cannot answer
+    (the false-premise failure mode; caught by evals/qa_benchmark.json).
+    """
+    if " for " not in q:
+        return None
+    head, tail = q.split(" for ", 1)
+    # 'expensive conditions for surgery' is a listing question, not a lookup.
+    if "condition" in head:
+        return None
+    tail = tail.split("?")[0].split(".")[0].strip()
+    for filler in (" in the dataset", " in this dataset", " patients"):
+        tail = tail.replace(filler, "")
+    tail = tail.strip()
+    if not tail:
+        return None
+    if tail.split()[0] in ("all", "every", "each", "overall", "total", "the",
+                           "our", "this", "that", "patients", "patient",
+                           "everyone", "dataset", "hospital", "me", "us"):
+        return None
+    matched = _match_condition(df, tail)
+    if matched is not None:
+        # Strict: the tail must NAME the condition (or a synonym), not merely
+        # contain it — 'lung cancer' must not fuzzy-match 'Cancer'.
+        tail_low = tail.lower()
+        synonyms = [s.lower() for s in CONDITION_SYNONYMS.get(matched, [])]
+        if tail_low == matched.lower() or tail_low in synonyms:
+            return None
+    return tail
+
+
 def answer(df: pd.DataFrame, question: str) -> dict:
     q = question.lower().strip()
 
     condition = _match_condition(df, q)
+
+    vague = _unmatched_condition_phrase(df, q)
+    if vague:
+        return {"ok": False, "text": (
+            f"I can't answer that: **{vague}** is not a condition in this "
+            f"dataset — refusing rather than guessing. Available conditions: "
+            + ", ".join(sorted(df.Condition.unique())) + ".")}
 
     if "readmission" in q or "readmit" in q:
         if condition:
