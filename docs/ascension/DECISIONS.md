@@ -39,3 +39,38 @@ The layer reproduces the README's figures exactly, so SQL cannot drift from it:
 
 ### Regression check
 `pytest tests/` → **91 passed**. All 56 original tests untouched and green.
+
+---
+
+## U2 — Program Simulator (Day 2)
+
+### The question
+The SQL layer proved readmissions cost +112% more. The CFO's next question is:
+**"If we fund a prevention program, who do we enroll and when does it pay for
+itself?"**
+
+### What was built
+| File | Purpose |
+|---|---|
+| `scripts/program_simulator.py` | Prices 5 enrollment strategies with an explicit cost model; break-even efficacy per strategy; sensitivity grid; equity audit of the targeting rule |
+| `tests/test_program_simulator.py` | 14 tests pinning every published number + economic identities |
+| `reports/program_simulator.json/.md` | The decision artifact |
+
+### Verified findings (pinned by tests)
+- **Enrolling everyone loses ₹10.39 lakh** (break-even efficacy 53% — implausible)
+- **Recommended: top-quartile by stratum risk (246 patients)** — net **₹2.98 lakh**, ROI 0.61, **break-even efficacy only 15.6%**
+- Targeting rule: Laplace-smoothed historical readmission rate of each
+  (Condition × Age-band) stratum — auditable in one sentence per patient
+- **Sensitivity is honest**: at 10% efficacy / ₹2,000 cost, EVERY strategy
+  loses money — the report prints that instead of hiding it
+- **Equity disclosure**: the rule concentrates enrollment on female patients
+  (86.2% vs 53.3% of population) because the dataset's readmission rate is far
+  higher for women — printed as a policy trade-off, not hidden
+
+### Bugs caught during this work (disclosed)
+1. The break-even identity test initially demanded exact equality against JSON
+   values rounded to 4 dp — false failure. Fixed with an explicit 1% tolerance
+   and a comment explaining why.
+
+### Regression check
+`pytest tests/` → **105 passed**. All 91 original tests untouched and green.
