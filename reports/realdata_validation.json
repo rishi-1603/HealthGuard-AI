@@ -1,0 +1,91 @@
+{
+  "generated_by": "scripts/realdata_validation.py",
+  "honesty": "Real external dataset (UCI Cleveland Heart Disease, 303 patients, CC BY 4.0). It measures disease PRESENCE, not readmission, and carries no costs. Transfer claims are structural, not value forecasts.",
+  "dataset": {
+    "rows": 303,
+    "positive_rate": 0.4587,
+    "sex_base_rates": {
+      "Female": 0.2577,
+      "Male": 0.5534
+    }
+  },
+  "fairness_structure": {
+    "group_metrics_at_0.5": {
+      "Female": {
+        "n": 97,
+        "base_rate": 0.2577,
+        "tpr": 0.72,
+        "fpr": 0.0278
+      },
+      "Male": {
+        "n": 206,
+        "base_rate": 0.5534,
+        "tpr": 0.7982,
+        "fpr": 0.1739
+      }
+    },
+    "tpr_gap_at_0.5": 0.0782,
+    "fpr_gap_at_0.5": 0.1461,
+    "equalized_odds_search": {
+      "t_female": 0.45,
+      "t_male": 0.6,
+      "tpr_gap": 0.0007,
+      "fpr_gap": 0.0102,
+      "worst_gap": 0.0102
+    },
+    "postprocess_closes_both_gaps": true
+  },
+  "economics_transfer": {
+    "strategies": [
+      {
+        "strategy": "enroll_all",
+        "enrolled": 303,
+        "expected_events_among_enrolled": 142.97,
+        "net_value": -118124.13,
+        "break_even_efficacy": 0.3105
+      },
+      {
+        "strategy": "enroll_top_quartile",
+        "enrolled": 75,
+        "expected_events_among_enrolled": 57.69,
+        "net_value": 46853.47,
+        "break_even_efficacy": 0.1905
+      },
+      {
+        "strategy": "enroll_above_baseline",
+        "enrolled": 144,
+        "expected_events_among_enrolled": 103.45,
+        "net_value": 65037.88,
+        "break_even_efficacy": 0.2039
+      }
+    ],
+    "targeting_beats_blanket": true
+  },
+  "verdicts": [
+    {
+      "conclusion": "A gender TPR gap exists in the deployed scoring regime",
+      "transfers": true,
+      "detail": "real-data TPR gap at t=0.5: 0.0782 (F base 0.26 vs M base 0.55)"
+    },
+    {
+      "conclusion": "Group-specific thresholds (Mitigation B method) reduce the gaps",
+      "transfers": true,
+      "detail": "minimax post-processing (F t=0.45, M t=0.6): TPR gap 0.0007, FPR gap 0.0102"
+    },
+    {
+      "conclusion": "Closing the TPR gap necessarily re-opens the FPR gap (impossibility)",
+      "transfers": false,
+      "detail": "did NOT reproduce on this set: post-processing found an approximate equalized-odds point. The impossibility pins CALIBRATED scores with unequal base rates; it is disclosed as dataset-geometry-dependent"
+    },
+    {
+      "conclusion": "Targeted enrollment beats blanket enrollment",
+      "transfers": true,
+      "detail": "enroll_all net -118124.13; enroll_top_quartile net 46853.47; enroll_above_baseline net 65037.88"
+    },
+    {
+      "conclusion": "Specific rupee values (\u20b92.98L net, +112% premium)",
+      "transfers": false,
+      "detail": "dataset-specific \u2014 the METHOD transfers, the values do not"
+    }
+  ]
+}

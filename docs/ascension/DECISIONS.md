@@ -108,3 +108,42 @@ fairness_check.py disclosed the gender error-rate gap. Disclosure is day one:
 
 ### Regression check
 `pytest tests/` → **115 passed**. All previous tests untouched and green.
+
+---
+
+## U4 — Grounded-QA Benchmark + Real-Data Validation Track (Day 2 final)
+
+### What was built
+| File | Purpose |
+|---|---|
+| `evals/qa_benchmark.json` | 8 answerable (runtime recompute specs), 3 out-of-scope, 3 false-premise traps |
+| `scripts/qa_eval.py` | Correct-refusal scoring: grounded accuracy, refusal accuracy, trap accuracy, fabrication count — the e-commerce eval lesson applied |
+| `scripts/realdata_validation.py` | Re-runs the fairness + intervention-economics METHODS on real patients (UCI Heart Disease, 303 rows, committed) |
+| `data/external/heart_disease.csv` | Committed real dataset (UCI ID 45, CC BY 4.0) + source README |
+| `tests/test_qa_eval.py`, `tests/test_realdata_validation.py` | 17 pins |
+
+### The eval caught a REAL product bug (and the fix is shipped)
+**False-premise questions were confidently answered.** "What is the readmission
+rate for lung cancer?" returned the OVERALL rate with ok=true — a confident
+answer to a question the data cannot answer. Worse, "lung cancer" fuzzy-matched
+the `Cancer` condition via substring. Shipped fix in `simple_qa.py`:
+1. questions naming a condition the dataset does not contain now REFUSE and
+   list available conditions;
+2. condition matching for lookups requires the phrase to NAME the condition
+   (or a synonym) — 'lung cancer' no longer matches 'Cancer'.
+
+### Verified findings (pinned by tests)
+- **QA eval after fix: 8/8 grounded · 3/3 refusals · 3/3 traps · 0 fabrications → PASS**
+- **Real-data transfer (UCI, 303 patients):**
+  - Gender TPR gap at deployed threshold: **0.078** — the gap structure TRANSFERS
+  - Minimax post-processing (F t=0.45 / M t=0.60) reaches TPR gap 0.0007 / FPR
+    gap 0.010 — the mitigation METHOD transfers
+  - **Honest negative**: the impossibility result that dominated the synthetic
+    set did NOT reproduce here — disclosed with the reason (it pins CALIBRATED
+    scores with unequal base rates; this set admits an approximate equalized-odds
+    point). Negative results are first-class claims in the verdict table.
+  - Economics: enroll-all **−₹1.18L**, top-quartile **+₹0.47L**, above-baseline
+    **+₹0.65L** — targeting beats blanket on REAL outcomes
+
+### Regression check
+`pytest tests/` → **132 passed**.

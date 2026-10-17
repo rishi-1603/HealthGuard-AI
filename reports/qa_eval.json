@@ -1,0 +1,138 @@
+{
+  "generated_by": "scripts/qa_eval.py",
+  "honesty": "Synthetic dataset; the property under test is answer-from-data-or-refuse, which holds for any dataset. The optional Gemini fallback is labelled and excluded from this benchmark.",
+  "answerable": {
+    "n": 8,
+    "grounded": 8,
+    "accuracy": 1.0,
+    "cases": [
+      {
+        "question": "What is the overall readmission rate?",
+        "ok": true,
+        "grounded": true,
+        "expected_any_of": [
+          "26.8%"
+        ],
+        "fabrication": false
+      },
+      {
+        "question": "What is the readmission rate for heart attack?",
+        "ok": true,
+        "grounded": true,
+        "expected_any_of": [
+          "100.0%"
+        ],
+        "fabrication": false
+      },
+      {
+        "question": "What is the readmission rate for diabetes?",
+        "ok": true,
+        "grounded": true,
+        "expected_any_of": [
+          "1.5%"
+        ],
+        "fabrication": false
+      },
+      {
+        "question": "What is the average cost for heart disease?",
+        "ok": true,
+        "grounded": true,
+        "expected_any_of": [
+          "15,000"
+        ],
+        "fabrication": false
+      },
+      {
+        "question": "What is the average length of stay?",
+        "ok": true,
+        "grounded": true,
+        "expected_any_of": [
+          "37.7"
+        ],
+        "fabrication": false
+      },
+      {
+        "question": "What is the average satisfaction?",
+        "ok": true,
+        "grounded": true,
+        "expected_any_of": [
+          "3.60"
+        ],
+        "fabrication": false
+      },
+      {
+        "question": "How many patients have diabetes?",
+        "ok": true,
+        "grounded": true,
+        "expected_any_of": [
+          "65"
+        ],
+        "fabrication": false
+      },
+      {
+        "question": "What are the most expensive conditions?",
+        "ok": true,
+        "grounded": true,
+        "expected_any_of": [
+          "Cancer",
+          "Prostate Cancer",
+          "Heart Attack"
+        ],
+        "fabrication": false
+      }
+    ]
+  },
+  "out_of_scope": {
+    "n": 3,
+    "refused": 3,
+    "refusal_accuracy": 1.0,
+    "cases": [
+      {
+        "question": "What is the capital of France?",
+        "refused": true,
+        "fabrication": false,
+        "pass": true
+      },
+      {
+        "question": "Write me a poem about hospitals",
+        "refused": true,
+        "fabrication": false,
+        "pass": true
+      },
+      {
+        "question": "What will the stock market do tomorrow?",
+        "refused": true,
+        "fabrication": false,
+        "pass": true
+      }
+    ]
+  },
+  "false_premise_traps": {
+    "n": 3,
+    "passed": 3,
+    "trap_accuracy": 1.0,
+    "cases": [
+      {
+        "question": "What is the readmission rate for lung cancer?",
+        "ok": false,
+        "confident_fabrication": false,
+        "pass": true
+      },
+      {
+        "question": "What is the readmission rate for brain transplant?",
+        "ok": false,
+        "confident_fabrication": false,
+        "pass": true
+      },
+      {
+        "question": "How many patients had COVID?",
+        "ok": false,
+        "confident_fabrication": false,
+        "pass": true
+      }
+    ]
+  },
+  "fabrications_total": 0,
+  "overall_accuracy": 1.0,
+  "verdict": "PASS"
+}
