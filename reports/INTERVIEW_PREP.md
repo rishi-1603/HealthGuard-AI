@@ -5,7 +5,7 @@
 
 ## Resume Bullets (verified numbers only)
 
-- **Built an explainable readmission-risk pipeline over 984 synthetic patient records** (26.8% readmission rate) — RandomForest scoring, per-patient SHAP explanations in a live 4-tab dashboard, and CI-tested grounded Q&A that refuses to answer outside the dataset (44 automated tests).
+- **Built an explainable readmission-risk pipeline over 984 synthetic patient records** (26.8% readmission rate) — RandomForest scoring, per-patient SHAP explanations in a live 4-tab dashboard, and CI-tested grounded Q&A that refuses to answer outside the dataset (132 automated tests).
 - **Wrote a model-honesty audit that explains why the headline AUC of 0.994 is not skill**: a per-condition lookup baseline already reaches 0.929 and a demographics-only model 0.985, because the synthetic generator makes `Condition → Readmission` nearly deterministic (11/15 conditions >95% or <5%). Real clinical models score 0.65–0.75 — the audit, the UI, and the README all say so.
 - **Quantified the operational cost of readmission in the dataset**: readmitted patients average ₹13,650 vs ₹6,431 for non-readmitted (+112%) and hold 43.8% of total cost — framed as association, not causation — plus cohort-level SHAP (which factors drive risk across all patients) and fairness slices (AUC/precision/recall by age group and gender).
 
@@ -86,7 +86,7 @@ An explainable healthcare-analytics platform: readmission risk scoring with per-
 
 1. **What did you build end-to-end?** Synthetic data generation → training pipeline → model artifacts → SHAP explainability → 4-tab analytics dashboard → grounded Q&A → honesty/fairness/quality reports → Docker + CI + live deployment.
 2. **Why is the dashboard 4 tabs?** Executive Overview (KPIs + cost story), Clinical Analytics (drivers, cohort SHAP), Patient Intelligence (per-patient SHAP drill-down), AI Assistant (grounded Q&A) — one workflow from question to evidence.
-3. **What's the test strategy?** 44 tests across data quality (invariants on the dataset), model validity (valid probabilities, reproducibility), Q&A grounding (answers == dataset aggregates), and a legacy smoke test.
+3. **What's the test strategy?** 132 tests across data quality (invariants on the dataset), model validity (valid probabilities, reproducibility), Q&A grounding (answers == dataset aggregates), and a legacy smoke test.
 4. **What would you improve next?** Temporal data to enable time-based validation; calibrated probabilities with a decision-threshold analysis; prospective evaluation design if real data ever appeared.
 5. **How is this different from a notebook?** Deployed product with pinned metrics, CI that re-runs the honesty audit and training, and documentation where every claim maps to a script.
 6. **Why synthetic data?** It's honest demo data with disclosed limitations and recoverable structure — which is exactly what let me demonstrate the leakage analysis; real clinical data can't be shipped in a portfolio.

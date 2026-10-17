@@ -1050,7 +1050,7 @@ try:
             "cohort (no LLM); anything else escalates to Gemini grounded in the same statistics. "
             "The AI never computes numbers and never makes clinical determinations.\n\n"
             "**Not medical advice:** demo analytics — not for diagnosis, treatment, or clinical decisions. "
-            "Everything here is reproducible: `tests/` (44 automated) and `reports/` in the repo."
+            "Everything here is reproducible: `tests/` (132 automated) and `reports/` in the repo."
         )
 
     st.divider()
