@@ -1,0 +1,265 @@
+{
+  "generated_by": "scripts/sql_analytics.py",
+  "database": "SQLite built from database/schema.sql",
+  "source": "data/hospital/hospital_data.csv",
+  "n_patients": 984,
+  "headline": {
+    "readmitted_patients": 264,
+    "readmission_rate_pct": 26.83,
+    "readmitted_cost_share_pct": 43.77,
+    "avg_cost_readmitted": 13650.0,
+    "avg_cost_not_readmitted": 6431.0,
+    "cost_premium_pct": 112.3,
+    "top_cost_condition": "Heart Attack",
+    "top_cost_condition_readmission_cost": 1206000.0
+  },
+  "reconciliation": {
+    "n_checks": 15,
+    "n_passed": 15,
+    "all_passed": true,
+    "failures": [],
+    "policy": "A mismatch is a failure, not a warning \u2014 implementing twice only has value if disagreement is surfaced. Only rounding tolerance (1e-4 relative) is allowed."
+  },
+  "queries": {
+    "cost_burden": [
+      {
+        "readmitted": "Yes",
+        "patients": 264,
+        "patient_share_pct": 26.83,
+        "total_cost": 3603500.0,
+        "cost_share_pct": 43.77,
+        "avg_cost_per_patient": 13650.0,
+        "avg_los_days": 39.2
+      },
+      {
+        "readmitted": "No",
+        "patients": 720,
+        "patient_share_pct": 73.17,
+        "total_cost": 4630100.0,
+        "cost_share_pct": 56.23,
+        "avg_cost_per_patient": 6431.0,
+        "avg_los_days": 37.1
+      }
+    ],
+    "cost_premium": [
+      {
+        "avg_cost_readmitted": 13650.0,
+        "avg_cost_not_readmitted": 6431.0,
+        "cost_premium_pct": 112.3,
+        "excess_cost_above_average": 1394485.0
+      }
+    ],
+    "by_condition": [
+      {
+        "condition": "Heart Attack",
+        "patients": 67,
+        "readmitted": 67,
+        "readmission_rate_pct": 100.0,
+        "readmission_cost": 1206000.0,
+        "avg_cost": 18000.0,
+        "avg_los": 41.0
+      },
+      {
+        "condition": "Heart Disease",
+        "patients": 65,
+        "readmitted": 64,
+        "readmission_rate_pct": 98.5,
+        "readmission_cost": 960000.0,
+        "avg_cost": 15000.0,
+        "avg_los": 38.2
+      },
+      {
+        "condition": "Cancer",
+        "patients": 66,
+        "readmitted": 33,
+        "readmission_rate_pct": 50.0,
+        "readmission_cost": 825000.0,
+        "avg_cost": 25000.0,
+        "avg_los": 42.7
+      },
+      {
+        "condition": "Stroke",
+        "patients": 66,
+        "readmitted": 33,
+        "readmission_rate_pct": 50.0,
+        "readmission_cost": 330000.0,
+        "avg_cost": 10000.0,
+        "avg_los": 40.3
+      },
+      {
+        "condition": "Appendicitis",
+        "patients": 66,
+        "readmitted": 33,
+        "readmission_rate_pct": 50.0,
+        "readmission_cost": 264000.0,
+        "avg_cost": 8000.0,
+        "avg_los": 37.4
+      },
+      {
+        "condition": "Fractured Arm",
+        "patients": 66,
+        "readmitted": 33,
+        "readmission_rate_pct": 50.0,
+        "readmission_cost": 16500.0,
+        "avg_cost": 500.0,
+        "avg_los": 34.3
+      },
+      {
+        "condition": "Diabetes",
+        "patients": 65,
+        "readmitted": 1,
+        "readmission_rate_pct": 1.5,
+        "readmission_cost": 2000.0,
+        "avg_cost": 2000.0,
+        "avg_los": 36.1
+      }
+    ],
+    "by_age_band": [
+      {
+        "age_band": "18-30",
+        "patients": 99,
+        "readmitted": 0,
+        "readmission_rate_pct": 0.0,
+        "avg_cost": 349.0
+      },
+      {
+        "age_band": "31-45",
+        "patients": 198,
+        "readmitted": 33,
+        "readmission_rate_pct": 16.7,
+        "avg_cost": 6348.0
+      },
+      {
+        "age_band": "46-60",
+        "patients": 359,
+        "readmitted": 131,
+        "readmission_rate_pct": 36.5,
+        "avg_cost": 11404.0
+      },
+      {
+        "age_band": "61-75",
+        "patients": 262,
+        "readmitted": 67,
+        "readmission_rate_pct": 25.6,
+        "avg_cost": 7344.0
+      },
+      {
+        "age_band": "76+",
+        "patients": 66,
+        "readmitted": 33,
+        "readmission_rate_pct": 50.0,
+        "avg_cost": 14000.0
+      }
+    ],
+    "cost_per_day": [
+      {
+        "condition": "Cancer",
+        "avg_cost_per_day": 784.0,
+        "avg_los": 42.7,
+        "avg_cost": 25000.0,
+        "patients": 66
+      },
+      {
+        "condition": "Prostate Cancer",
+        "avg_cost_per_day": 659.0,
+        "avg_los": 41.6,
+        "avg_cost": 20000.0,
+        "patients": 65
+      },
+      {
+        "condition": "Heart Attack",
+        "avg_cost_per_day": 617.0,
+        "avg_los": 41.0,
+        "avg_cost": 18000.0,
+        "patients": 67
+      },
+      {
+        "condition": "Heart Disease",
+        "avg_cost_per_day": 615.0,
+        "avg_los": 38.2,
+        "avg_cost": 15000.0,
+        "patients": 65
+      },
+      {
+        "condition": "Childbirth",
+        "avg_cost_per_day": 605.0,
+        "avg_los": 35.5,
+        "avg_cost": 12000.0,
+        "patients": 65
+      },
+      {
+        "condition": "Stroke",
+        "avg_cost_per_day": 362.0,
+        "avg_los": 40.3,
+        "avg_cost": 10000.0,
+        "patients": 66
+      },
+      {
+        "condition": "Appendicitis",
+        "avg_cost_per_day": 359.0,
+        "avg_los": 37.4,
+        "avg_cost": 8000.0,
+        "patients": 66
+      },
+      {
+        "condition": "Kidney Stones",
+        "avg_cost_per_day": 273.0,
+        "avg_los": 36.5,
+        "avg_cost": 6000.0,
+        "patients": 65
+      },
+      {
+        "condition": "Osteoarthritis",
+        "avg_cost_per_day": 163.0,
+        "avg_los": 37.9,
+        "avg_cost": 4000.0,
+        "patients": 64
+      },
+      {
+        "condition": "Fractured Leg",
+        "avg_cost_per_day": 115.0,
+        "avg_los": 39.0,
+        "avg_cost": 3000.0,
+        "patients": 67
+      }
+    ],
+    "by_outcome": [
+      {
+        "outcome": "Recovered",
+        "patients": 591,
+        "share_pct": 60.1,
+        "avg_cost": 9921.0,
+        "readmission_rate_pct": 27.6,
+        "avg_satisfaction": 3.84
+      },
+      {
+        "outcome": "Stable",
+        "patients": 393,
+        "share_pct": 39.9,
+        "avg_cost": 6031.0,
+        "readmission_rate_pct": 25.7,
+        "avg_satisfaction": 3.24
+      }
+    ],
+    "by_gender": [
+      {
+        "gender": "Female",
+        "patients": 524,
+        "readmitted": 230,
+        "readmission_rate_pct": 43.9,
+        "avg_cost": 10458.0,
+        "avg_los": 37.7,
+        "avg_satisfaction": 3.68
+      },
+      {
+        "gender": "Male",
+        "patients": 460,
+        "readmitted": 34,
+        "readmission_rate_pct": 7.4,
+        "avg_cost": 5986.0,
+        "avg_los": 37.6,
+        "avg_satisfaction": 3.5
+      }
+    ]
+  }
+}
