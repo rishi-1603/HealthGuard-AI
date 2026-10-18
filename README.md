@@ -2,7 +2,7 @@
 
 **An analytics-first healthcare portfolio prototype** for exploring synthetic outcomes, costs, length of stay, and subgroup patterns in a filterable dashboard—with a separately evaluated readmission model and explicit model-honesty checks.
 
-[Live demo](https://healthguard-ai-cyl2viwrsdrrff7pig7u6c.streamlit.app/) · [Executive summary](reports/executive_summary.md) · [Data dictionary](data/DATA_DICTIONARY.md) · [Model honesty audit](reports/model_honesty.md) · [Calibration and decision curves](reports/calibration_and_decision_curve.md) · [Temporal validation](reports/temporal_validation.md) · [Model card](models/readmission/MODEL_CARD.md) · [Tests](tests/) · [Release gates](docs/RELEASE_GATES.md)
+[Live demo](https://healthguard-ai-cyl2viwrsdrrff7pig7u6c.streamlit.app/) · [Executive summary](reports/executive_summary.md) · [Data dictionary](data/DATA_DICTIONARY.md) · [Model honesty audit](reports/model_honesty.md) · [Calibration and decision curves](reports/calibration_and_decision_curve.md) · [Temporal validation](reports/temporal_validation.md) · [Model card](models/readmission/MODEL_CARD.md) · [Intervention economics](reports/program_simulator.md) · [Fairness trade-off](reports/fairness_tradeoff.md) · [Tests](tests/) · [Release gates](docs/RELEASE_GATES.md)
 
 [![CI](https://github.com/rishi-1603/HealthGuard-AI/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/rishi-1603/HealthGuard-AI/actions/workflows/ci.yml) ![Tests](https://img.shields.io/badge/tests-132%20passed-brightgreen)
 
@@ -10,9 +10,9 @@
 
 ## Executive summary
 
-The primary deliverable is an operations-style analytics dashboard: a reviewer can filter outcomes, compare cost and length of stay, inspect condition and demographic breakdowns, and trace displayed figures to a shared metric registry. A model and SHAP explanations are included as a supporting Data Science layer; the project’s main evaluation finding is that the unusually high AUC is explained by the synthetic label-generation process.
+The primary deliverable is an operations-style analytics dashboard: a reviewer can filter outcomes, compare cost and length of stay, inspect condition and demographic breakdowns, and trace displayed figures to a shared metric registry. A model and SHAP explanations are included as a supporting Data Science layer, joined by intervention economics, a priced fairness trade-off curve, and a grounded-Q&A benchmark; the project’s main evaluation finding is that the unusually high AUC is explained by the synthetic label-generation process.
 
-**Role emphasis:** Data Analyst first (metric definitions, data-quality checks, outcome and cost analysis, subgroup comparisons, dashboard communication); applied Data Science second (model validation, calibration, decision-curve analysis, explainability, temporal protocol, and error analysis).
+**Role emphasis:** Data Analyst first (metric definitions, data-quality checks, outcome and cost analysis, subgroup comparisons, dashboard communication); applied Data Science second (model validation, calibration, decision-curve analysis, explainability, temporal protocol, error analysis, intervention economics, and fairness trade-off analysis).
 
 ## At a glance
 
@@ -81,30 +81,29 @@ The shipped Random Forest uses six demographic, condition, procedure, cost, and 
 
 On a separate fit/calibration/test split (64/16/20; 197 test records), the raw model has Brier score **0.0187**, 10-bin ECE **0.0463**, and calibration slope **1.4341**. Isotonic calibration reduces Brier to **0.0102** and ECE to **0.0101** on that evaluation. Decision-curve analysis finds higher net benefit than treat-all at 7 tested thresholds from 0.10 to 0.50. These are method results on synthetic labels; they do not establish that acting on the scores would benefit patients.
 
-### Decision layer: intervention economics (program simulator)
-
-![Program simulator: blanket enrollment loses money — targeting wins](docs/program_simulator_strategies.png)
-
-If a prevention program is funded, who should be enrolled? The simulator prices five
-strategies with an explicit cost model (₹2,000 per enrollee vs ₹13,650 avoided
-readmission episode — the measured premium). **Enrolling everyone loses ₹10.39 lakh**
-(break-even efficacy 53% — implausible). The recommended top-quartile targeting
-(246 patients) nets **+₹2.98 lakh** at break-even efficacy just **15.6%**, and the
-report prints the honest phase boundary: at 10% efficacy, every strategy loses money.
-The targeting rule is transparent — the Laplace-smoothed historical readmission rate
-of each (Condition × Age-band) stratum — and the equity audit shows its gender skew
-(86% female enrollees) as an explicit policy trade-off. Artifacts:
-[`reports/program_simulator.md`](reports/program_simulator.md) · tests pin every number.
-
 ### Subgroups, temporal validation, and errors
 
 - **Subgroup uncertainty:** bootstrap confidence intervals are shown only when sample-size rules are met. Age bands with fewer than five positive cases are explicitly refused rather than assigned unstable metrics.
-![Fairness trade-off: closing the TPR gap re-opens the FPR gap](docs/fairness_tradeoff_gaps.png)
-
 - **Fairness:** the reported AUC gaps are small (0.006 by gender; 0.003 by age), but the dataset has a 36.5 percentage-point gender base-rate difference. One parity metric is not a fairness conclusion. See [`reports/fairness_check.md`](reports/fairness_check.md).
 - **Temporal protocol:** random-split AUC is 0.9923 and time-split AUC is 0.9963; the time-split result falls inside the random-split noise band. Dates were generated independently of outcomes, so the protocol—not a generalization claim—is the useful artifact. See [`reports/temporal_validation.md`](reports/temporal_validation.md).
 - **Error analysis:** two held-out errors map to the synthetic generator’s stochastic cases. See [`reports/error_analysis.md`](reports/error_analysis.md).
 - **Explainability:** SHAP describes how the fitted model uses its inputs; it does not identify real clinical causes or validate the model. See [`reports/cohort_shap.md`](reports/cohort_shap.md).
+
+### Intervention economics: is prevention worth funding?
+
+![Program simulator: blanket enrollment loses money — targeting wins](docs/program_simulator_strategies.png)
+
+A program simulator ([`reports/program_simulator.md`](reports/program_simulator.md)) prices the targeting decision instead of stopping at a risk score. At ₹2,000 per enrolled patient, enrolling the **top-risk quartile nets +₹298,298** (ROI 0.61; break-even efficacy 15.6%), while enrolling everyone **loses ₹1,039,325** (break-even efficacy 53.0%). The targeting decision is worth more than the model. Values are dataset-specific; the method transfers.
+
+### Fairness trade-off curve
+
+![Fairness trade-off: closing the TPR gap re-opens the FPR gap](docs/fairness_tradeoff_gaps.png)
+
+A priced mitigation analysis ([`reports/fairness_tradeoff.md`](reports/fairness_tradeoff.md)) maps the equal-opportunity (TPR) gap against policy options: unconstrained, the gap is **0.059**; group-specific thresholds reduce it to **0.001** (recall 97.0%, precision 83.4%). The impossibility is stated out loud: with base rates this different (43.9% vs 7.4%), equalizing TPR necessarily un-equalizes FPR — the FPR gap is printed in the JSON so nobody mistakes the mitigation for a free lunch.
+
+### SQL analytics, grounded Q&A benchmark, and real-data validation
+
+A real SQL analytics layer ([`reports/sql_analytics.md`](reports/sql_analytics.md)) answers the business questions directly in the database. The grounded Q&A is benchmarked ([`reports/qa_eval.md`](reports/qa_eval.md)): **8/8 answerable questions grounded in data, 3/3 out-of-scope refusals, 3/3 false-premise traps caught, 0 fabrications**. A real-data track ([`reports/realdata_validation.md`](reports/realdata_validation.md)) re-runs the fairness trade-off and intervention economics on the public UCI Cleveland Heart Disease dataset (303 patients, CC BY 4.0), so the two headline methods are tested outside the synthetic generator.
 
 ## 4. Reproduce locally
 
@@ -135,10 +134,10 @@ An optional Gemini fallback can be configured through the platform’s secrets o
 ├── app/dashboard/       # Streamlit application and analytics components
 ├── data/                # synthetic hospital records, dictionary, metric registry
 ├── models/readmission/  # model, encoders, metrics, and model card
-├── scripts/             # training, calibration, fairness, temporal, and honesty analyses
+├── scripts/             # training, calibration, fairness, temporal, honesty, simulation, and Q&A analyses
 ├── reports/             # executive, data-quality, model, fairness, and error reports
 ├── docs/                # architecture, evaluation, governance, and release checks
-├── tests/               # 56 automated tests, including Q&A and evaluation-depth checks
+├── tests/               # 132 automated tests, including Q&A and evaluation-depth checks
 └── Dockerfile           # containerized local run
 ```
 
@@ -151,4 +150,4 @@ An optional Gemini fallback can be configured through the platform’s secrets o
 - The Q&A layer supports a bounded set of data questions; the optional Gemini response is a labelled best-effort fallback, not a source of validated medical advice.
 - This repository is for analytics and model-evaluation demonstration only. Do not use it to diagnose, treat, triage, or make decisions about real patients.
 
-For full methodology and assumptions, see [`reports/assumptions_and_limitations.md`](reports/assumptions_and_limitations.md) and [`reports/methodology.md`](reports/methodology.md). The release checklist is [`docs/RELEASE_GATES.md`](docs/RELEASE_GATES.md); every bug found during development is recorded with its fix and lesson in [`docs/ascension/DECISIONS.md`](docs/ascension/DECISIONS.md). Latest audited suite: **132 tests passed** (2026-10-18).
+For full methodology and assumptions, see [`reports/assumptions_and_limitations.md`](reports/assumptions_and_limitations.md) and [`reports/methodology.md`](reports/methodology.md). The release checklist is [`docs/RELEASE_GATES.md`](docs/RELEASE_GATES.md); every bug found during development is recorded in [`docs/ascension/DECISIONS.md`](docs/ascension/DECISIONS.md). Latest audited suite: **132 tests passed** (2026-10-18).
