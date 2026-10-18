@@ -147,3 +147,16 @@ the `Cancer` condition via substring. Shipped fix in `simple_qa.py`:
 
 ### Regression check
 `pytest tests/` → **132 passed**.
+
+---
+
+## U5 — README & Presentation Polish (consistency sweep)
+
+### What changed
+- Two charts generated FROM the committed JSON artifacts:
+  `docs/program_simulator_strategies.png` (blanket enrollment loses ₹10.4L —
+  targeting wins) and `docs/fairness_tradeoff_gaps.png` (the impossibility:
+  closing the TPR gap re-opens the FPR gap).
+- New README section: "Decision layer: intervention economics (program simulator)".
+- Stale count fixed: README claimed 56 tests → corrected to 132, with tests badge.
+- DECISIONS.md bug-log pointer added to the governance line.
