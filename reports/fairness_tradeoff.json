@@ -84,8 +84,8 @@
       "Male": 0.05
     },
     "equal_opportunity_gap": 0.001,
-    "fpr_gap": 0.1082,
-    "precision": 0.8339,
+    "fpr_gap": 0.1106,
+    "precision": 0.8312,
     "recall": 0.9697
   },
   "accuracy_cost": {
@@ -100,32 +100,32 @@
   "sweep": [
     {
       "threshold": 0.05,
-      "precision": 0.6292,
+      "precision": 0.6217,
       "recall": 0.9962,
-      "f1": 0.7713,
+      "f1": 0.7656,
       "groups": {
         "Female": {
           "n": 524,
           "tpr": 1.0,
-          "fpr": 0.3605,
-          "selection_rate": 0.6412
+          "fpr": 0.3741,
+          "selection_rate": 0.6489
         },
         "Male": {
           "n": 460,
           "tpr": 0.9706,
-          "fpr": 0.115,
-          "selection_rate": 0.1783
+          "fpr": 0.1174,
+          "selection_rate": 0.1804
         }
       },
-      "demo_parity_gap": 0.4629,
+      "demo_parity_gap": 0.4685,
       "equal_opportunity_gap": 0.0294,
-      "equalized_odds_gap": 0.2455
+      "equalized_odds_gap": 0.2567
     },
     {
       "threshold": 0.1,
-      "precision": 0.6591,
+      "precision": 0.6608,
       "recall": 0.9962,
-      "f1": 0.7934,
+      "f1": 0.7946,
       "groups": {
         "Female": {
           "n": 524,
@@ -136,71 +136,71 @@
         "Male": {
           "n": 460,
           "tpr": 0.9706,
-          "fpr": 0.0845,
-          "selection_rate": 0.15
+          "fpr": 0.0822,
+          "selection_rate": 0.1478
         }
       },
-      "demo_parity_gap": 0.4798,
+      "demo_parity_gap": 0.482,
       "equal_opportunity_gap": 0.0294,
-      "equalized_odds_gap": 0.2556
+      "equalized_odds_gap": 0.2579
     },
     {
       "threshold": 0.15,
-      "precision": 0.7472,
+      "precision": 0.6921,
       "recall": 0.9962,
-      "f1": 0.8539,
+      "f1": 0.8168,
       "groups": {
         "Female": {
           "n": 524,
           "tpr": 1.0,
-          "fpr": 0.2279,
-          "selection_rate": 0.5668
+          "fpr": 0.2959,
+          "selection_rate": 0.605
         },
         "Male": {
           "n": 460,
           "tpr": 0.9706,
-          "fpr": 0.0516,
-          "selection_rate": 0.1196
+          "fpr": 0.0704,
+          "selection_rate": 0.137
         }
       },
-      "demo_parity_gap": 0.4472,
+      "demo_parity_gap": 0.468,
       "equal_opportunity_gap": 0.0294,
-      "equalized_odds_gap": 0.1763
+      "equalized_odds_gap": 0.2255
     },
     {
       "threshold": 0.2,
-      "precision": 0.8651,
+      "precision": 0.8349,
       "recall": 0.9962,
-      "f1": 0.9261,
+      "f1": 0.9085,
       "groups": {
         "Female": {
           "n": 524,
           "tpr": 1.0,
-          "fpr": 0.1156,
-          "selection_rate": 0.5038
+          "fpr": 0.1463,
+          "selection_rate": 0.521
         },
         "Male": {
           "n": 460,
           "tpr": 0.9706,
-          "fpr": 0.0164,
-          "selection_rate": 0.087
+          "fpr": 0.0211,
+          "selection_rate": 0.0913
         }
       },
-      "demo_parity_gap": 0.4168,
+      "demo_parity_gap": 0.4297,
       "equal_opportunity_gap": 0.0294,
-      "equalized_odds_gap": 0.0992
+      "equalized_odds_gap": 0.1252
     },
     {
       "threshold": 0.25,
-      "precision": 0.9424,
+      "precision": 0.9097,
       "recall": 0.9924,
-      "f1": 0.9668,
+      "f1": 0.9493,
       "groups": {
         "Female": {
           "n": 524,
           "tpr": 1.0,
-          "fpr": 0.0544,
-          "selection_rate": 0.4695
+          "fpr": 0.0884,
+          "selection_rate": 0.4885
         },
         "Male": {
           "n": 460,
@@ -209,21 +209,21 @@
           "selection_rate": 0.0696
         }
       },
-      "demo_parity_gap": 0.3999,
+      "demo_parity_gap": 0.4189,
       "equal_opportunity_gap": 0.0588,
-      "equalized_odds_gap": 0.0588
+      "equalized_odds_gap": 0.0884
     },
     {
       "threshold": 0.3,
-      "precision": 0.9668,
+      "precision": 0.9597,
       "recall": 0.9924,
-      "f1": 0.9794,
+      "f1": 0.9758,
       "groups": {
         "Female": {
           "n": 524,
           "tpr": 1.0,
-          "fpr": 0.0306,
-          "selection_rate": 0.4561
+          "fpr": 0.0374,
+          "selection_rate": 0.4599
         },
         "Male": {
           "n": 460,
@@ -232,21 +232,21 @@
           "selection_rate": 0.0696
         }
       },
-      "demo_parity_gap": 0.3865,
+      "demo_parity_gap": 0.3903,
       "equal_opportunity_gap": 0.0588,
       "equalized_odds_gap": 0.0588
     },
     {
       "threshold": 0.35,
-      "precision": 0.9887,
+      "precision": 0.9704,
       "recall": 0.9924,
-      "f1": 0.9905,
+      "f1": 0.9813,
       "groups": {
         "Female": {
           "n": 524,
           "tpr": 1.0,
-          "fpr": 0.0102,
-          "selection_rate": 0.4447
+          "fpr": 0.0272,
+          "selection_rate": 0.4542
         },
         "Male": {
           "n": 460,
@@ -255,7 +255,7 @@
           "selection_rate": 0.0696
         }
       },
-      "demo_parity_gap": 0.3751,
+      "demo_parity_gap": 0.3846,
       "equal_opportunity_gap": 0.0588,
       "equalized_odds_gap": 0.0588
     },
@@ -497,43 +497,43 @@
       "groups": {
         "Female": {
           "n": 524,
-          "tpr": 0.8652,
+          "tpr": 0.8522,
           "fpr": 0.0034,
-          "selection_rate": 0.3817
+          "selection_rate": 0.376
         },
         "Male": {
           "n": 460,
-          "tpr": 0.6765,
+          "tpr": 0.7647,
           "fpr": 0.0,
-          "selection_rate": 0.05
+          "selection_rate": 0.0565
         }
       },
-      "demo_parity_gap": 0.3317,
-      "equal_opportunity_gap": 0.1887,
-      "equalized_odds_gap": 0.1887
+      "demo_parity_gap": 0.3195,
+      "equal_opportunity_gap": 0.0875,
+      "equalized_odds_gap": 0.0875
     },
     {
       "threshold": 0.95,
       "precision": 1.0,
-      "recall": 0.5076,
-      "f1": 0.6734,
+      "recall": 0.5341,
+      "f1": 0.6963,
       "groups": {
         "Female": {
           "n": 524,
-          "tpr": 0.5696,
+          "tpr": 0.5739,
           "fpr": 0.0,
-          "selection_rate": 0.25
+          "selection_rate": 0.2519
         },
         "Male": {
           "n": 460,
-          "tpr": 0.0882,
+          "tpr": 0.2647,
           "fpr": 0.0,
-          "selection_rate": 0.0065
+          "selection_rate": 0.0196
         }
       },
-      "demo_parity_gap": 0.2435,
-      "equal_opportunity_gap": 0.4814,
-      "equalized_odds_gap": 0.4814
+      "demo_parity_gap": 0.2323,
+      "equal_opportunity_gap": 0.3092,
+      "equalized_odds_gap": 0.3092
     }
   ]
 }

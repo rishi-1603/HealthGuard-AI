@@ -134,7 +134,7 @@ def test_equity_slice_discloses_gender_concentration():
 # ── honest reporting ─────────────────────────────────────────────────────────
 
 def test_report_discloses_assumptions():
-    md = MD.read_text()
+    md = MD.read_text(encoding="utf-8")
     assert "synthetic" in md.lower()
     assert "assumption" in md.lower()
     r = _report()

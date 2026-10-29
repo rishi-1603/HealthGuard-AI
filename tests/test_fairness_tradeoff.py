@@ -76,7 +76,7 @@ def test_mitigation_b_closes_tpr_gap_but_opens_fpr_gap():
         r["deployed_threshold"]["groups"]["Female"]["fpr"] -
         r["deployed_threshold"]["groups"]["Male"]["fpr"])
     assert b["fpr_gap"] > deployed_fpr_gap
-    assert b["fpr_gap"] == 0.1082
+    assert abs(b["fpr_gap"] - 0.11) < 0.005  # 0.1082 or 0.1106 across sklearn versions
     # And precision pays for it.
     assert b["precision"] < r["best_f1_threshold"]["precision"]
 

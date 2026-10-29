@@ -17,7 +17,7 @@
 |---|---|---|---|---|
 | Unconstrained best-F1 | 0.70 | 99.2% | 99.2% | 0.059 |
 | A: single fair threshold | 0.85 | 96.6% | 99.2% | 0.028 |
-| B: group thresholds | {'Female': np.float64(0.85), 'Male': np.float64(0.05)} | 97.0% | 83.4% | 0.001 |
+| B: group thresholds | {'Female': np.float64(0.85), 'Male': np.float64(0.05)} | 97.0% | 83.1% | 0.001 |
 
 **Accuracy cost of A:** ΔF1 -0.013, Δrecall -2.6%.
 **Accuracy cost of B:** Δrecall -2.3%.
@@ -33,9 +33,9 @@ is the Chouldechova/Kleinberg impossibility result, visible in our own data.
 
 | Threshold | Recall | Precision | TPR gap | Demographic-parity gap |
 |---|---|---|---|---|
-| 0.15 | 99.6% | 74.7% | 0.029 | 0.447 |
-| 0.25 | 99.2% | 94.2% | 0.059 | 0.400 |
-| 0.35 | 99.2% | 98.9% | 0.059 | 0.375 |
+| 0.15 | 99.6% | 69.2% | 0.029 | 0.468 |
+| 0.25 | 99.2% | 91.0% | 0.059 | 0.419 |
+| 0.35 | 99.2% | 97.0% | 0.059 | 0.385 |
 | 0.50 | 99.2% | 98.9% | 0.059 | 0.375 |
 | 0.65 | 99.2% | 98.9% | 0.059 | 0.375 |
 | 0.80 | 97.4% | 99.2% | 0.037 | 0.364 |
