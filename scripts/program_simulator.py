@@ -185,8 +185,8 @@ def run() -> dict:
     }
 
     JSON_PATH.parent.mkdir(exist_ok=True)
-    JSON_PATH.write_text(json.dumps(result, indent=2))
-    MD_PATH.write_text(render_md(result))
+    JSON_PATH.write_text(json.dumps(result, indent=2), encoding="utf-8")
+    MD_PATH.write_text(render_md(result), encoding="utf-8")
     return result
 
 
@@ -255,6 +255,6 @@ def render_md(r: dict) -> str:
 
 if __name__ == "__main__":
     out = run()
-    print(f"Recommended: {out['recommended_strategy']} | net ₹{out['recommended_net_value']:,.0f} | "
+    print(f"Recommended: {out['recommended_strategy']} | net Rs.{out['recommended_net_value']:,.0f} | "
           f"break-even efficacy shown per strategy")
     print(f"Report: {MD_PATH}")

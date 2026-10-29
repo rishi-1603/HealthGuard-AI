@@ -193,8 +193,8 @@ def run() -> dict:
     }
 
     JSON_PATH.parent.mkdir(exist_ok=True)
-    JSON_PATH.write_text(json.dumps(result, indent=2))
-    MD_PATH.write_text(render_md(result))
+    JSON_PATH.write_text(json.dumps(result, indent=2), encoding="utf-8")
+    MD_PATH.write_text(render_md(result), encoding="utf-8")
     return result
 
 
