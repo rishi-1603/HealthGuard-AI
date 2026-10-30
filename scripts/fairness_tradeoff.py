@@ -26,8 +26,8 @@ This script answers with numbers:
 HONESTY DISCLOSURES:
 - Synthetic dataset (984 patients). The gender skew (F 43.9% vs M 7.4% base
   rate) is a property of THIS dataset; the trade-off method is the deliverable.
-- Equalizing TPR across groups with very different base rates cannot also
-  equalize FPR — that impossibility is reported, not hidden.
+- This search observes a TPR/FPR trade-off; it is not a general impossibility
+  proof. Unequal base rates alone do not prohibit equalized odds.
 
 Run:  python scripts/fairness_tradeoff.py
 """
@@ -166,9 +166,9 @@ def run() -> dict:
     result = {
         "generated_by": "scripts/fairness_tradeoff.py",
         "honesty": ("Synthetic dataset (984 patients). Gender base rates F 43.9% / "
-                    "M 7.4% are properties of THIS dataset. Equalizing TPR across "
-                    "groups with different base rates cannot also equalize FPR — "
-                    "that impossibility is reported, not hidden."),
+                    "M 7.4% are properties of THIS dataset. This search observes a TPR/FPR "
+                    "trade-off, not a general impossibility proof. Unequal base rates "
+                    "alone do not prohibit equalized odds."),
         "cohort": {
             "patients": int(len(df)),
             "gender_base_rates_pct": {
@@ -229,12 +229,12 @@ def render_md(r: dict) -> str:
         f"Δrecall {r['accuracy_cost']['single_threshold']['recall_delta']:+.1%}.",
         f"**Accuracy cost of B:** Δrecall {r['accuracy_cost']['group_thresholds']['recall_delta']:+.1%}.",
         "",
-        "## The impossibility that must be stated out loud",
+        "## Observed trade-off, not an impossibility proof",
         "",
-        "When base rates differ this sharply (43.9% vs 7.4%), **equalizing TPR",
-        "necessarily un-equalizes FPR** — mitigation B's FPR gap is printed in the",
-        "JSON (`fpr_gap`) precisely so nobody mistakes this for a free lunch. This",
-        "is the Chouldechova/Kleinberg impossibility result, visible in our own data.",
+        "In this search, mitigation B reduces the TPR gap but increases the FPR gap.",
+        "Both gaps are printed in the JSON (`fpr_gap`). Unequal base rates alone do",
+        "not make equalized odds impossible. Calibration-related impossibility",
+        "results require additional assumptions; this experiment does not prove them.",
         "",
         "## Threshold sweep (excerpts)",
         "",
@@ -253,8 +253,8 @@ def render_md(r: dict) -> str:
         "   parity, equal opportunity, equalized odds), each measured here.",
         "2. **Mitigations are priced like any other decision** — recall lost is the",
         "   cost, gap closed is the benefit.",
-        "3. **The impossibility result is disclosed** — that single sentence separates",
-        "   a candidate who has DONE this work from one who has read about it.",
+        "3. **Separate empirical trade-offs from impossibility theorems.**",
+        "   The external-validation dataset can have a different policy geometry.",
         "",
     ]
     return "\n".join(lines)

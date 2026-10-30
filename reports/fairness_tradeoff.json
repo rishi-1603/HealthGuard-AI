@@ -1,6 +1,6 @@
 {
   "generated_by": "scripts/fairness_tradeoff.py",
-  "honesty": "Synthetic dataset (984 patients). Gender base rates F 43.9% / M 7.4% are properties of THIS dataset. Equalizing TPR across groups with different base rates cannot also equalize FPR \u2014 that impossibility is reported, not hidden.",
+  "honesty": "Synthetic dataset (984 patients). Gender base rates F 43.9% / M 7.4% are properties of THIS dataset. This search observes a TPR/FPR trade-off, not a general impossibility proof. Unequal base rates alone do not prohibit equalized odds.",
   "cohort": {
     "patients": 984,
     "gender_base_rates_pct": {
