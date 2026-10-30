@@ -6,7 +6,7 @@ An exploratory dashboard for reviewing hospital outcomes, readmission flags and 
 
 [![CI](https://github.com/rishi-1603/HealthGuard-AI/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/rishi-1603/HealthGuard-AI/actions/workflows/ci.yml)
 
-![Hospital outcomes dashboard](dashboard/screenshots/v2_outcomes_overview.png)
+![Hospital outcomes dashboard](docs/screenshots/publication_overview.png)
 
 > The primary dashboard uses 984 synthetic patient records. It is not for diagnosis, treatment, triage or clinical decisions. A separate external-validation track uses public UCI heart-disease data with a different outcome; it is not a validation of real-world readmission performance.
 
@@ -82,11 +82,13 @@ Condition, gender, outcome and age filters let the user inspect smaller cohorts.
 
 The hosted app may need waking after inactivity. The [local-demo guide](docs/DEMO_FALLBACK_GUIDE.md) provides an alternative.
 
+![Condition and age analysis](docs/screenshots/publication_conditions.png)
+
 ## Validation and responsible use of AI
 
 The grounded Q&A benchmark checks both answers and refusals: **8/8 answerable cases, 3/3 out-of-scope refusals and 3/3 false-premise traps** pass, with no fabricated answers in those tested cases. Optional Gemini narration is not covered by that guarantee.
 
-The full audited suite contains **132 tests**. It covers the SQL layer, data checks, analytical reports, model outputs, Q&A and application rendering. The committed model and encoders use scikit-learn **1.9.0**, pinned in the requirements to avoid cross-version loading.
+The full audited suite contains **133 tests**. It covers the SQL layer, data checks, analytical reports, model outputs, Q&A and application rendering. The committed model and encoders use scikit-learn **1.9.0**, pinned in the requirements to avoid cross-version loading.
 
 [Q&A evaluation](reports/qa_eval.md) · [Data-quality report](reports/data_quality_report.md) · [Publication audit and remaining checks](docs/FINAL_RELEASE_AUDIT.md)
 
