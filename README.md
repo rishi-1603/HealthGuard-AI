@@ -6,6 +6,19 @@
 
 [![CI](https://github.com/rishi-1603/HealthGuard-AI/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/rishi-1603/HealthGuard-AI/actions/workflows/ci.yml) ![Tests](https://img.shields.io/badge/tests-132%20passed-brightgreen)
 
+> ### 🧭 Recruiter & Interview Verification Hub (October 2026 Comprehensive Upgrade)
+> - **Direct Resume Evidence Index:** [RESUME_EVIDENCE.md](RESUME_EVIDENCE.md) *(Claims, definitions, reproduction commands, & test files)*
+> - **Executive Clinical Brief:** [docs/EXECUTIVE_FINDINGS_REPORT.md](docs/EXECUTIVE_FINDINGS_REPORT.md) *(Cost concentration, clinical baseline power, & intervention economics)*
+> - **Prediction Point Methodology:** [docs/PREDICTION_POINT_METHODOLOGY.md](docs/PREDICTION_POINT_METHODOLOGY.md) *(Prediction at discharge & feature leakage boundaries)*
+> - **Methodology & Synthetic Limitations:** [docs/SYNTHETIC_DATA_LIMITATIONS.md](docs/SYNTHETIC_DATA_LIMITATIONS.md) *(Why 0.99 AUC is synthetic structure vs real-world EHR)*
+> - **Consolidated Baseline Matrix:** [docs/MODEL_EVALUATION_CONSOLIDATION.md](docs/MODEL_EVALUATION_CONSOLIDATION.md) *(No-ML 0.929 baseline vs Logistic Regression vs RF)*
+> - **Hospital Operations Analytics:** [docs/HOSPITAL_OPERATIONS_ANALYTICS.md](docs/HOSPITAL_OPERATIONS_ANALYTICS.md) *(Length of stay, cost asymmetry, & Rs. 2.98L net benefit)*
+> - **Fairness & Subgroup Audit:** [docs/FAIRNESS_AND_SUBGROUP_AUDIT.md](docs/FAIRNESS_AND_SUBGROUP_AUDIT.md) *(Gender and age band performance parity breakdown)*
+> - **Offline Demo Fallback Guide:** [docs/DEMO_FALLBACK_GUIDE.md](docs/DEMO_FALLBACK_GUIDE.md) *(Local instant execution & smoke-test instructions)*
+
+---
+
+
 > **Safety and data notice:** This project uses **984 synthetic patient records**. It contains no real patient data and is not intended for diagnosis, treatment, care prioritization, or clinical decision-making. All outcome, cost, subgroup, and model metrics are illustrative properties of the generated dataset—not evidence of patient benefit or clinical validity.
 
 ## Executive summary
