@@ -10,11 +10,13 @@ Real dataset: 303 patients, positive rate 45.9%, sex base rates {'Female': 0.257
 ## 1. Fairness structure on real patients
 
 - TPR gap at t=0.5: **0.0782** — the gap is real-data too
-- Minimax post-processing (F t=0.45, M t=0.6): TPR gap 0.0007 / FPR gap **0.0102** (vs TPR 0.0782 / FPR 0.1461 at t=0.5)
+- Minimax post-processing (F t=0.25, M t=0.35): TPR gap 0.0011 / FPR gap **0.0085** (vs TPR 0.0782 / FPR 0.1431 at t=0.5)
 - **Post-processing closes both gaps here: True**
-- Honesty: the strict impossibility (calibrated scores + parity with unequal
-  base rates) did NOT dominate on this set — the trade-off here appears as
-  fairness-vs-calibration, not as a forced FPR explosion. Disclosed, not hidden.
+- Baseline recall 78.4%; search recall floor 70.6%.
+- Selected recall 92.1%, precision 68.1%.
+- This is an empirical threshold comparison, not an impossibility proof or
+  a demonstration of clinical utility. Unequal base rates alone do not
+  prohibit equalized odds.
 
 ## 2. Intervention economics on real outcomes
 
@@ -31,8 +33,8 @@ Real dataset: 303 patients, positive rate 45.9%, sex base rates {'Female': 0.257
 | Conclusion | Transfers? | Detail |
 |---|---|---|
 | A gender TPR gap exists in the deployed scoring regime | YES | real-data TPR gap at t=0.5: 0.0782 (F base 0.26 vs M base 0.55) |
-| Group-specific thresholds (Mitigation B method) reduce the gaps | YES | minimax post-processing (F t=0.45, M t=0.6): TPR gap 0.0007, FPR gap 0.0102 |
-| Closing the TPR gap necessarily re-opens the FPR gap (impossibility) | NO | did NOT reproduce on this set: post-processing found an approximate equalized-odds point. The impossibility pins CALIBRATED scores with unequal base rates; it is disclosed as dataset-geometry-dependent |
+| Group-specific thresholds (Mitigation B method) reduce the gaps | YES | minimax post-processing (F t=0.25, M t=0.35): TPR gap 0.0011, FPR gap 0.0085 |
+| Closing the TPR gap necessarily re-opens the FPR gap (impossibility) | NO | did NOT reproduce as a general theorem: this is a constrained empirical threshold comparison. Unequal base rates alone do not prohibit equalized odds; calibration-related impossibility results require additional conditions not proved by this experiment. |
 | Targeted enrollment beats blanket enrollment | YES | enroll_all net -118124.13; enroll_top_quartile net 46853.47; enroll_above_baseline net 65037.88 |
 | Specific rupee values (₹2.98L net, +112% premium) | NO | dataset-specific — the METHOD transfers, the values do not |
 

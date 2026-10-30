@@ -348,7 +348,7 @@ def render_overview(df, kpis, cond_summary):
             f"""<div style="border:1px solid rgba(248,113,113,0.35); border-radius:10px;
                  padding:12px 14px; background:rgba(248,113,113,0.07);">
               <div style="font-size:0.95rem; font-weight:700; color:{TEXT};">
-                {ops['readmitted_n']} readmitted patients hold ₹{ops['readmitted_total_cost']/1e5:,.1f}L
+                {ops['readmitted_n']} readmitted patients hold ₹{ops['readmitted_total_cost']:,.0f}
                 — {ops['readmitted_cost_share_pct']}% of all cost</div>
               <div style="font-size:0.8rem; color:{MUTED}; margin-top:4px;">
                 {ops['readmission_rate_pct']}% of patients, {ops['readmitted_cost_share_pct']}% of spend —
@@ -360,10 +360,10 @@ def render_overview(df, kpis, cond_summary):
                  padding:12px 14px; background:rgba(251,191,36,0.06);">
               <div style="font-size:0.95rem; font-weight:700; color:{TEXT};">
                 Readmitted cost ₹{ops['readmitted_avg_cost']:,.0f} vs ₹{ops['non_readmitted_avg_cost']:,.0f}
-                (+{ops['cost_premium_pct']}%)</div>
+                ({ops['cost_premium_pct']:+.1f}%)</div>
               <div style="font-size:0.8rem; color:{MUTED}; margin-top:4px;">
                 Avg length of stay {ops['readmitted_avg_los']}d vs {ops['non_readmitted_avg_los']}d
-                (+{ops['los_premium_days']}d) — the operational premium of a readmission</div>
+                ({ops['los_premium_days']:+.1f}d) — observed length-of-stay difference</div>
             </div>""", unsafe_allow_html=True)
     with o3:
         top_cond = ops_layer.readmission_by_condition(df).iloc[0]
@@ -371,7 +371,7 @@ def render_overview(df, kpis, cond_summary):
             f"""<div style="border:1px solid rgba(99,102,241,0.4); border-radius:10px;
                  padding:12px 14px; background:rgba(99,102,241,0.07);">
               <div style="font-size:0.95rem; font-weight:700; color:{TEXT};">
-                Highest readmission rate: {top_cond['Condition']} ({top_cond['readmit_rate_pct']:.0f}%)</div>
+                Highest readmission rate: {top_cond['Condition']} ({top_cond['readmit_rate_pct']:.1f}%)</div>
               <div style="font-size:0.8rem; color:{MUTED}; margin-top:4px;">
                 {int(top_cond['patients'])} patients — drill into condition and age bands on the
                 Root-Cause Drill tab</div>
@@ -486,7 +486,7 @@ def render_overview(df, kpis, cond_summary):
         r2_name, r2_rate = top_readmit.iloc[1]["Condition"], top_readmit.iloc[1]["readmission_rate"]
         readmit_line = f"**{r1_name}** ({r1_rate:.1f}%) and **{r2_name}** ({r2_rate:.1f}%) have the highest observed readmission rates"
     except IndexError:
-        readmit_line = f"**{r1_name}** ({r1_rate}%) drives readmissions"
+        readmit_line = f"**{r1_name}** ({r1_rate:.1f}%) is the only condition in this filtered view"
     priciest = cond_summary.sort_values("avg_cost", ascending=False).iloc[0]
     st.info(
         f"📌 **What the data says (computed live):** {readmit_line}. "
@@ -1051,7 +1051,7 @@ try:
             "cohort (no LLM); anything else escalates to Gemini grounded in the same statistics. "
             "The AI never computes numbers and never makes clinical determinations.\n\n"
             "**Not medical advice:** demo analytics — not for diagnosis, treatment, or clinical decisions. "
-            "Everything here is reproducible: `tests/` (132 automated) and `reports/` in the repo."
+            "Everything here is reproducible: `tests/` (133 automated) and `reports/` in the repo."
         )
 
     st.divider()

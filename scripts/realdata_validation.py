@@ -93,8 +93,10 @@ def fairness_structure(df: pd.DataFrame) -> dict:
     tpr_gap_05 = abs(g05["Female"]["tpr"] - g05["Male"]["tpr"])
     fpr_gap_05 = abs(g05["Female"]["fpr"] - g05["Male"]["fpr"])
 
-    # Equalized-odds post-processing (Hardt et al.): per-group thresholds that
-    # minimize the WORSE of the two gaps (minimax), non-saturated regime only.
+    # Minimax threshold search, not a full randomized equalized-odds algorithm.
+    # Retain at least 90% of baseline recall to exclude near-all-negative policies.
+    baseline_recall = float(((proba >= 0.5) & (y == 1)).sum() / (y == 1).sum())
+    recall_floor = 0.90 * baseline_recall
     best = None
     for t_f in np.arange(0.20, 1.0, 0.05):
         for t_m in np.arange(0.20, 1.0, 0.05):
@@ -102,14 +104,22 @@ def fairness_structure(df: pd.DataFrame) -> dict:
             gm = group_at(float(t_m))
             tpr_gap = abs(gf["Female"]["tpr"] - gm["Male"]["tpr"])
             fpr_gap = abs(gf["Female"]["fpr"] - gm["Male"]["fpr"])
+            pred = proba >= np.where(df["sex_label"] == "Female", t_f, t_m)
+            recall = float((pred & (y == 1)).sum() / (y == 1).sum())
+            if recall < recall_floor:
+                continue
+            precision = float((pred & (y == 1)).sum() / max(int(pred.sum()), 1))
             worst = max(tpr_gap, fpr_gap)
             cand = {"t_female": round(float(t_f), 2), "t_male": round(float(t_m), 2),
                     "tpr_gap": round(tpr_gap, 4), "fpr_gap": round(fpr_gap, 4),
-                    "worst_gap": round(worst, 4)}
-            if best is None or cand["worst_gap"] < best["worst_gap"]:
+                    "worst_gap": round(worst, 4), "recall": round(recall, 4),
+                    "precision": round(precision, 4)}
+            if best is None or (cand["worst_gap"], -cand["recall"]) < (best["worst_gap"], -best["recall"]):
                 best = cand
 
     return {
+        "baseline_recall": round(baseline_recall, 4),
+        "recall_floor": round(recall_floor, 4),
         "group_metrics_at_0.5": g05,
         "tpr_gap_at_0.5": round(tpr_gap_05, 4),
         "fpr_gap_at_0.5": round(fpr_gap_05, 4),
@@ -169,9 +179,10 @@ def run() -> dict:
                    f"{fair['equalized_odds_search']['fpr_gap']}"},
         {"conclusion": "Closing the TPR gap necessarily re-opens the FPR gap (impossibility)",
          "transfers": False,
-         "detail": ("did NOT reproduce on this set: post-processing found an approximate "
-                    "equalized-odds point. The impossibility pins CALIBRATED scores with "
-                    "unequal base rates; it is disclosed as dataset-geometry-dependent")},
+         "detail": ("did NOT reproduce as a general theorem: this is a constrained empirical "
+                    "threshold comparison. Unequal base rates alone do not prohibit "
+                    "equalized odds; calibration-related impossibility results require "
+                    "additional conditions not proved by this experiment.")},
         {"conclusion": "Targeted enrollment beats blanket enrollment",
          "transfers": econ["targeting_beats_blanket"],
          "detail": "; ".join(f"{s['strategy']} net {s['net_value']}" for s in econ["strategies"])},
@@ -180,8 +191,11 @@ def run() -> dict:
          "detail": "dataset-specific — the METHOD transfers, the values do not"},
     ]
 
+    import sklearn
     result = {
         "generated_by": "scripts/realdata_validation.py",
+        "sklearn_version": sklearn.__version__,
+        "protocol": "5-fold stratified OOF, seed 42; threshold grid 0.20–0.95; retain at least 90% of baseline recall",
         "honesty": ("Real external dataset (UCI Cleveland Heart Disease, 303 patients, "
                     "CC BY 4.0). It measures disease PRESENCE, not readmission, and "
                     "carries no costs. Transfer claims are structural, not value "
@@ -225,9 +239,11 @@ def render_md(r: dict) -> str:
         f"**{f['equalized_odds_search']['fpr_gap']}** (vs TPR {f['tpr_gap_at_0.5']} / "
         f"FPR {f['fpr_gap_at_0.5']} at t=0.5)",
         f"- **Post-processing closes both gaps here: {f['postprocess_closes_both_gaps']}**",
-        "- Honesty: the strict impossibility (calibrated scores + parity with unequal",
-        "  base rates) did NOT dominate on this set — the trade-off here appears as",
-        "  fairness-vs-calibration, not as a forced FPR explosion. Disclosed, not hidden.",
+        f"- Baseline recall {f['baseline_recall']:.1%}; search recall floor {f['recall_floor']:.1%}.",
+        f"- Selected recall {f['equalized_odds_search']['recall']:.1%}, precision {f['equalized_odds_search']['precision']:.1%}.",
+        "- This is an empirical threshold comparison, not an impossibility proof or",
+        "  a demonstration of clinical utility. Unequal base rates alone do not",
+        "  prohibit equalized odds.",
         "",
         "## 2. Intervention economics on real outcomes",
         "",
