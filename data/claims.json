@@ -1,1 +1,104 @@
-﻿
+{
+  "project": "HealthGuard AI - Hospital Operations Analytics & Model Evaluation",
+  "repository": "https://github.com/rishi-1603/HealthGuard-AI",
+  "last_updated": "2026-10-30",
+  "verified_ci_tests": 132,
+  "claims": [
+    {
+      "metric_id": "hg_patient_cohort",
+      "display_name": "Total Patient Admissions Analyzed",
+      "value": 984,
+      "formatted_value": "984 Patients",
+      "unit": "Admissions",
+      "population": "Complete hospital admission encounters",
+      "definition": "COUNT(admission_id)",
+      "source_file": "data/hospital_admissions.csv, src/eda.py",
+      "test_file": "tests/test_data_integrity.py",
+      "limitations": "Synthetic inpatient cohort modeling standard healthcare pathway distributions"
+    },
+    {
+      "metric_id": "hg_clinical_conditions",
+      "display_name": "Clinical Diagnosis Taxonomy",
+      "value": 15,
+      "formatted_value": "15 Medical Conditions",
+      "unit": "Conditions",
+      "population": "Inpatient diagnostic condition space",
+      "definition": "COUNT(DISTINCT condition_name)",
+      "source_file": "src/condition_profiling.py",
+      "test_file": "tests/test_condition_analytics.py",
+      "limitations": "Standardized diagnostic categories"
+    },
+    {
+      "metric_id": "hg_readmission_prevalence",
+      "display_name": "30-Day Readmission Prevalence",
+      "value": 26.8,
+      "formatted_value": "26.8% (264 records)",
+      "unit": "Percentage",
+      "population": "All-cause 30-day inpatient readmissions",
+      "definition": "COUNT(readmitted == 1) / COUNT(admission_id) * 100",
+      "source_file": "src/outcomes_analysis.py",
+      "test_file": "tests/test_outcomes_consistency.py",
+      "limitations": "Readmissions drive 43.8% of total inpatient healthcare costs"
+    },
+    {
+      "metric_id": "hg_no_ml_baseline_auc",
+      "display_name": "No-ML Clinical Condition Baseline",
+      "value": 0.929,
+      "formatted_value": "0.929 ROC-AUC",
+      "unit": "ROC-AUC",
+      "population": "Condition-only empirical probability lookup benchmark",
+      "definition": "Baseline ROC-AUC using medical condition alone without ML modeling",
+      "source_file": "src/baseline_models.py",
+      "test_file": "tests/test_readmission_model.py",
+      "limitations": "Demonstrates condition explains majority of variance before applying complex ML"
+    },
+    {
+      "metric_id": "hg_synthetic_ceiling_honesty",
+      "display_name": "Synthetic Data Architecture Audit",
+      "value": 0.994,
+      "formatted_value": "0.994 ROC-AUC (Synthetic Artifact Footnote)",
+      "unit": "ROC-AUC",
+      "population": "Held-out test split under Random Forest classifier",
+      "definition": "Documented limitation showing high AUC reflects synthetic deterministic rules",
+      "source_file": "docs/SYNTHETIC_DATA_LIMITATIONS.md, src/model_audit.py",
+      "test_file": "tests/test_model_honesty.py",
+      "limitations": "Honest limitation statement: high AUC is a data artifact, not clinical genius"
+    },
+    {
+      "metric_id": "hg_shap_explainability",
+      "display_name": "SHAP Explainability Top Drivers",
+      "value": 3,
+      "formatted_value": "Age, Length of Stay, Medication Count",
+      "unit": "Features",
+      "population": "Global TreeExplainer attribution rankings",
+      "definition": "Mean absolute SHAP value across patient encounters",
+      "source_file": "src/explainability.py",
+      "test_file": "tests/test_cohort_shap.py",
+      "limitations": "Explains predictive model associations, not clinical biological causality"
+    },
+    {
+      "metric_id": "hg_intervention_economics",
+      "display_name": "Targeted Post-Discharge Intervention Benefit",
+      "value": 298000.0,
+      "formatted_value": "+\u20b92.98L net benefit (vs -\u20b910.4L blanket loss)",
+      "unit": "INR",
+      "population": "Top-quartile high-risk readmission patients (\u20b95,000 follow-up cost)",
+      "definition": "Economic simulation of targeted nurse follow-up outreach",
+      "source_file": "src/program_economics.py",
+      "test_file": "tests/test_program_economics.py",
+      "limitations": "Simulated operational healthcare economics scenario"
+    },
+    {
+      "metric_id": "hg_automated_ci_tests",
+      "display_name": "Automated CI Test Footprint",
+      "value": 132,
+      "formatted_value": "132 Passing Tests",
+      "unit": "Tests",
+      "population": "Inference, fairness, and schema integrity test suite",
+      "definition": "pytest tests/ execution in GitHub Actions CI",
+      "source_file": ".github/workflows/ci.yml",
+      "test_file": "tests/",
+      "limitations": "100% passing across demographic parity and risk scoring"
+    }
+  ]
+}
