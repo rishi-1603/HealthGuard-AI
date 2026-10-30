@@ -5,7 +5,6 @@ SHAP explainer for use in the dashboard.
 
 Run: python scripts/train_readmission_model.py
 """
-import sys
 from pathlib import Path
 
 import joblib

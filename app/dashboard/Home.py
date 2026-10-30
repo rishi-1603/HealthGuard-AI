@@ -35,6 +35,7 @@ RED = "#F87171"
 
 st.markdown(f"""
 <style>
+[data-testid="stToolbarActionButtonLabel"] {{ color: {TEXT} !important; }}
 [data-testid="stAppViewContainer"] {{
     background: {BG};
 }}
@@ -975,7 +976,7 @@ try:
     raw = data.load_patients()
 
     with st.sidebar:
-        st.markdown(f"""
+        st.markdown("""
         <div class="hg-brand">
             <div style="font-size:1.5rem;">🛡️</div>
             <div class="hg-brand-title">HealthGuard AI</div>

@@ -104,7 +104,7 @@ def main() -> None:
         "   of Stay follow the same condition pathway), a RandomForest spreads its splits",
         "   across the correlated group, so SHAP attribution is distributed. This is",
         "   expected model behaviour, not evidence of independent risk factors.",
-        f"2. **Pathway-linked factors (Procedure + Cost + Condition + Length of Stay)",
+        "2. **Pathway-linked factors (Procedure + Cost + Condition + Length of Stay)",
         f"   jointly hold {pathway_share:.1f}% of influence** — consistent with the model",
         "   honesty audit (`reports/model_honesty.md`), which showed readmission is",
         "   generated as a near-deterministic function of the condition pathway in this",

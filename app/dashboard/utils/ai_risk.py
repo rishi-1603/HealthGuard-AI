@@ -2,7 +2,6 @@
 AI layer: readmission risk scoring with SHAP-based explainability.
 Loads the model trained by scripts/train_readmission_model.py.
 """
-import sys
 from pathlib import Path
 
 import joblib
