@@ -13,7 +13,6 @@ mitigation B (F 0.85 / M 0.05): TPR gap 0.0010 but FPR gap 0.1082 — the
 impossibility pin: closing the TPR gap un-closes the FPR gap.
 """
 import json
-import math
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]

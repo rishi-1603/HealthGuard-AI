@@ -59,7 +59,7 @@ def test_risk_tier_thresholds_match_dashboard(artifacts, df):
     n_high = (proba >= 0.66).sum()
     n_watch = ((proba >= 0.33) & (proba < 0.66)).sum()
     n_low = (proba < 0.33).sum()
-    assert n_high > 0 and n_low > 0, "HIGH/LOW tiers empty — tier logic broken"
+    assert n_high > 0 and n_watch > 0 and n_low > 0, "A risk tier is empty — tier logic broken"
 
 
 def test_metrics_json_is_self_consistent():
