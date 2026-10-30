@@ -19,7 +19,7 @@
 ---
 
 
-> **Safety and data notice:** This project uses **984 synthetic patient records**. It contains no real patient data and is not intended for diagnosis, treatment, care prioritization, or clinical decision-making. All outcome, cost, subgroup, and model metrics are illustrative properties of the generated dataset—not evidence of patient benefit or clinical validity.
+> **Safety and data notice:** This project uses **984 synthetic patient records**. The primary dashboard uses only those synthetic records; a separate external-validation track includes a public UCI clinical reference dataset. It is not intended for diagnosis, treatment, care prioritization, or clinical decision-making. All outcome, cost, subgroup, and model metrics are illustrative properties of the generated dataset—not evidence of patient benefit or clinical validity.
 
 ## Executive summary
 
@@ -112,7 +112,7 @@ A program simulator ([`reports/program_simulator.md`](reports/program_simulator.
 
 ![Fairness trade-off: closing the TPR gap re-opens the FPR gap](docs/fairness_tradeoff_gaps.png)
 
-A priced mitigation analysis ([`reports/fairness_tradeoff.md`](reports/fairness_tradeoff.md)) maps the equal-opportunity (TPR) gap against policy options: unconstrained, the gap is **0.059**; group-specific thresholds reduce it to **0.001** (recall 97.0%, precision 83.4%). The impossibility is stated out loud: with base rates this different (43.9% vs 7.4%), equalizing TPR necessarily un-equalizes FPR — the FPR gap is printed in the JSON so nobody mistakes the mitigation for a free lunch.
+A priced mitigation analysis ([`reports/fairness_tradeoff.md`](reports/fairness_tradeoff.md)) maps the equal-opportunity (TPR) gap against policy options: unconstrained, the gap is **0.059**; group-specific thresholds reduce it to **0.001** (recall 97.0%, precision 83.4%). In this threshold search, the lower TPR gap comes with a larger FPR gap. This is an observed policy trade-off, not a proof that unequal base rates alone make simultaneous TPR/FPR parity impossible; fairness impossibility results require additional conditions, such as calibration. The JSON reports both gaps, and the external-data track documents a different result.
 
 ### SQL analytics, grounded Q&A benchmark, and real-data validation
 
@@ -156,7 +156,7 @@ An optional Gemini fallback can be configured through the platform’s secrets o
 
 ## Limitations and safety boundary
 
-- No real patients or clinical source data are included; all reported metrics are synthetic.
+- The primary dashboard and model metrics use synthetic records. The separately labelled UCI external-validation track uses a public clinical reference dataset and a different outcome (disease presence, not readmission).
 - The outcome is strongly encoded by the generated condition/procedure pathway. High AUC is not evidence of clinical skill.
 - Cost, age, and subgroup comparisons are descriptive and can reflect generator choices; they do not establish causality, fairness, or patient benefit.
 - The one-row-per-patient table has no true longitudinal admissions timeline. The synthetic time split cannot establish temporal generalization.

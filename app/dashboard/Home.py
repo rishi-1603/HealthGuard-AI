@@ -483,7 +483,7 @@ def render_overview(df, kpis, cond_summary):
     r1_name, r1_rate = top_readmit.iloc[0]["Condition"], top_readmit.iloc[0]["readmission_rate"]
     try:
         r2_name, r2_rate = top_readmit.iloc[1]["Condition"], top_readmit.iloc[1]["readmission_rate"]
-        readmit_line = f"**{r1_name}** ({r1_rate}%) and **{r2_name}** ({r2_rate}%) drive readmissions"
+        readmit_line = f"**{r1_name}** ({r1_rate:.1f}%) and **{r2_name}** ({r2_rate:.1f}%) have the highest observed readmission rates"
     except IndexError:
         readmit_line = f"**{r1_name}** ({r1_rate}%) drives readmissions"
     priciest = cond_summary.sort_values("avg_cost", ascending=False).iloc[0]

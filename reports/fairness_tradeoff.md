@@ -22,12 +22,12 @@
 **Accuracy cost of A:** ΔF1 -0.013, Δrecall -2.6%.
 **Accuracy cost of B:** Δrecall -2.3%.
 
-## The impossibility that must be stated out loud
+## Observed trade-off, not an impossibility proof
 
-When base rates differ this sharply (43.9% vs 7.4%), **equalizing TPR
-necessarily un-equalizes FPR** — mitigation B's FPR gap is printed in the
-JSON (`fpr_gap`) precisely so nobody mistakes this for a free lunch. This
-is the Chouldechova/Kleinberg impossibility result, visible in our own data.
+In this search, mitigation B reduces the TPR gap but increases the FPR gap.
+Both gaps are printed in the JSON (`fpr_gap`). Unequal base rates alone do
+not make equalized odds impossible. Calibration-related impossibility
+results require additional assumptions; this experiment does not prove them.
 
 ## Threshold sweep (excerpts)
 
@@ -46,5 +46,5 @@ is the Chouldechova/Kleinberg impossibility result, visible in our own data.
    parity, equal opportunity, equalized odds), each measured here.
 2. **Mitigations are priced like any other decision** — recall lost is the
    cost, gap closed is the benefit.
-3. **The impossibility result is disclosed** — that single sentence separates
-   a candidate who has DONE this work from one who has read about it.
+3. **Separate empirical trade-offs from impossibility theorems.**
+   The external-validation dataset can have a different policy geometry.

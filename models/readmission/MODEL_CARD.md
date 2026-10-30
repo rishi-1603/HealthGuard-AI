@@ -8,11 +8,11 @@
 | | |
 |---|---|
 | **Task** | Binary classification — predict `Readmission = Yes` for a patient record |
-| **Algorithm** | `RandomForestClassifier` (scikit-learn), 100 trees, `random_state=42` |
+| **Algorithm** | `RandomForestClassifier` (scikit-learn), 200 trees, `max_depth=6`, `min_samples_leaf=5`, `random_state=42` |
 | **Features (6)** | `Age`, `Gender_enc`, `Condition_enc`, `Procedure_enc`, `Cost`, `Length_of_Stay` |
 | **Training code** | `scripts/train_readmission_model.py` (shipped model) · `src/models/train.py` (legacy reference) |
 | **Artifacts** | `readmission_model.joblib`, `encoders.joblib`, `metrics.json` (this directory) |
-| **Reproducibility** | Fixed seed, stratified 80/20 split; CI retrains and re-evaluates on every push |
+| **Reproducibility** | Fixed seed, stratified 80/20 split; artifacts use scikit-learn 1.9.0. CI audits and re-evaluates the committed model; it does not retrain this model on every push. |
 
 ## 2. Intended use
 
