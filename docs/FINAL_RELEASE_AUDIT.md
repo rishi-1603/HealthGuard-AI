@@ -94,3 +94,23 @@ Verify pinned environment on deployed Streamlit app after rebuild. All provider/
 
 ## Verdict
 **NOT READY for an unconditional all-features final-release claim.** Targeted source repairs pass their local acceptance tests. Publication as an analytics demonstration must retain the listed limitations; release completion depends on the pushed-commit CI and deployment follow-up.
+
+## 2026-10-30 Second-pass publication audit (independent)
+
+Baseline main: `b39b795`. Recoverable branch: `audit/publication-review-2`. All work on a branch; nothing pushed to `main` directly.
+
+### Verified in this pass
+- Dependency install from `requirements.txt`: exit 0.
+- Full automated suite executed on Python 3.13: **132 passed**.
+- Static fatal-error scan (`ruff check --select E9,F63,F7,F82`): **All checks passed**.
+- CI on the current `main` head: **success** (GitHub Actions API).
+- README internal links and local image paths: no missing targets.
+
+### Fixes applied
+- Security: enabled XSRF protection in `.streamlit/config.toml` (was explicitly disabled); kept `enableCORS = false`.
+- Added a 'Streamlit sign-in may be required' disclosure to the live demo link.
+
+### Blocked / manual action required
+- GitHub repository **homepage** field could not be set via API (HTTP 403). Set manually: Settings -> Homepage = the Streamlit app URL.
+- **Live app is not publicly reachable**: the Streamlit URL redirects (HTTP 303) to `share.streamlit.io/-/auth/app`. Make the app public in Streamlit Cloud settings.
+- Post-rebuild pinned-environment verification, all provider/API behaviours, accessibility and load testing remain unverified.

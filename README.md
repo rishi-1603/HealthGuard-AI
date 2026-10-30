@@ -2,7 +2,7 @@
 
 **An analytics-first healthcare portfolio prototype** for exploring synthetic outcomes, costs, length of stay, and subgroup patterns in a filterable dashboard—with a separately evaluated readmission model and explicit model-honesty checks.
 
-[Live demo](https://healthguard-ai-cyl2viwrsdrrff7pig7u6c.streamlit.app/) · [Executive summary](reports/executive_summary.md) · [Data dictionary](data/DATA_DICTIONARY.md) · [Model honesty audit](reports/model_honesty.md) · [Calibration and decision curves](reports/calibration_and_decision_curve.md) · [Temporal validation](reports/temporal_validation.md) · [Model card](models/readmission/MODEL_CARD.md) · [Intervention economics](reports/program_simulator.md) · [Fairness trade-off](reports/fairness_tradeoff.md) · [Tests](tests/) · [Release gates](docs/RELEASE_GATES.md)
+[Live demo (Streamlit sign-in may be required)](https://healthguard-ai-cyl2viwrsdrrff7pig7u6c.streamlit.app/) · [Executive summary](reports/executive_summary.md) · [Data dictionary](data/DATA_DICTIONARY.md) · [Model honesty audit](reports/model_honesty.md) · [Calibration and decision curves](reports/calibration_and_decision_curve.md) · [Temporal validation](reports/temporal_validation.md) · [Model card](models/readmission/MODEL_CARD.md) · [Intervention economics](reports/program_simulator.md) · [Fairness trade-off](reports/fairness_tradeoff.md) · [Tests](tests/) · [Release gates](docs/RELEASE_GATES.md)
 
 [![CI](https://github.com/rishi-1603/HealthGuard-AI/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/rishi-1603/HealthGuard-AI/actions/workflows/ci.yml) ![Tests](https://img.shields.io/badge/tests-132%20passed-brightgreen)
 
