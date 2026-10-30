@@ -9,6 +9,7 @@
 | Medium | .streamlit/config.toml | Reviewed audit PR enables Streamlit XSRF protection. | XSRF had been explicitly disabled. | Merge reviewed protection setting and remove CORS-disable override. | TOML validated; AppTest/regression passes; recheck actual cloud startup. |
 | Low | app/dashboard/Home.py | Single-condition view showed unrounded rates, +− LOS text and rounded small costs to 0.0L. | Formatting paths did not cover filtered cohorts. | One-decimal descriptive rate, signed difference formatting and exact recorded cost display. | Filtered-cohort tests and browser workflow checks. |
 | Low | Python/test modules | 12 selected lint findings at baseline. | Unused imports/locals and unnecessary f prefixes. | Remove dead imports; strengthen the existing tier test to assert WATCH as well as HIGH/LOW. | Selected Ruff rules clean; full suite pass. |
+| Medium | scripts/qa_eval.py | Top-three responses could pass with one matching token; false-premise counts could pass without a percent sign. | Evaluation checked any token and inferred refusal from formatting. | Require all expected tokens and explicit ok=false refusal. | Direct benchmark passes; incomplete top-three answer rejected; Q&A regression passes. |
 
 ## Remaining boundaries
 - No real parallel subagent facility was available; sequential specialist workstreams were used.

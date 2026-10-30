@@ -12,7 +12,7 @@
 | Direct QA benchmark | 8 answers + 3 refusals + 3 traps | PASS within authored scope |
 
 ## Accessibility
-axe scans use WCAG2A/AA and WCAG2.1AA tags. Measured patch verification has zero detected violations at 1440×900 and 390×844, with 1 incomplete rule groups still requiring manual review. A live post-push scan is recorded in the delivery report.
+axe scans use WCAG2A/AA and WCAG2.1AA tags. Measured patch verification has zero detected violations at 1440×900 and 390×844, with 1 incomplete rule groups still requiring manual review. Live post-push scans also reported zero detected violations in the tested desktop/mobile states; incomplete rules remain manual-review items.
 Keyboard focus smoke checks are not a screen-reader walkthrough. Not all chart semantics, every hidden state or assistive-technology behavior is certified.
 
 ## Performance

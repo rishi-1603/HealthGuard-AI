@@ -65,12 +65,12 @@ def evaluate_answerable(df: pd.DataFrame, case: dict) -> dict:
     ok = bool(res.get("ok"))
     text = res.get("text", "")
     tokens = expected_tokens(df, case["recompute"])
-    grounded = ok and any(tok in text for tok in tokens)
+    grounded = ok and bool(tokens) and all(tok in text for tok in tokens)
     return {
         "question": case["question"],
         "ok": ok,
         "grounded": bool(grounded),
-        "expected_any_of": tokens,
+        "expected_tokens": tokens,
         "fabrication": bool(ok and not grounded),
     }
 
@@ -92,11 +92,9 @@ def run() -> dict:
     traps = []
     for c in bench["false_premise_traps"]:
         res = answer(df, c["question"])
-        text = res.get("text", "")
-        # A trap is passed only if the system does NOT present a confident
-        # condition-specific number. ok=false, or text without a fabricated
-        # condition rate, both count as refusal.
-        confident_fabrication = bool(res.get("ok")) and ("%" in text) and ("not" not in text.lower() and "no " not in text.lower())
+        # A false premise must be explicitly refused. Looking only for a '%' sign
+        # could incorrectly pass an unsupported count or a confident text answer.
+        confident_fabrication = bool(res.get("ok"))
         traps.append({
             "question": c["question"],
             "ok": bool(res.get("ok")),

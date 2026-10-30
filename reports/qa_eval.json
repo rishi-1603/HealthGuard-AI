@@ -10,7 +10,7 @@
         "question": "What is the overall readmission rate?",
         "ok": true,
         "grounded": true,
-        "expected_any_of": [
+        "expected_tokens": [
           "26.8%"
         ],
         "fabrication": false
@@ -19,7 +19,7 @@
         "question": "What is the readmission rate for heart attack?",
         "ok": true,
         "grounded": true,
-        "expected_any_of": [
+        "expected_tokens": [
           "100.0%"
         ],
         "fabrication": false
@@ -28,7 +28,7 @@
         "question": "What is the readmission rate for diabetes?",
         "ok": true,
         "grounded": true,
-        "expected_any_of": [
+        "expected_tokens": [
           "1.5%"
         ],
         "fabrication": false
@@ -37,7 +37,7 @@
         "question": "What is the average cost for heart disease?",
         "ok": true,
         "grounded": true,
-        "expected_any_of": [
+        "expected_tokens": [
           "15,000"
         ],
         "fabrication": false
@@ -46,7 +46,7 @@
         "question": "What is the average length of stay?",
         "ok": true,
         "grounded": true,
-        "expected_any_of": [
+        "expected_tokens": [
           "37.7"
         ],
         "fabrication": false
@@ -55,7 +55,7 @@
         "question": "What is the average satisfaction?",
         "ok": true,
         "grounded": true,
-        "expected_any_of": [
+        "expected_tokens": [
           "3.60"
         ],
         "fabrication": false
@@ -64,7 +64,7 @@
         "question": "How many patients have diabetes?",
         "ok": true,
         "grounded": true,
-        "expected_any_of": [
+        "expected_tokens": [
           "65"
         ],
         "fabrication": false
@@ -73,7 +73,7 @@
         "question": "What are the most expensive conditions?",
         "ok": true,
         "grounded": true,
-        "expected_any_of": [
+        "expected_tokens": [
           "Cancer",
           "Prostate Cancer",
           "Heart Attack"
