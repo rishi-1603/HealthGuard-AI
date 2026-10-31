@@ -8,7 +8,7 @@
 ## Cost model
 
 - Program cost: **₹2,000** per enrolled patient
-- Avoided readmission episode: **₹13,650** (measured: avg readmitted cost)
+- Avoided readmission episode: **₹13,650** (scenario value based on the rounded mean cost of readmitted records, not a causal saving)
 - Efficacy: **25%** relative risk reduction (assumption)
 
 ## Strategies priced
@@ -45,10 +45,10 @@
   policy choice, not just maths. The numbers are printed so the trade-off is
   explicit (see also the fairness trade-off track).
 
-## How to defend this in an interview
+## Interpretation
 
-1. **The targeting rule is auditable** — one sentence per patient, no model API.
-2. **Break-even efficacy is the CFO's number**: below it, don't fund.
-3. **Sensitivity shows the phase boundary** — the program flips from asset to
-   liability at known efficacy/cost combinations.
-4. **Equity is measured, not asserted** — enrollee mix is printed alongside value.
+1. Enrollment uses condition/age strata estimated from this same dataset.
+2. Compare assumed efficacy with the reported break-even value before considering funding.
+3. The sensitivity grid shows when modeled benefits fall below program costs.
+   If every strategy is negative, no enrollment is preferable under those assumptions.
+4. Review enrollee composition alongside value. Composition alone does not establish fairness.

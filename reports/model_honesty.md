@@ -21,7 +21,7 @@
 
 ## Conclusion (the honest framing)
 
-- Real-world clinical readmission models achieve **AUC 0.65–0.75**. AUC ≈ 0.99 here is a property of the **synthetic data-generation process**, not predictive skill.
+- Clinical performance depends on the endpoint, cohort and validation design. AUC ≈ 0.99 here is a property of the **synthetic data-generation process**, not predictive skill.
 - What this project genuinely demonstrates: the **end-to-end system** — training pipeline, per-patient scoring, SHAP explainability, and serving — with honest evaluation. The number is trivially high *and we say so*.
 - Any reviewer who checks (and good ones will) finds the note in the UI, this audit, and the README all telling the same story.
 
