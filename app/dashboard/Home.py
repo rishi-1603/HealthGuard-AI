@@ -399,8 +399,8 @@ def render_overview(df, kpis, cond_summary):
               <div style="font-size:0.9rem; font-weight:700; color:{TEXT};">
                 Model honesty: AUC {hon['shipped_rf_auc']} vs {hon['condition_only_baseline_auc']} no-ML baseline</div>
               <div style="font-size:0.8rem; color:{MUTED}; margin-top:4px;">
-                The {hon['shipped_rf_auc']} is synthetic-data determinism, not skill — real clinical models
-                sit at {hon['real_world_clinical_range']}. Published in reports/model_honesty.md.</div>
+                This result reflects the generated target structure and does not establish
+                clinical performance. See reports/model_honesty.md.</div>
             </div>""", unsafe_allow_html=True)
 
     # ---- Distribution + condition volume ----
@@ -879,7 +879,7 @@ def render_ops_drill(df):
 
 
 def render_ai(df):
-    tab_intro("Ask the data — grounded answers computed from this cohort; the AI never invents numbers.")
+    tab_intro("Ask about this cohort. Supported questions use dataset calculations; optional AI responses need review.")
 
     # ---------------- AI Recommendations ----------------
     st.markdown('<div class="section-title">AI Recommendations</div>', unsafe_allow_html=True)
@@ -960,8 +960,8 @@ def render_ai(df):
             "an almost perfect predictor of Readmission in this specific dataset — "
             "consistent with it being a synthetic/demo dataset rather than noisy real-world "
             "clinical data. For scale: a trivial Condition-only lookup table (no ML) already "
-            "scores ~0.93 AUC here, while real-world clinical readmission models typically "
-            "achieve 0.65–0.75. The quantified audit lives in reports/model_honesty.md "
+            "scores ~0.93 AUC here. Clinical performance depends on the endpoint, "
+            "population and validation protocol. See reports/model_honesty.md "
             "(run scripts/model_honesty_audit.py to regenerate it). Treat this as a "
             "demonstration of the technique, not a validated clinical risk model."
         )

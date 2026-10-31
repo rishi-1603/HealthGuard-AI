@@ -67,7 +67,7 @@
       "definition": "Audit of the headline model metric (scripts/model_honesty_audit.py).",
       "shipped_rf_auc": 0.992,
       "condition_only_baseline_auc": 0.93,
-      "real_world_clinical_range": "0.65-0.75",
+      "real_world_clinical_range": "Not specified: depends on endpoint, cohort and validation protocol",
       "reading": "AUC ~0.99 is a property of the synthetic generation process (readmission is nearly deterministic given Condition), not predictive skill."
     },
     "cohort_shap": {

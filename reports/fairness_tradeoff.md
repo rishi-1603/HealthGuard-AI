@@ -40,11 +40,11 @@ results require additional assumptions; this experiment does not prove them.
 | 0.65 | 99.2% | 98.9% | 0.059 | 0.375 |
 | 0.80 | 97.4% | 99.2% | 0.037 | 0.364 |
 
-## How to defend this in an interview
+## Interpretation
 
-1. **'Fairness' is not a vibe — it is three named metrics** (demographic
-   parity, equal opportunity, equalized odds), each measured here.
-2. **Mitigations are priced like any other decision** — recall lost is the
-   cost, gap closed is the benefit.
+1. The report separates demographic parity, equal opportunity and equalized odds;
+   agreement on one measure does not imply agreement on the others.
+2. Compare the change in error-rate gaps with the loss of recall and precision.
+   These threshold choices have not been validated as clinical policies.
 3. **Separate empirical trade-offs from impossibility theorems.**
    The external-validation dataset can have a different policy geometry.

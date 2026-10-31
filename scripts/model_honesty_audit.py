@@ -12,8 +12,8 @@ What it measures (all on the same train/test split as the shipped model):
   3. Model without Condition   — does the ML add anything past the lookup?
   4. Demographics/utilization  — Age/Gender/Cost/LOS only, no diagnosis info
 
-Why this matters: real clinical readmission models achieve AUC 0.65–0.75.
-Anything near 0.99 on this task means the LABEL IS ENCODED IN THE FEATURES —
+Why this matters: a high AUC needs comparison with simple baselines and a
+review of how the target was constructed. Here the label structure is strong —
 i.e., the dataset is synthetic and readmission was generated as a function of
 condition/cost pathways. The model demonstrates the *system* (train → score →
 SHAP explain → serve); it does NOT demonstrate predictive skill on a hard task.
@@ -119,7 +119,7 @@ def main():
         "",
         "## Conclusion (the honest framing)",
         "",
-        "- Real-world clinical readmission models achieve **AUC 0.65–0.75**. "
+        "- Clinical performance depends on the endpoint, cohort and validation design. "
         "AUC ≈ 0.99 here is a property of the **synthetic data-generation process**, "
         "not predictive skill.",
         "- What this project genuinely demonstrates: the **end-to-end system** — "

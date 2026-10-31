@@ -247,12 +247,12 @@ def render_md(r: dict) -> str:
                          f"{s['equal_opportunity_gap']:.3f} | {s['demo_parity_gap']:.3f} |")
     lines += [
         "",
-        "## How to defend this in an interview",
+        "## Interpretation",
         "",
-        "1. **'Fairness' is not a vibe — it is three named metrics** (demographic",
-        "   parity, equal opportunity, equalized odds), each measured here.",
-        "2. **Mitigations are priced like any other decision** — recall lost is the",
-        "   cost, gap closed is the benefit.",
+        "1. The report separates demographic parity, equal opportunity and equalized odds;",
+        "   agreement on one measure does not imply agreement on the others.",
+        "2. Compare the change in error-rate gaps with the loss of recall and precision.",
+        "   These threshold choices have not been validated as clinical policies.",
         "3. **Separate empirical trade-offs from impossibility theorems.**",
         "   The external-validation dataset can have a different policy geometry.",
         "",

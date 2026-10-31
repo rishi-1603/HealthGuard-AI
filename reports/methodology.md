@@ -29,8 +29,7 @@ only by the legacy smoke test. The live product is the Streamlit app above.
   top factors driving the score up/down.
 - **Honest evaluation:** see `reports/model_honesty.md`. Summary: AUC ≈ 0.99
   is synthetic-data determinism (a per-condition lookup table alone scores
-  0.93; demographics-only scores 0.985). Real clinical readmission models
-  score 0.65–0.75. The number is trivially high *and documented as such*.
+  0.93; demographics-only scores 0.985). The result does not establish clinical validity; performance on real populations requires a separate evaluation.
 
 ## 3. The Q&A layer (anti-hallucination by design)
 - Keyword-matched templates compute answers **directly from the filtered

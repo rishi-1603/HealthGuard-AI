@@ -34,15 +34,15 @@
 | **Evidence** | `tests/test_qa_grounding.py`: every grounded answer must match a dataset aggregate; unknown subgroups refuse instead of guessing |
 | **Recommended decision** | Maintain the grounded-first, LLM-fallback-labelled pattern in any future deployment |
 | **Owner** | Engineering |
-| **KPI** | 100% of numeric answers traceable to data (CI-enforced) |
+| **KPI** | Trace supported numeric answers to their calculations; report benchmark coverage and refusals |
 | **Expected outcome** | Stakeholders can quote dashboard numbers without verification anxiety |
 
 ## Decision 4 — On real data, re-run the honesty audit before any rollout
 | Field | Detail |
 |---|---|
-| **Problem** | The same pipeline on real data will produce much lower (honest) metrics |
-| **Evidence** | Published readmission models: AUC 0.65–0.75 |
-| **Recommended decision** | Re-run `scripts/model_honesty_audit.py`; if the baseline gap collapses, the model has real signal; ship with the updated report |
+| **Problem** | Performance on real data cannot be inferred from the generated dataset |
+| **Evidence** | The present model is evaluated on synthetic labels with a strong condition pathway |
+| **Recommended decision** | Define the clinical endpoint; compare simple baselines, audit leakage and calibration, and evaluate on an independent cohort before considering deployment |
 | **Owner** | Data Science |
 | **KPI** | Honest AUC reported alongside any deployment |
 | **Expected outcome** | Credible model governance from day one |

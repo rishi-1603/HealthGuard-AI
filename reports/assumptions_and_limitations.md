@@ -1,8 +1,7 @@
 # Assumptions & Limitations
 ### What HealthGuard AI can and cannot tell you
 
-> An interviewer WILL ask these questions. Answering them first is maturity,
-> not weakness.
+> These assumptions define the scope of the analysis and the checks needed before operational use.
 
 ---
 
@@ -22,10 +21,9 @@
   in this data (11 of 15 conditions readmit at >95% or <5%). A no-ML lookup
   table scores 0.93; demographics-only scores 0.985 (see
   `reports/model_honesty.md`).
-- Real-world readmission prediction is a hard problem: published models
-  typically achieve **AUC 0.65–0.75**. Anyone quoting ~0.99 on this task is
-  either leaking the label or using synthetic data — here it is the latter,
-  and it is documented.
+- An AUC value alone cannot establish clinical validity. Results depend on
+  endpoint definition, population, available predictors and validation design.
+  Here the synthetic generator explains much of the discrimination.
 - **What the model does demonstrate:** the full MLOps-style system — training
   script, versioned artifacts, per-patient scoring, SHAP explainability,
   dashboard integration, reproducible metrics, and honest evaluation.

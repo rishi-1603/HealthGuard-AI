@@ -64,3 +64,9 @@ Synthetic hospital-outcomes case study using SQL reconciliation, cost/readmissio
 ## Extended accessibility follow-up — 2026-10-31
 
 All main pages/tabs were keyboard-activated and scanned after animations settled. The extended scan found additional contrast defects beyond the earlier default-page scan. E-Commerce retention heatmap text now uses contrast-based black/white selection on solid computed backgrounds; HealthGuard native theme settings now match the existing dark CSS so widget labels remain readable. This expands automated coverage but does not certify real screen-reader use or every possible UI state.
+
+## Language and claim-scope review — 2026-10-31
+
+Removed an uncited universal clinical-AUC range from active UI, registry commentary and reports. Replaced promotional conclusions with endpoint-specific limitations and conditional scenario interpretation. The corresponding regression now guards against reintroducing that uncited claim while retaining all numerical assertions. Full suite: 133 tests.
+
+Numerical findings were not increased or relabelled as real-world outcomes. Synthetic-data, AI-use, evaluation-scope and deployment limitations remain explicit.

@@ -73,7 +73,7 @@ An explainable healthcare-analytics platform: readmission risk scoring with per-
 
 1. **Why is AUC 0.994 not impressive here?** Because a lookup table baseline hits 0.929 and demographics-only 0.985 — the label leaks through condition, procedure, cost, and LOS. The audit proves it.
 2. **How do you detect label leakage?** Baseline comparisons (lookup tables, feature-subset models), feature-target correlation inspection, and asking whether a feature could be a proxy for the label — condition→procedure is 1:1 here.
-3. **What would a trustworthy AUC look like?** For real readmission, 0.65–0.75 with temporal validation and calibration — and it should beat its baselines by a meaningful margin.
+3. **What would a trustworthy AUC look like?** There is no universal trustworthy range. Define the endpoint and cohort, compare baselines, assess calibration and test on a suitable independent population.
 4. **What is calibration and why does it matter?** A calibrated model's 70% predictions fail ~30% of the time; risk scores used for prioritization need that property, so the reports discuss it explicitly.
 5. **When would you NOT use this model?** Any real clinical, insurance, or triage decision — synthetic data, unvalidated thresholds, no regulatory approval.
 6. **What fairness checks did you run?** AUC/precision/recall sliced by age group and gender with an honest writeup — method demonstration only on synthetic data.

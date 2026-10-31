@@ -39,7 +39,7 @@ Osteoarthritis
 1. **Readmission is condition-driven by construction** — the generator assigns
    each condition a near-fixed readmission behaviour. This is why the model's
    AUC ≈ 0.99 is a dataset property, quantified in `reports/model_honesty.md`
-   (a no-ML condition lookup scores 0.93; real clinical models reach 0.65–0.75).
+   (a condition-only lookup scores about 0.93 here; this is not a clinical validation).
 2. **Gender base-rate disparity** — Female patients in this dataset readmit at
    43.9% vs Male 7.4% (condition mix differs by gender). Full analysis:
    `reports/fairness_check.md`.

@@ -38,13 +38,13 @@ Real dataset: 303 patients, positive rate 45.9%, sex base rates {'Female': 0.257
 | Targeted enrollment beats blanket enrollment | YES | enroll_all net -118124.13; enroll_top_quartile net 46853.47; enroll_above_baseline net 65037.88 |
 | Specific rupee values (₹2.98L net, +112% premium) | NO | dataset-specific — the METHOD transfers, the values do not |
 
-## How to defend this in an interview
+## Interpretation
 
-1. **'It's synthetic' is not a rebuttal — it's the first row of this table.**
-   The values are labelled dataset-specific; the METHODS are validated on
-   real patients.
-2. **The gender gap structure reproduces on real data** (TPR gap 0.078 at the
-   deployed threshold), and the mitigation METHOD transfers too.
-3. **The honesty play**: the impossibility result that dominated the synthetic
-   set did NOT reproduce here — stated out loud with the reason (calibration
-   geometry). A candidate who reports the negative result owns the topic.
+1. The primary dashboard is synthetic. This separate analysis uses a public reference dataset
+   with a different endpoint. It illustrates the same calculations on
+   additional records, not transportability of a clinical readmission model.
+2. A group error-rate gap is observed at the default threshold (TPR gap about 0.078).
+   The selected thresholds are exploratory and require separate validation.
+3. Different datasets produce different threshold trade-offs; unequal base rates alone
+   do not prove that simultaneous TPR/FPR parity is impossible. This experiment
+   does not establish an impossibility theorem or clinical benefit.
