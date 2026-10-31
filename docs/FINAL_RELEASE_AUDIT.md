@@ -60,3 +60,7 @@ Synthetic hospital-outcomes case study using SQL reconciliation, cost/readmissio
 - Why is high AUC not proof of clinical validity?
 - What assumptions determine intervention economics?
 - Can differing base rates alone prove equalized odds impossible?
+
+## Extended accessibility follow-up — 2026-10-31
+
+All main pages/tabs were keyboard-activated and scanned after animations settled. The extended scan found additional contrast defects beyond the earlier default-page scan. E-Commerce retention heatmap text now uses contrast-based black/white selection on solid computed backgrounds; HealthGuard native theme settings now match the existing dark CSS so widget labels remain readable. This expands automated coverage but does not certify real screen-reader use or every possible UI state.
