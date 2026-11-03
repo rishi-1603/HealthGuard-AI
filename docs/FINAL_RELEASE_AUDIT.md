@@ -75,6 +75,6 @@ Numerical findings were not increased or relabelled as real-world outcomes. Synt
 
 The numerical backend, evidence display and optional provider path were audited separately. The prior live provider call returned 503 and exposed an SDK error body; the adapter now uses safe status messages and bounded catalog-model selection/failover. Numerical Q&A never invokes the provider, and optional generated prose was replaced with validated selection of precomputed aggregate fact cards.
 
-Regression: 212 tests pass. Deterministic numerical/scope benchmark: 14/14; refusals: 12/12; independent gender comparison passes. Provider contracts are mocked in CI; actual deployed connection/brief results are separate verification, not inferred from an environment variable.
+Regression: 213 tests pass. Deterministic numerical/scope benchmark: 14/14; refusals: 12/12; independent gender comparison passes. Provider contracts are mocked in CI; actual deployed connection/brief results are separate verification, not inferred from an environment variable.
 
 A comparison-group defect was also repaired: absent readmitted/non-readmitted groups now produce unavailable means/differences instead of fictitious zero comparators. Full-dataset analytical headlines are unchanged. See `ASSISTANT_GUIDE.md` and the new evaluation report.

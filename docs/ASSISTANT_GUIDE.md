@@ -39,7 +39,7 @@ No raw patient rows, patient identifiers or patient codes are sent. Cohorts smal
 ## Configuration and availability
 
 - Set `GOOGLE_API_KEY` through deployment secrets or the environment. Never paste a credential into the app or commit it.
-- Optional `GEMINI_MODEL` selects a text model returned by this account's model catalog. Otherwise the adapter chooses an available Flash text model automatically.
+- Optional `GEMINI_MODEL` selects a text model returned by this account's model catalog. Otherwise the adapter prefers an available stable lightweight Flash text model for this small selection task, with one bounded alternative from a distinct model family.
 - A configured key is not a verified connection. **Check Gemini connection** performs a small generation request with no patient data.
 - Requests have bounded timeouts/retries. In automatic mode, a transient/model-availability error may try one alternative catalog model. Authentication/quota errors do not trigger repeated requests.
 - A small process-local budget allows four optional provider flows per minute. It reduces accidental quota use but is not distributed rate limiting or authentication. Local analytical questions are not subject to it.

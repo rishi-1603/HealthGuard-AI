@@ -7,7 +7,6 @@ separately through the deployed UI.
 from pathlib import Path
 import json
 import sys
-import time
 
 import pandas as pd
 
@@ -49,12 +48,9 @@ def run():
         ('What is the capital of France?', 'all'),
     ]
     rows = []
-    times = []
     for question, expected, scope in cases:
         sub = df if scope == 'all' else df[df.Condition.eq('Diabetes')]
-        start = time.perf_counter()
         response = answer_question(sub, question)
-        times.append((time.perf_counter()-start)*1000)
         correct = response['ok'] and response.get('value') is not None and abs(response['value']-expected) < 1e-8
         rows.append({'question': question, 'scope': scope, 'expected': expected,
                      'returned': response.get('value'), 'correct': bool(correct)})
@@ -72,7 +68,6 @@ def run():
               'answerable': {'cases': len(rows), 'correct': sum(r['correct'] for r in rows), 'details': rows},
               'refusals': {'cases': len(denied), 'correct': sum(r['correct_refusal'] for r in denied), 'details': denied},
               'gender_comparison_correct': bool(group_pass),
-              'max_computed_answer_ms': round(max(times), 3),
               'scope': 'Authored deterministic benchmark, not arbitrary NLP, clinical validity or live provider uptime.',
               'verdict': 'PASS' if all(r['correct'] for r in rows) and all(r['correct_refusal'] for r in denied) and group_pass else 'FAIL'}
     (ROOT/'reports/assistant_reliability.json').write_text(json.dumps(result, indent=2), encoding='utf-8')

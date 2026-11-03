@@ -24,7 +24,7 @@ from . import assistant_service as service
 LOGGER = logging.getLogger(__name__)
 FOCUSES = {'balanced', 'costs', 'readmissions', 'outcomes'}
 MIN_EXTERNAL_COHORT = 5
-ADAPTER_VERSION = 2
+ADAPTER_VERSION = 3
 _PROVIDER_WINDOW_SECONDS = 60
 _PROVIDER_MAX_FLOWS = 4
 _REQUESTS = deque()
@@ -43,7 +43,7 @@ def is_configured() -> bool:
 
 def configuration_id() -> str:
     """Internal state invalidation key; never display credentials."""
-    value = os.getenv('GOOGLE_API_KEY', '') + '|' + os.getenv('GEMINI_MODEL', '')
+    value = str(ADAPTER_VERSION) + '|' + os.getenv('GOOGLE_API_KEY', '') + '|' + os.getenv('GEMINI_MODEL', '')
     return hashlib.sha256(value.encode()).hexdigest()[:20]
 
 
@@ -113,7 +113,10 @@ def _failure(error, fallback=None) -> dict:
     # Never log or display exception bodies: SDK messages can include sensitive context.
     LOGGER.warning('Optional analytical provider unavailable: %s', code)
     return {'ok': False, 'status': code, 'mode': 'computed_fallback',
-            'text': messages.get(code, messages['request_failed']), 'cards': fallback or []}
+            'text': messages.get(code, messages['request_failed']), 'cards': fallback or [],
+            'attempted_models': getattr(error, 'attempted_models', []),
+            'phase': getattr(error, 'phase', 'configuration'),
+            'selection_mode': 'owner_override' if os.getenv('GEMINI_MODEL', '').strip() else 'automatic'}
 
 
 def _close(client):
@@ -143,19 +146,35 @@ def _models(client) -> list[str]:
             raise ProviderProblem('model_unavailable')
         return [configured]
     # Prefer stable Flash text models actually returned by this account's catalog.
-    candidates = [x for x in available if 'flash' in x and 'lite' not in x] or [x for x in available if 'flash' in x]
+    candidates = [x for x in available if 'flash' in x]
     candidates.sort(key=lambda x: (
         not any(p in x for p in ['preview', 'exp']),
+        'lite' in x,
         tuple(int(n) for n in re.findall(r'\d+', x)),
     ), reverse=True)
     if not candidates:
         raise ProviderProblem('model_unavailable')
-    return candidates[:2]
+    unique = []
+    families = set()
+    for name in candidates:
+        match = re.match(r'gemini-(\d+(?:\.\d+)?)-(flash(?:-lite)?)', name)
+        family = match.groups() if match else (name,)
+        if family not in families:
+            families.add(family)
+            unique.append(name)
+    return unique[:2]
 
 
 def _request_json(client, prompt: str) -> tuple[dict, str]:
-    models = _models(client)
+    try:
+        models = _models(client)
+    except Exception as error:
+        safe = ProviderProblem(_problem(error))
+        safe.phase = 'catalog'
+        raise safe from None
+    attempted = []
     for index, model in enumerate(models):
+        attempted.append(model)
         try:
             response = client.models.generate_content(
                 model=model, contents=prompt,
@@ -176,7 +195,10 @@ def _request_json(client, prompt: str) -> tuple[dict, str]:
             # failures in automatic mode; never repeatedly spend quota on 429/403.
             if index + 1 < len(models) and _code(error) in {404, 500, 502, 503, 504}:
                 continue
-            raise
+            safe = ProviderProblem(_problem(error))
+            safe.attempted_models = attempted
+            safe.phase = 'generation'
+            raise safe from None
     raise ProviderProblem('request_failed')
 
 
