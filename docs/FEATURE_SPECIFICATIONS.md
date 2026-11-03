@@ -12,7 +12,8 @@
 | Subgroup CIs | demographics | bootstrap 95% CIs | refusal rules tested (thin bands) |
 | Temporal validation | synthetic dates | split comparison + noise band | 0.9963 vs 0.9923 pinned |
 | Grounded Q&A | question | grounded answer or refusal | test_qa_grounding (0 ungrounded answers) |
-| Ops layer | app events | monitoring view | test_ops_layer |
+| Ops layer | scoped synthetic records | descriptive operational comparisons | test_ops_layer |
+| Analyst workbench | selected cohort + full synthetic reference | quality checks, scoped SQL parity, comparison and report | test_analyst_workbench and test_workbench_ui |
 
 **Hard non-features:** clinical decision support, treatment advice, real-patient
 data, "99% accurate clinical AI" claims of any kind.

@@ -120,7 +120,7 @@ def test_home_has_ops_layer_integrated():
         "from app.dashboard.utils import ops_layer",
         "def render_ops_drill(df)",
         "Operations Context",
-        "Root-Cause Drill",
+        "Condition & Age",
         "Fairness &amp; Model Honesty",
         "readmission_by_age_band",
     ]:
@@ -128,12 +128,14 @@ def test_home_has_ops_layer_integrated():
 
 
 def test_dashboard_renders_end_to_end():
-    """AppTest smoke: the upgraded 5-tab dashboard renders without errors."""
+    """The six named analyst-oriented sections render without errors."""
     from streamlit.testing.v1 import AppTest
 
     at = AppTest.from_file(str(ROOT / "app" / "dashboard" / "Home.py"), default_timeout=300)
     at.run()
     assert not at.exception, f"raised: {at.exception}"
     assert len(at.error) == 0, [e.value for e in at.error]
-    # 5 tabs present
-    assert len(at.tabs) == 5, f"expected 5 tabs, got {len(at.tabs)}"
+    assert [tab.label for tab in at.tabs] == [
+        "Overview", "Analyst Workbench", "Cohort Analysis",
+        "Condition & Age", "Patient Records", "AI Assistant",
+    ]

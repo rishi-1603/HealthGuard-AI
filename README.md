@@ -70,15 +70,33 @@ The threshold analysis measures recall, precision and group error-rate gaps. One
 
 [Fairness analysis](reports/fairness_tradeoff.md) · [Subgroup report](reports/fairness_check.md) · [External-data comparison](reports/realdata_validation.md)
 
+## A practical analyst workflow
+
+The **Analyst Workbench** brings the routine reporting steps into one place:
+
+1. **Check data:** validate the source and selected cohort against a 12-rule project contract; review failures without silently filling or deleting records.
+2. **Compare:** inspect the selected cohort against the full synthetic reference, with population counts and percentage-point differences.
+3. **SQL:** choose one of four tracked, read-only questions. The query executes on the selected cohort in SQLite and is reconciled independently in pandas before results or CSV exports are shown.
+4. **Report:** export a stakeholder snapshot containing the scope, metric comparison, executed SQL, checked results and limitations. No AI key is needed.
+
+For example, the Diabetes filter selects 65 records: a 1.54% readmission rate versus 26.83% in the full reference. The reference includes those records and is not an independent control; the comparison is descriptive, not a causal conclusion.
+
+![Analyst workbench: selected cohort versus reference](docs/screenshots/workbench_comparison.png)
+
+![Analyst workbench: executed SQL and reconciliation](docs/screenshots/workbench_sql.png)
+
+[Step-by-step analyst workflow](docs/ANALYST_WORKFLOW.md) · [Four SQL questions](sql/02_analyst_workbench.sql) · [Reproducible sample stakeholder report](reports/analyst_workbench_example.md)
+
 ## Explore the dashboard
 
-- **Executive Overview:** patient volumes, recorded costs, outcomes and readmission context.
-- **Clinical Analytics:** condition and outcome comparisons.
-- **Root-Cause Drill:** condition and age breakdowns. The page name refers to exploration; it does not establish causal root causes.
-- **Patient Intelligence:** synthetic-record risk scores and model explanations.
-- **AI Assistant:** bounded questions about the dataset, with an optional external-model fallback.
+- **Overview:** selected population, recorded costs, outcomes and readmission context.
+- **Analyst Workbench:** data checks, cohort comparison, SQL/pandas reconciliation and report exports.
+- **Cohort Analysis:** condition and outcome comparisons.
+- **Condition & Age:** descriptive drill-down—not a causal root-cause result.
+- **Patient Records:** synthetic-record views, model scores and explanations.
+- **AI Assistant:** bounded numerical questions and optional Gemini selection of computed evidence.
 
-Condition, gender, outcome and age filters let the user inspect smaller cohorts. SHAP explanations describe how the fitted model uses its inputs; they do not identify clinical causes.
+Condition, gender, outcome and age filters apply to the selected cohort. SHAP describes how the synthetic model uses its inputs; it does not identify clinical causes.
 
 The hosted app may need waking after inactivity. The [local-demo guide](docs/DEMO_FALLBACK_GUIDE.md) provides an alternative.
 
@@ -96,7 +114,7 @@ The AI Assistant tab now separates numerical answers from provider assistance:
 
 The new deterministic benchmark passes **14 numerical/scope cases, 12 refusals and an independent gender comparison**. The original 8-answer/6-refusal benchmark also passes. These are authored cases, not a guarantee for arbitrary questions or provider uptime.
 
-The audited regression suite contains **214 tests**. The saved model/encoders still use scikit-learn **1.9.0**; they were not replaced for this assistant update.
+The audited regression suite contains **249 tests**. The saved model/encoders still use scikit-learn **1.9.0**; they were not replaced for this assistant update.
 
 ![Computed answer with calculation evidence](docs/screenshots/assistant_computed_evidence.png)
 
@@ -124,6 +142,7 @@ To reproduce selected reports:
 
 ```bash
 python scripts/sql_analytics.py
+python scripts/export_analyst_example.py
 python scripts/model_honesty_audit.py
 python scripts/calibration_decision_curve.py
 python scripts/temporal_validation.py

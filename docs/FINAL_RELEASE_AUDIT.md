@@ -82,3 +82,11 @@ A comparison-group defect was also repaired: absent readmitted/non-readmitted gr
 ### Actual deployed assistant checks
 
 On 2026-11-03, the deployed application returned the computed count of 264, refused an unsupported condition, and answered the filtered Diabetes cohort correctly (65 records; 1.5%). Gemini connection and validated card selection succeeded using a catalog-returned lightweight model; the evidence brief downloaded. Scope changes cleared the prior brief. No displayed Streamlit exception or JavaScript page error was observed in those workflows. See `reports/assistant_live_verification.json` and the genuine screenshots. These observations do not establish future provider uptime or whole-runtime commit attestation.
+
+## Analyst workbench — 2026-11-03
+
+A business-reporting workflow was added using the existing synthetic records, SQLite, pandas and Streamlit. It validates source/selection, compares a cohort with its labelled full reference, executes four tracked SQL questions against the selected scope, independently reconciles the returned values in pandas, and exports aggregate CSV and a stakeholder report. The reference includes the selection and is not an independent control.
+
+The workbench does not generate arbitrary SQL, invent dates or measure clinical/financial outcomes. Model evaluation is supporting evidence; the AI assistant remains a bounded separate workflow. The sample report records scope and definitions. New unit and Streamlit workflow tests cover scope integrity, missing/bad values, query failure, SQL parity, empty comparison groups, report generation and stale-state invalidation.
+
+See `ANALYST_WORKFLOW.md` for steps, reproduction and limitations. Final deployment and exact-commit CI verification are recorded separately after publication.

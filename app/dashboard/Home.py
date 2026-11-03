@@ -328,7 +328,7 @@ def filter_chips(conditions, genders, outcomes, age_range, raw):
 # ════════════════════════════════════════════════════════════════════════════
 
 def render_overview(df, kpis, cond_summary):
-    tab_intro("How is the hospital performing — volumes, outcomes, cost, and what readmissions cost?")
+    tab_intro("Review volumes, recorded costs and outcomes for the selected synthetic cohort.")
 
     # ---- KPI rows (8 cards, each with one line of context) ----
     ops = ops_layer.ops_context(df)
@@ -341,7 +341,7 @@ def render_overview(df, kpis, cond_summary):
     kpi_card(k[1], "💰", CYAN, "AVG COST / PATIENT", f"₹{kpis['avg_cost']:,.0f}",
              context=f"total ₹{kpis['total_cost']:,.0f} across cohort")
     kpi_card(k[2], "🛏️", AMBER, "AVG LENGTH OF STAY", f"{kpis['avg_los']} days",
-             context="days per admission")
+             context="recorded days per synthetic row")
     kpi_card(k[3], "↩️", RED if kpis['readmission_rate'] > 30 else AMBER, "READMISSION RATE", f"{kpis['readmission_rate']}%",
              context=f"{n_readmitted:,} patients readmitted")
 
@@ -358,7 +358,7 @@ def render_overview(df, kpis, cond_summary):
     # ---- Day-3 ops layer: what readmissions cost (computed, not assumed) ----
     ops = ops_layer.ops_context(df)
     facts = ops_layer.load_model_facts()
-    st.markdown('<div class="section-title">Operations Context — the cost of readmissions</div>',
+    st.markdown('<div class="section-title">Operations Context — recorded cost and readmission flags</div>',
                 unsafe_allow_html=True)
     o1, o2, o3 = st.columns(3)
     with o1:
@@ -392,34 +392,35 @@ def render_overview(df, kpis, cond_summary):
                 Highest readmission rate: {top_cond['Condition']} ({top_cond['readmit_rate_pct']:.1f}%)</div>
               <div style="font-size:0.8rem; color:{MUTED}; margin-top:4px;">
                 {int(top_cond['patients'])} patients — drill into condition and age bands on the
-                Root-Cause Drill tab</div>
+                Condition & Age tab</div>
             </div>""", unsafe_allow_html=True)
 
-    # ---- Fairness strip (model-derived disclosures from the audit) ----
-    st.markdown('<div class="section-title">Fairness &amp; Model Honesty (from the model audit)</div>',
-                unsafe_allow_html=True)
-    f1, f2 = st.columns(2)
-    fair = facts["fairness"]
-    hon = facts["model_honesty"]
-    with f1:
-        st.markdown(
-            f"""<div style="border:1px solid {CARD_BORDER}; border-radius:10px; padding:12px 14px;">
-              <div style="font-size:0.9rem; font-weight:700; color:{TEXT};">
-                Fairness: AUC gap {fair['auc_gap_gender']} (gender) · {fair['auc_gap_age']} (age)</div>
-              <div style="font-size:0.8rem; color:{MUTED}; margin-top:4px;">
-                Disclosed: readmission base rate is {fair['base_rate_female_pct']}% (Female) vs
-                {fair['base_rate_male_pct']}% (Male) — a {fair['base_rate_gap_pp']}-point dataset property.
-                Parity in one metric is not fairness.</div>
-            </div>""", unsafe_allow_html=True)
-    with f2:
-        st.markdown(
-            f"""<div style="border:1px solid {CARD_BORDER}; border-radius:10px; padding:12px 14px;">
-              <div style="font-size:0.9rem; font-weight:700; color:{TEXT};">
-                Model honesty: AUC {hon['shipped_rf_auc']} vs {hon['condition_only_baseline_auc']} no-ML baseline</div>
-              <div style="font-size:0.8rem; color:{MUTED}; margin-top:4px;">
-                This result reflects the generated target structure and does not establish
-                clinical performance. See reports/model_honesty.md.</div>
-            </div>""", unsafe_allow_html=True)
+    with st.expander("Model evaluation — supporting evidence", expanded=False):
+        # ---- Fairness strip (model-derived disclosures from the audit) ----
+        st.markdown('<div class="section-title">Fairness &amp; Model Honesty (from the model audit)</div>',
+                    unsafe_allow_html=True)
+        f1, f2 = st.columns(2)
+        fair = facts["fairness"]
+        hon = facts["model_honesty"]
+        with f1:
+            st.markdown(
+                f"""<div style="border:1px solid {CARD_BORDER}; border-radius:10px; padding:12px 14px;">
+                  <div style="font-size:0.9rem; font-weight:700; color:{TEXT};">
+                    Fairness: AUC gap {fair['auc_gap_gender']} (gender) · {fair['auc_gap_age']} (age)</div>
+                  <div style="font-size:0.8rem; color:{MUTED}; margin-top:4px;">
+                    Disclosed: readmission base rate is {fair['base_rate_female_pct']}% (Female) vs
+                    {fair['base_rate_male_pct']}% (Male) — a {fair['base_rate_gap_pp']}-point dataset property.
+                    Parity in one metric is not fairness.</div>
+                </div>""", unsafe_allow_html=True)
+        with f2:
+            st.markdown(
+                f"""<div style="border:1px solid {CARD_BORDER}; border-radius:10px; padding:12px 14px;">
+                  <div style="font-size:0.9rem; font-weight:700; color:{TEXT};">
+                    Model honesty: AUC {hon['shipped_rf_auc']} vs {hon['condition_only_baseline_auc']} no-ML baseline</div>
+                  <div style="font-size:0.8rem; color:{MUTED}; margin-top:4px;">
+                    This result reflects the generated target structure and does not establish
+                    clinical performance. See reports/model_honesty.md.</div>
+                </div>""", unsafe_allow_html=True)
 
     # ---- Distribution + condition volume ----
     st.markdown('<div class="section-title">Patient Distribution</div>', unsafe_allow_html=True)
@@ -729,7 +730,7 @@ def render_patients(df):
                     paper_bgcolor="rgba(0,0,0,0)", font=CHART_FONT,
                 )
                 st.plotly_chart(fig, width='stretch', config={"displayModeBar": False})
-                st.caption(f"AI readmission risk — {risk['risk_tier']}")
+                st.caption(f"Synthetic-model score — {risk['risk_tier']} (not a clinical prediction)")
 
             with cost_col:
                 fig = go.Figure(go.Indicator(
@@ -810,10 +811,10 @@ def render_ops_drill(df):
         st.info("No patients match the current filters.")
         return
 
-    st.markdown('<div class="section-title">Root-Cause Drill — readmission &rarr; condition &rarr; age band</div>',
+    st.markdown('<div class="section-title">Condition & Age — readmission &rarr; condition &rarr; age band</div>',
                 unsafe_allow_html=True)
     st.caption(
-        f"All patients: {overall['readmission_rate_pct']}% readmission "
+        f"Selected cohort: {overall['readmission_rate_pct']}% readmission "
         f"({overall['readmitted_n']} of {overall['total_patients']}) — now drill into WHERE it concentrates."
     )
 
@@ -828,7 +829,7 @@ def render_ops_drill(df):
 
     # breadcrumb
     crumb = (
-        f"**All patients {overall['readmission_rate_pct']}%** &rarr; "
+        f"**Selected cohort {overall['readmission_rate_pct']}%** &rarr; "
         f"**{cond} {prof['readmit_rate_pct']}%** (n={prof['patients']})"
     )
     if worst is not None and len(bands_with_data) > 1:
@@ -880,12 +881,12 @@ def render_ops_drill(df):
 
     # findings (computed sentences — no LLM)
     findings = (
-        f"**Findings (computed):** {cond} patients readmit at {prof['readmit_rate_pct']}% versus "
+        f"**Findings (computed):** {cond} records are marked readmitted at {prof['readmit_rate_pct']}% versus "
         f"{overall['readmission_rate_pct']}% overall. "
     )
     if worst is not None and len(bands_with_data) > 1:
         findings += (
-            f"Within {cond}, the {worst['Age_Band']} band concentrates risk at {worst['readmit_rate_pct']}% "
+            f"Within {cond}, the observed rate in the {worst['Age_Band']} band is {worst['readmit_rate_pct']}% "
             f"(n={int(worst['patients'])}). "
         )
     if comparable:
@@ -899,6 +900,148 @@ def render_ops_drill(df):
         findings += "A readmitted/non-readmitted cost comparison is not available because a comparison group is absent or has no usable cost baseline. "
     findings += "Association, not causation — definitions in data/metrics.json."
     st.info(findings)
+
+
+@st.fragment
+def render_workbench(df, reference):
+    """Validate -> compare -> execute trusted SQL -> export a stakeholder snapshot."""
+    from app.dashboard.utils import analyst_workbench as workbench
+    from app.dashboard.utils import assistant_service as assistant
+    import json
+
+    selected_id = assistant.scope_fingerprint(df)
+    reference_id = assistant.scope_fingerprint(reference)
+    signature = selected_id + ":" + reference_id
+    if st.session_state.get("hg_workbench_scope") != signature:
+        st.session_state["hg_workbench_scope"] = signature
+        st.session_state.pop("hg_workbench_result", None)
+        st.session_state.pop("hg_workbench_report", None)
+    selected_quality = workbench.quality_report(df)
+    source_quality = workbench.quality_report(reference)
+    tab_intro("A reporting workflow: validate the records, investigate a cohort, inspect executed SQL and share an evidence-led summary.")
+    n1, n2, n3 = st.columns(3)
+    n1.metric("Full reference records", f"{len(reference):,}")
+    n2.metric("Selected cohort records", f"{len(df):,}")
+    n3.metric("Selected contract checks", f"{selected_quality['passed']}/{len(selected_quality['checks'])}")
+    st.caption("Reference = the full supplied synthetic dataset, including the selection. It is not an independent control group or a time-period comparison.")
+    if (reference.Condition == "Diabetes").any():
+        st.caption(f"Try the sidebar Condition filter: Diabetes selects {int(reference.Condition.eq('Diabetes').sum())} records. The comparison, SQL and exports will use that selection.")
+    step = st.radio("Workbench step", ["Check data", "Compare", "SQL", "Report"],
+                    horizontal=True, key="hg_workbench_step")
+    if not source_quality["all_passed"]:
+        st.warning("The full reference fails the project data contract. Inspect the checks before trusting a baseline or exporting a comparison.")
+    if not selected_quality["all_passed"]:
+        st.warning("The selected cohort fails the data contract. SQL/report publication is blocked rather than silently repairing the records.")
+
+    if step == "Check data":
+        st.subheader("Data contract and reporting grain")
+        st.write("One source row represents one synthetic patient record. There is no validated longitudinal admissions or 30-day readmission timeline.")
+        same_scope = selected_id == reference_id
+        datasets = [("Source and selection (same scope)", source_quality)] if same_scope else [
+            ("Full source contract", source_quality), ("Selected cohort contract", selected_quality)]
+        for label, quality in datasets:
+            with st.container(border=True):
+                st.markdown("**" + label + "**")
+                if quality["all_passed"]:
+                    st.success("All checked project-contract rules pass for this scope.")
+                else:
+                    st.warning(f"{quality['failed']} failed checks; {quality['blocked']} blocked checks.")
+                checks = pd.DataFrame(quality["checks"])
+                st.dataframe(checks[["check", "status", "affected"]], hide_index=True, width="stretch")
+                with st.expander("Definitions and failure counts"):
+                    st.dataframe(checks, hide_index=True, width="stretch")
+                    st.caption("A record can fail more than one rule. Affected counts must not be added as if they were distinct records.")
+        audit = {"selected_scope_id": selected_id, "reference_scope_id": reference_id,
+                 "selected": selected_quality, "reference": source_quality,
+                 "boundary": "Project-specific synthetic-data contract; not a clinical quality or privacy certification."}
+        st.download_button("Download data-check snapshot", json.dumps(audit, indent=2).encode("utf-8"),
+                           "healthguard_data_checks.json", "application/json", key="hg_download_checks")
+        with st.expander("Metric definitions"):
+            st.markdown("- **Readmission rate:** Yes records / valid Yes-or-No records in the cohort. No time window is implied.\n"
+                        "- **Recorded cost:** a data field, not an incremental or avoidable readmission cost.\n"
+                        "- **Length of stay:** recorded days per synthetic row, not a reconstructed admissions history.\n"
+                        "- **Recovered rate:** Recovered labels / valid outcome labels; not measured intervention effectiveness.")
+
+    elif step == "Compare":
+        st.subheader("Selected cohort versus full reference")
+        if not selected_quality["all_passed"] or not source_quality["all_passed"]:
+            st.info("Repair or review the failed data checks before comparing cohorts.")
+            return
+        try:
+            comparison = workbench.compare_cohorts(df, reference)
+        except ValueError as error:
+            st.error(str(error))
+            return
+        if len(df) == len(reference):
+            st.info("The selection currently matches the full reference, so its differences are zero. Choose a cohort in the sidebar to investigate a contrast.")
+        c1, c2 = st.columns(2)
+        for container, row in zip([c1, c2, c1, c2], comparison.to_dict("records")):
+            number = workbench.round_value(row["selected_value"])
+            value = f"₹{number:,.2f}" if row["unit"] == "INR" else f"{number:,.2f} {row['unit']}"
+            container.metric(row["metric"], value,
+                             delta=f"{workbench.round_value(row['difference']):+,.2f} {row['difference_unit']} vs reference",
+                             delta_color="off")
+        st.dataframe(comparison, hide_index=True, width="stretch")
+        st.caption("Rate differences are percentage points, not percent improvements. Differences use unrounded metrics; displayed values use two-decimal half-up rounding.")
+        st.info("These groups have different composition and are not randomized. Investigate case mix, label definitions and sample size before attributing any difference to a service, characteristic or intervention.")
+        if len(df) < 30:
+            st.warning("Fewer than 30 selected records: treat the descriptive rates cautiously, not as stable population estimates.")
+        st.download_button("Download cohort comparison (CSV)", comparison.to_csv(index=False).encode("utf-8"),
+                           f"healthguard_comparison_{selected_id[:8]}.csv", "text/csv", key="hg_download_comparison")
+
+    elif step == "SQL":
+        st.subheader("Inspect and execute a scoped SQL question")
+        key = st.selectbox("Analytical question", list(workbench.QUERY_LABELS),
+                           format_func=lambda name: workbench.QUERY_LABELS[name], key="hg_workbench_query")
+        query_signature = signature + ":" + key
+        previous = st.session_state.get("hg_workbench_result")
+        if previous and previous["signature"] != query_signature:
+            st.session_state.pop("hg_workbench_result", None)
+        with st.expander("View the tracked SQL", expanded=False):
+            st.code(workbench.load_queries()[key], language="sql")
+        st.caption("Read-only query from the tracked SQL file. The in-memory table contains only the validated selected cohort; no free-text or model-generated SQL is executed.")
+        if st.button("Run scoped SQL", key="hg_run_workbench_sql", type="primary",
+                     disabled=not selected_quality["all_passed"]):
+            try:
+                result = workbench.execute_question(df, key)
+                st.session_state["hg_workbench_result"] = {"signature": query_signature, "result": result}
+            except ValueError as error:
+                st.error(str(error))
+        previous = st.session_state.get("hg_workbench_result")
+        if previous:
+            result = previous["result"]
+            st.success(f"SQL/pandas reconciliation PASS: {result['checked_values']} result cells checked for {result['rows_in_scope']:,} selected records.")
+            st.caption(result["scope_note"])
+            st.dataframe(result["table"], hide_index=True, width="stretch")
+            st.download_button("Download scoped SQL results (CSV)", result["table"].to_csv(index=False).encode("utf-8"),
+                               f"healthguard_{key}_{selected_id[:8]}.csv", "text/csv", key="hg_download_sql")
+        else:
+            st.info("Choose a question and run it. A query being displayed is not proof that it has executed.")
+
+    else:
+        st.subheader("Prepare a stakeholder snapshot")
+        st.write("Create a short report with the population, definitions, comparison, a fresh SQL/pandas check and questions for follow-up. No provider key is required.")
+        focus = st.selectbox("Stakeholder focus", list(workbench.FOCUSES),
+                             format_func=lambda key: workbench.FOCUSES[key], key="hg_workbench_focus")
+        report_signature = signature + ":" + focus
+        previous = st.session_state.get("hg_workbench_report")
+        if previous and previous["signature"] != report_signature:
+            st.session_state.pop("hg_workbench_report", None)
+        if st.button("Build stakeholder report", key="hg_build_workbench_report", type="primary",
+                     disabled=not (selected_quality["all_passed"] and source_quality["all_passed"])):
+            try:
+                text = workbench.build_report(df, reference, focus)
+                st.session_state["hg_workbench_report"] = {"signature": report_signature, "text": text}
+            except ValueError as error:
+                st.error(str(error))
+        previous = st.session_state.get("hg_workbench_report")
+        if previous:
+            st.success("Stakeholder snapshot prepared from this cohort with a fresh scoped SQL reconciliation.")
+            st.download_button("Download stakeholder report", previous["text"].encode("utf-8"),
+                               f"healthguard_{focus}_{selected_id[:8]}.md", "text/markdown", key="hg_download_report")
+            with st.expander("Read the report", expanded=True):
+                st.markdown(previous["text"])
+        st.caption("Use the AI Assistant tab if you also want optional Gemini selection of existing computed evidence cards. That does not change these deterministic report figures.")
 
 
 @st.fragment
@@ -1101,8 +1244,8 @@ try:
 
     df = data.apply_filters(raw, conditions, genders, outcomes, age_range)
 
-    st.markdown('<div class="hg-page-title">Hospital Outcomes Intelligence Dashboard</div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="hg-page-sub">AI-assisted analytics across {len(df)} of {len(raw)} patients — cost, length of stay, readmissions, and outcomes, with per-patient risk scoring and explainability.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="hg-page-title">Hospital Outcomes Analytics</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="hg-page-sub">Select a cohort, check the numbers and prepare a report — {len(df)} of {len(raw)} records in scope.</div>', unsafe_allow_html=True)
 
     st.caption("Synthetic patient records · Descriptive demonstration · Not for clinical decisions")
 
@@ -1113,22 +1256,25 @@ try:
     kpis = data.get_kpis(df)
     cond_summary = data.condition_summary(df)
 
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "Executive Overview",
-        "Clinical Analytics",
-        "Root-Cause Drill",
-        "Patient Intelligence",
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+        "Overview",
+        "Analyst Workbench",
+        "Cohort Analysis",
+        "Condition & Age",
+        "Patient Records",
         "AI Assistant",
     ])
     with tab1:
         render_overview(df, kpis, cond_summary)
     with tab2:
-        render_clinical(df, cond_summary)
+        render_workbench(df, raw)
     with tab3:
-        render_ops_drill(df)
+        render_clinical(df, cond_summary)
     with tab4:
-        render_patients(df)
+        render_ops_drill(df)
     with tab5:
+        render_patients(df)
+    with tab6:
         render_ai(df)
 
     # ---- Methodology & data trust ----
