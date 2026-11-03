@@ -8,6 +8,7 @@ data/hospital/hospital_data.csv (committed synthetic records, 984 × 10)
   ├─ scripts/train_readmission_model.py (optional retrain) → model/encoders
   └─ app/dashboard/Home.py
        ├─ hospital_data.py / ops_layer.py → scoped descriptive analysis
+       ├─ analyst_workbench.py + sql/02_analyst_workbench.sql → validation, cohort comparison, scoped SQL/pandas reconciliation and reporting
        ├─ ai_risk.py → synthetic-record scores and SHAP
        └─ assistant_service.py → validated plans and computed evidence
             └─ optional gemini_ai.py → allowed fact-ID selection only
@@ -23,6 +24,7 @@ The `src/` FHIR prototype and its `data/synthetic/` pipeline are legacy referenc
 | calibration_decision_curve.py | model + split | calibration/DCA metrics JSON + report + figure |
 | temporal_validation.py | model + data | random-vs-temporal AUC + noise band |
 | app/ (Streamlit) | scoped records + model | descriptive dashboard, synthetic-model explanations and bounded assistant |
+| analyst_workbench.py | validated selected + reference DataFrames | contract checks, SQL/pandas parity, aggregate comparison and report |
 | assistant_service.py | question + filtered DataFrame | validated plan, computed value, denominator, provenance and refusals |
 | gemini_ai.py | computed fact catalog + supported focus | validated existing card selection, safe failure status |
 
