@@ -36,9 +36,8 @@ product should be believed on this data.
 ## 4. Q&A limitations
 - The grounded layer answers a fixed set of question shapes (readmission
   rates, costs, counts, satisfaction, LOS, outcomes) — it is not general NLP.
-- The Gemini fallback is clearly labelled and best-effort; it is grounded in
-  current-filter statistics but can still produce generic advice. It is
-  never used for numbers when the grounded layer can answer.
+- Optional Gemini assistance selects only allowed IDs from a computed fact catalog. It does not answer unsupported clinical questions or provide unrestricted recommendations in this interface.
+- Provider availability and authored-case accuracy are different checks. A successful connection or benchmark does not certify arbitrary language understanding, privacy for real clinical data or future provider uptime.
 
 ## 5. What CANNOT be concluded
 - Anything clinical. The disclaimer is prominent because it is meant: **not

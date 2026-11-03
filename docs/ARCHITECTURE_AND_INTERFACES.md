@@ -1,14 +1,19 @@
 # ARCHITECTURE & INTERFACES — HealthGuard
 
 ## Data flow
+
+```text
+data/hospital/hospital_data.csv (committed synthetic records, 984 × 10)
+  ├─ scripts/sql_analytics.py → SQLite analytics and pandas reconciliation
+  ├─ scripts/train_readmission_model.py (optional retrain) → model/encoders
+  └─ app/dashboard/Home.py
+       ├─ hospital_data.py / ops_layer.py → scoped descriptive analysis
+       ├─ ai_risk.py → synthetic-record scores and SHAP
+       └─ assistant_service.py → validated plans and computed evidence
+            └─ optional gemini_ai.py → allowed fact-ID selection only
 ```
-scripts/generate_data.py -> data/hospital/hospital_data.csv (984x10, synthetic)
-   └─> scripts/train_readmission_model.py -> models/readmission/
-         ├─> app/dashboard (Streamlit: risk view, SHAP, cohort, Q&A, ops)
-         └─> scripts/{fairness_check, calibration_decision_curve,
-                      temporal_validation, cohort_shap_analysis,
-                      model_honesty_audit}.py -> reports/
-```
+
+The `src/` FHIR prototype and its `data/synthetic/` pipeline are legacy reference code, not the source of the committed hospital table. CI audits the primary model; it does not retrain the shipped readmission artifact on every push.
 
 ## Module interfaces
 | Module | Input | Output |
@@ -17,7 +22,9 @@ scripts/generate_data.py -> data/hospital/hospital_data.csv (984x10, synthetic)
 | cohort_shap_analysis.py | model + data | cohort SHAP + reports/cohort_shap.md |
 | calibration_decision_curve.py | model + split | calibration/DCA metrics JSON + report + figure |
 | temporal_validation.py | model + data | random-vs-temporal AUC + noise band |
-| app/ (Streamlit) | model + SHAP | patient view, drivers, grounded Q&A, ops panel |
+| app/ (Streamlit) | scoped records + model | descriptive dashboard, synthetic-model explanations and bounded assistant |
+| assistant_service.py | question + filtered DataFrame | validated plan, computed value, denominator, provenance and refusals |
+| gemini_ai.py | computed fact catalog + supported focus | validated existing card selection, safe failure status |
 
 ## Deployment
 - **App:** Streamlit Community Cloud — https://healthguard-ai-cyl2viwrsdrrff7pig7u6c.streamlit.app/

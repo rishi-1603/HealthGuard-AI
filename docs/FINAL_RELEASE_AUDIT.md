@@ -70,3 +70,11 @@ All main pages/tabs were keyboard-activated and scanned after animations settled
 Removed an uncited universal clinical-AUC range from active UI, registry commentary and reports. Replaced promotional conclusions with endpoint-specific limitations and conditional scenario interpretation. The corresponding regression now guards against reintroducing that uncited claim while retaining all numerical assertions. Full suite: 133 tests.
 
 Numerical findings were not increased or relabelled as real-world outcomes. Synthetic-data, AI-use, evaluation-scope and deployment limitations remain explicit.
+
+## Assistant finalization — 2026-11-03
+
+The numerical backend, evidence display and optional provider path were audited separately. The prior live provider call returned 503 and exposed an SDK error body; the adapter now uses safe status messages and bounded catalog-model selection/failover. Numerical Q&A never invokes the provider, and optional generated prose was replaced with validated selection of precomputed aggregate fact cards.
+
+Regression: 212 tests pass. Deterministic numerical/scope benchmark: 14/14; refusals: 12/12; independent gender comparison passes. Provider contracts are mocked in CI; actual deployed connection/brief results are separate verification, not inferred from an environment variable.
+
+A comparison-group defect was also repaired: absent readmitted/non-readmitted groups now produce unavailable means/differences instead of fictitious zero comparators. Full-dataset analytical headlines are unchanged. See `ASSISTANT_GUIDE.md` and the new evaluation report.

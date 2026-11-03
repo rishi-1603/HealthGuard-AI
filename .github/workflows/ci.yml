@@ -36,5 +36,10 @@ jobs:
           python scripts/generate_data.py
           python scripts/train_models.py
 
+      - name: Verify analytical assistant benchmarks
+        run: |
+          python scripts/qa_eval.py
+          python scripts/assistant_reliability_eval.py
+
       - name: Run all tests (data quality, model, Q&A grounding, legacy smoke)
         run: pytest -q
