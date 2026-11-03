@@ -10,6 +10,7 @@ from contextlib import closing
 from datetime import datetime, timezone
 from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
+from numbers import Real
 import re
 import sqlite3
 
@@ -18,7 +19,7 @@ import pandas as pd
 from . import assistant_service as assistant
 from .hospital_data import CONDITION_CODES
 
-WORKBENCH_VERSION = 2
+WORKBENCH_VERSION = 3
 ROOT = Path(__file__).resolve().parents[3]
 SQL_FILE = ROOT / 'sql/02_analyst_workbench.sql'
 BASE_COLUMNS = ['Patient_ID', 'Age', 'Gender', 'Condition', 'Procedure', 'Cost',
@@ -28,6 +29,12 @@ QUERY_LABELS = {
     'readmission_by_gender': 'How do readmission flags differ by gender?',
     'cost_by_readmission': 'How do recorded costs differ by readmission flag?',
     'outcomes_by_condition': 'How do recorded outcomes differ by condition?',
+}
+QUERY_COLUMNS = {
+    'cost_by_condition': ['condition', 'records', 'total_cost', 'avg_cost', 'cost_share_pct', 'readmitted', 'readmission_rate_pct'],
+    'readmission_by_gender': ['gender', 'records', 'readmitted', 'readmission_rate_pct', 'avg_cost', 'avg_stay_days'],
+    'cost_by_readmission': ['readmission', 'records', 'total_cost', 'avg_cost', 'avg_stay_days', 'cost_share_pct'],
+    'outcomes_by_condition': ['condition', 'records', 'recovered', 'recovered_rate_pct', 'avg_satisfaction'],
 }
 FOCUSES = {'costs': 'Recorded cost review', 'readmissions': 'Readmission-flag review',
            'outcomes': 'Outcome reporting review'}
@@ -63,9 +70,14 @@ def quality_report(df: pd.DataFrame) -> dict:
         for column, lo, hi in [('Age', 0, 120), ('Cost', 0, float('inf')),
                               ('Length_of_Stay', 0, float('inf')), ('Satisfaction', 1, 5)]:
             values = pd.to_numeric(df[column], errors='coerce')
-            valid = values.between(lo, hi) & values.notna() & ~values.isin([float('inf'), -float('inf')])
-            record(column + ' range', int((~valid).sum()),
-                   f'Finite numeric values in [{lo}, {hi}]. No imputation is performed.')
+            numeric_type = df[column].map(lambda value: isinstance(value, Real) and not isinstance(value, bool)).astype(bool)
+            valid = numeric_type & values.between(lo, hi) & values.notna() & ~values.isin([float('inf'), -float('inf')])
+            if column == 'Age':
+                valid &= values.mod(1).eq(0)
+            detail = f'Finite numeric values in [{lo}, {hi}]; numeric strings and booleans are rejected.'
+            if column == 'Age':
+                detail += ' Age must be a whole number for the age-band chart.'
+            record(column + ' range', int((~valid).sum()), detail + ' No imputation is performed.')
         for column, allowed in [('Readmission', {'Yes', 'No'}), ('Outcome', {'Recovered', 'Stable'}),
                                 ('Gender', {'Female', 'Male'}), ('Condition', set(CONDITION_CODES))]:
             record(column + ' project labels', int((~df[column].isin(allowed)).sum()),
@@ -189,7 +201,9 @@ def execute_question(df: pd.DataFrame, name: str) -> dict:
             result = pd.read_sql_query(sql, connection)
     except (sqlite3.Error, pd.errors.DatabaseError):
         raise ValueError('The tracked SQL question could not execute. Inspect the query file before publishing a result.') from None
-    expected = _pandas_query(df, name).reindex(columns=result.columns)
+    if result.columns.tolist() != QUERY_COLUMNS[name]:
+        raise ValueError('SQL result columns do not match the required question schema; no result is published.')
+    expected = _pandas_query(df, name).reindex(columns=QUERY_COLUMNS[name])
     try:
         pd.testing.assert_frame_equal(result, expected, check_dtype=False, atol=.005, rtol=1e-8)
     except AssertionError:
@@ -197,6 +211,7 @@ def execute_question(df: pd.DataFrame, name: str) -> dict:
     return {'question': QUERY_LABELS[name], 'key': name, 'sql': sql, 'table': result,
             'rows_in_scope': len(df), 'scope_id': assistant.scope_fingerprint(df),
             'reconciliation': 'PASS', 'checked_values': int(result.size),
+            'small_groups': int(result['records'].lt(30).sum()),
             'scope_note': 'The SQL table contains only the selected cohort. Cost shares use this cohort, not the full reference.'}
 
 
@@ -218,6 +233,11 @@ def build_report(selected: pd.DataFrame, reference: pd.DataFrame, focus='costs',
              '- Selected scope ID: ' + selected_metrics['scope_id'],
              '- Reference scope ID: ' + reference_metrics['scope_id'],
              '- Both source and selected data-contract checks: PASS.', '',
+             '## Observed selected-cohort composition',
+             'These are observed values in the resulting records, not the filter settings; they may not uniquely reconstruct the selection.',
+             *[f"- {column}: " + ', '.join(f"{label} ({count})" for label, count in selected[column].value_counts().sort_index().items())
+               for column in ['Condition', 'Gender', 'Outcome']],
+             f"- Observed age range: {int(selected.Age.min())}–{int(selected.Age.max())} years.", '',
              '## Selected cohort versus reference',
              'Differences use unrounded metrics; displayed numbers use two-decimal half-up rounding.',
              '| Metric | Selected | Full reference | Difference | Difference unit |',
@@ -231,6 +251,8 @@ def build_report(selected: pd.DataFrame, reference: pd.DataFrame, focus='costs',
               '| ' + ' | '.join('---' for _ in query['table'].columns) + ' |']
     for row in query['table'].itertuples(index=False, name=None):
         lines.append('| ' + ' | '.join('Not available' if pd.isna(value) else str(value).replace('|', '/') for value in row) + ' |')
+    if query['small_groups']:
+        lines += ['', f"Caution: {query['small_groups']} SQL result group(s) have fewer than 30 records. This is a heuristic, not a statistical significance test."]
     lines += ['', '## Interpretation and next checks']
     if focus == 'costs':
         lines += ['Review which conditions account for recorded cost, then check case mix and data definitions before attributing the difference to a service or intervention. Recorded cost is not an estimate of preventable savings.']

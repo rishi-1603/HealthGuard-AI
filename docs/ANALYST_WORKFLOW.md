@@ -4,7 +4,7 @@ The workbench demonstrates a reporting cycle for an operations analyst using the
 
 ## 1. Check data
 
-The workbench runs 12 project-specific checks on the full reference and selected cohort: required schema/cells, unique patient identifiers, finite numeric ranges and expected labels. Failures are displayed; values are not silently repaired. Contract failures block comparison or report generation rather than presenting a successful-looking result. Rule counts can overlap and should not be summed as distinct records.
+The workbench runs 12 project-specific checks on the full reference and selected cohort: required schema/cells, unique patient identifiers, finite numeric ranges, whole-number age and expected labels. Failures are displayed; values are not silently repaired. Contract failures block comparison or report generation rather than presenting a successful-looking result. Rule counts can overlap and should not be summed as distinct records.
 
 ## 2. Compare a selected cohort
 
@@ -21,11 +21,13 @@ Four named questions live in [`sql/02_analyst_workbench.sql`](../sql/02_analyst_
 3. Recorded cost by readmission status.
 4. Recorded outcomes by condition.
 
+The expected result-column schema is checked before reconciliation; incomplete query output is rejected. SQL groups with fewer than 30 records are flagged as a heuristic, not a significance test.
+
 The app loads **only the selected cohort** into an in-memory SQLite table and enables SQLite query-only mode. It does not accept free-text or model-generated SQL. Each query is independently reconstructed in pandas and reconciled before its output and CSV download are displayed. If execution or reconciliation fails, the app does not publish the result as verified.
 
 ## 4. Prepare a stakeholder snapshot
 
-Choose a supported cost, readmission or outcome focus and build a Markdown report. The report includes scope/reference identifiers, selected and reference population sizes, metric definitions, the actual SQL, checked results, limitations and next analytical questions. It is deterministic except for its generated UTC timestamp; no API key or generative model is needed.
+Choose a supported cost, readmission or outcome focus and build a Markdown report. The report includes scope/reference identifiers, selected and reference population sizes, observed cohort composition (not a reconstruction of filter settings), metric definitions, the actual SQL, checked results, limitations and next analytical questions. It is deterministic except for its generated UTC timestamp; no API key or generative model is needed.
 
 Reports and query outputs are cleared when the scope or selected focus/question changes. The full reference cannot be substituted for the selected data; altered or unrelated selected records are rejected. Small cohorts are flagged for cautious interpretation.
 

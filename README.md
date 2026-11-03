@@ -76,8 +76,8 @@ The **Analyst Workbench** brings the routine reporting steps into one place:
 
 1. **Check data:** validate the source and selected cohort against a 12-rule project contract; review failures without silently filling or deleting records.
 2. **Compare:** inspect the selected cohort against the full synthetic reference, with population counts and percentage-point differences.
-3. **SQL:** choose one of four tracked, read-only questions. The query executes on the selected cohort in SQLite and is reconciled independently in pandas before results or CSV exports are shown.
-4. **Report:** export a stakeholder snapshot containing the scope, metric comparison, executed SQL, checked results and limitations. No AI key is needed.
+3. **SQL:** choose one of four tracked, read-only questions. The query executes on the selected cohort in SQLite; its required result schema and values are reconciled independently in pandas before results or CSV exports are shown. Small result groups are flagged.
+4. **Report:** export a stakeholder snapshot containing observed cohort composition, scope, metric comparison, executed SQL, checked results and limitations. No AI key is needed.
 
 For example, the Diabetes filter selects 65 records: a 1.54% readmission rate versus 26.83% in the full reference. The reference includes those records and is not an independent control; the comparison is descriptive, not a causal conclusion.
 
@@ -114,7 +114,7 @@ The AI Assistant tab now separates numerical answers from provider assistance:
 
 The new deterministic benchmark passes **14 numerical/scope cases, 12 refusals and an independent gender comparison**. The original 8-answer/6-refusal benchmark also passes. These are authored cases, not a guarantee for arbitrary questions or provider uptime.
 
-The audited regression suite contains **257 tests**. The saved model/encoders still use scikit-learn **1.9.0**; they were not replaced for this assistant update.
+The regression suite covers data contracts, analytical calculations, model boundaries and UI behavior. The saved model/encoders still use scikit-learn **1.9.0**; they were not replaced for this assistant update.
 
 ![Computed answer with calculation evidence](docs/screenshots/assistant_computed_evidence.png)
 
