@@ -28,3 +28,9 @@ outcomes; Q&A grounds answers in project data only.
 ## Interview defense
 "Is 0.99 AUC impressive?" · "How do you validate on synthetic data?" · "How do
 you handle tiny subgroups?" (reports/INTERVIEW_PREP.md)
+
+## Analytical assistant evaluation
+
+The authored numerical/scope benchmark recomputes 14 targets independently, checks 12 explicit refusals and verifies a grouped gender comparison. The older 8-answer/6-refusal benchmark is retained. Unit tests exercise typed plans, no scope expansion, missing denominators, provider JSON contracts, bounded failover, safe errors and the Streamlit workflow.
+
+Provider tests use mocks in CI; actual connection and brief generation are separately verified in the deployed application. The optional provider selects existing fact IDs, not new numerical or clinical prose. This is not universal NLP or medical validation.

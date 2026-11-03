@@ -84,13 +84,21 @@ The hosted app may need waking after inactivity. The [local-demo guide](docs/DEM
 
 ![Condition and age analysis](docs/screenshots/publication_conditions.png)
 
-## Validation and responsible use of AI
+## Analyst assistant: questions, evidence and an optional AI brief
 
-The grounded Q&A benchmark checks both answers and refusals: **8/8 answerable cases, 3/3 out-of-scope refusals and 3/3 false-premise traps** pass, with no fabricated answers in those tested cases. Optional Gemini narration is not covered by that guarantee.
+The AI Assistant tab now separates numerical answers from provider assistance:
 
-The full audited suite contains **133 tests**. It covers the SQL layer, data checks, analytical reports, model outputs, Q&A and application rendering. The committed model and encoders use scikit-learn **1.9.0**, pinned in the requirements to avoid cross-version loading.
+- **Computed Q&A:** counts, rates, average/total cost, stay, satisfaction and age, with supported condition, gender and age filters. Group comparisons include source columns and denominators.
+- **Visible evidence:** each successful answer includes the current scope, formula and an inspectable results table. Missing comparison groups are shown as unavailable, not zero.
+- **Scope-safe history:** changing dashboard filters clears earlier answers and briefs. The assistant cannot expand the filtered cohort behind the user's back.
+- **Optional Gemini selection:** Gemini may select three to five backend-computed fact cards. Invalid JSON, extra text and unsupported selections are rejected; model-generated figures or clinical prose are not displayed as verified evidence.
+- **Honest failure states:** configured is not the same as connected. A real connection check verifies a small generation request, while authentication, quota and temporary outages leave local analysis available.
 
-[Q&A evaluation](reports/qa_eval.md) · [Data-quality report](reports/data_quality_report.md) · [Publication audit and remaining checks](docs/FINAL_RELEASE_AUDIT.md)
+The new deterministic benchmark passes **14 numerical/scope cases, 12 refusals and an independent gender comparison**. The original 8-answer/6-refusal benchmark also passes. These are authored cases, not a guarantee for arbitrary questions or provider uptime.
+
+The audited regression suite contains **212 tests**. The saved model/encoders still use scikit-learn **1.9.0**; they were not replaced for this assistant update.
+
+[Assistant behavior and configuration](docs/ASSISTANT_GUIDE.md) · [New evaluation](reports/assistant_reliability.md) · [Original Q&A evaluation](reports/qa_eval.md) · [Publication scope](docs/FINAL_RELEASE_AUDIT.md)
 
 ## Run locally
 
@@ -118,10 +126,11 @@ python scripts/temporal_validation.py
 python scripts/program_simulator.py
 python scripts/fairness_tradeoff.py
 python scripts/qa_eval.py
+python scripts/assistant_reliability_eval.py
 python scripts/realdata_validation.py
 ```
 
-The core dashboard and deterministic Q&A do not need an API key. Optional Gemini responses use `GOOGLE_API_KEY`; see the [provider module](app/dashboard/utils/gemini_ai.py). Store the key in platform secrets or the environment, never in Git.
+The core dashboard and deterministic Q&A do not need an API key. Optional Gemini evidence selection uses `GOOGLE_API_KEY`; `GEMINI_MODEL` is an optional catalog-model override. See the [assistant guide](docs/ASSISTANT_GUIDE.md). Store credentials in platform secrets or the environment, never in Git.
 
 ## Repository guide
 

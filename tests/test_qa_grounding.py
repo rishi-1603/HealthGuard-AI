@@ -63,7 +63,7 @@ def test_satisfaction_is_grounded(df):
 
 def test_unknown_subgroup_does_not_answer_with_total():
     """Trust behaviour: if the question names an unrecognized subgroup, the
-    grounded layer must REFUSE (escalate to the labelled Gemini fallback),
+    grounded layer must REFUSE without escalating the unsupported request,
     never silently answer the total count."""
     result = answer(pd.DataFrame(
         {"Condition": ["Diabetes"], "Readmission": ["Yes", "No"][:1],
@@ -71,7 +71,7 @@ def test_unknown_subgroup_does_not_answer_with_total():
          "Length_of_Stay": [3]}),
         "how many pediatric patients")
     assert result.get("ok") is False, (
-        f"Unrecognized subgroup was answered instead of escalated: {result}")
+        f"Unrecognized subgroup was answered instead of refused: {result}")
 
 
 def test_numbers_in_answers_always_come_from_data(df):

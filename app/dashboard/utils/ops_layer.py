@@ -19,6 +19,7 @@ import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 METRICS_PATH = REPO_ROOT / "data" / "metrics.json"
+COMPARISON_SCHEMA_VERSION = 2
 
 AGE_BANDS = [(17, 30, "18-30"), (30, 45, "31-45"), (45, 60, "46-60"),
              (60, 75, "61-75"), (75, 120, "76+")]
@@ -49,19 +50,20 @@ def ops_context(df: pd.DataFrame) -> dict:
         "total_patients": total,
         "readmitted_n": len(r),
         "readmission_rate_pct": round(len(r) / total * 100, 1),
-        "readmitted_avg_cost": round(r.Cost.mean(), 0) if len(r) else 0,
-        "non_readmitted_avg_cost": round(n.Cost.mean(), 0) if len(n) else 0,
-        "readmitted_avg_los": round(r.Length_of_Stay.mean(), 1) if len(r) else 0,
-        "non_readmitted_avg_los": round(n.Length_of_Stay.mean(), 1) if len(n) else 0,
+        "readmitted_avg_cost": round(r.Cost.mean(), 0) if len(r) else None,
+        "non_readmitted_avg_cost": round(n.Cost.mean(), 0) if len(n) else None,
+        "readmitted_avg_los": round(r.Length_of_Stay.mean(), 1) if len(r) else None,
+        "non_readmitted_avg_los": round(n.Length_of_Stay.mean(), 1) if len(n) else None,
         "readmitted_total_cost": round(r.Cost.sum(), 0),
         "readmitted_cost_share_pct": round(r.Cost.sum() / df.Cost.sum() * 100, 1) if df.Cost.sum() else 0,
     }
-    if out["non_readmitted_avg_cost"]:
+    if out["readmitted_avg_cost"] is not None and out["non_readmitted_avg_cost"]:
         out["cost_premium_pct"] = round(
             (out["readmitted_avg_cost"] / out["non_readmitted_avg_cost"] - 1) * 100, 1)
     else:
-        out["cost_premium_pct"] = 0.0
-    out["los_premium_days"] = round(out["readmitted_avg_los"] - out["non_readmitted_avg_los"], 1)
+        out["cost_premium_pct"] = None
+    out["los_premium_days"] = (round(out["readmitted_avg_los"] - out["non_readmitted_avg_los"], 1)
+                               if len(r) and len(n) else None)
     return out
 
 
@@ -96,10 +98,10 @@ def condition_profile(df: pd.DataFrame, condition: str) -> dict:
         "condition": condition,
         "patients": len(d),
         "readmit_rate_pct": round(len(r) / len(d) * 100, 1) if len(d) else 0,
-        "readmitted_avg_cost": round(r.Cost.mean(), 0) if len(r) else 0,
-        "non_readmitted_avg_cost": round(n.Cost.mean(), 0) if len(n) else 0,
-        "readmitted_avg_los": round(r.Length_of_Stay.mean(), 1) if len(r) else 0,
-        "non_readmitted_avg_los": round(n.Length_of_Stay.mean(), 1) if len(n) else 0,
+        "readmitted_avg_cost": round(r.Cost.mean(), 0) if len(r) else None,
+        "non_readmitted_avg_cost": round(n.Cost.mean(), 0) if len(n) else None,
+        "readmitted_avg_los": round(r.Length_of_Stay.mean(), 1) if len(r) else None,
+        "non_readmitted_avg_los": round(n.Length_of_Stay.mean(), 1) if len(n) else None,
     }
 
 

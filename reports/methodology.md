@@ -10,8 +10,8 @@ data/hospital/hospital_data.csv (984 patients, committed)
 app/dashboard/Home.py (Streamlit)
    ├── utils/hospital_data.py     — load, patient codes, filters
    ├── utils/ai_risk.py           — model + SHAP scoring
-   ├── utils/simple_qa.py         — grounded Q&A (template + aggregation)
-   └── utils/gemini_ai.py         — optional labelled LLM fallback
+   ├── utils/simple_qa.py         — compatibility entry point for computed Q&A
+   └── utils/gemini_ai.py         — optional validated selection of computed fact cards
         ↓
 Live demo (Streamlit Community Cloud)
 ```
@@ -31,21 +31,19 @@ only by the legacy smoke test. The live product is the Streamlit app above.
   is synthetic-data determinism (a per-condition lookup table alone scores
   0.93; demographics-only scores 0.985). The result does not establish clinical validity; performance on real populations requires a separate evaluation.
 
-## 3. The Q&A layer (anti-hallucination by design)
-- Keyword-matched templates compute answers **directly from the filtered
-  dataframe** — every percentage and count is a real aggregation.
-- Unrecognized subgroups **refuse and escalate** to a clearly-labelled
-  Gemini fallback rather than silently answering the wrong thing.
-- Gemini (optional, `GOOGLE_API_KEY`) is used only for open-ended
-  questions/cohort recommendations, grounded in the current filter's actual
-  statistics; without a key the app degrades gracefully.
+## 3. Analytical questions and optional provider assistance
+- `assistant_service.py` validates a bounded question plan and computes answers from the filtered DataFrame. It returns scope, formula, source columns and evidence values.
+- Unsupported filters, false premises, clinical advice and unavailable time windows are refused. They are not forwarded to a generative fallback.
+- Optional Gemini assistance selects IDs from already computed aggregate evidence cards. Extra fields, invalid JSON and unknown IDs are rejected; provider-authored figures or clinical prose are not displayed as verified evidence.
+- Scope changes clear stale answers and briefs. A content fingerprint, explicit form submission and an isolated Streamlit fragment reduce unnecessary reruns.
+- Provider configuration, actual connection success and computed local mode are labelled separately. See `docs/ASSISTANT_GUIDE.md` for the precise contract and limits.
 
 ## 4. How this is validated (the trust layer)
 | Check | Where |
 |---|---|
 | Data quality: uniqueness, nulls, ranges, valid categories, base rates | `tests/test_hospital_data_quality.py` |
 | Model artifacts load, scores are valid probabilities, tiers populate | `tests/test_readmission_model.py` |
-| Retraining reproduces the recorded AUC (no hand-edited metrics) | `tests/test_readmission_model.py` |
+| Model artifacts and recorded metric consistency | `tests/test_readmission_model.py` |
 | Condition→Procedure 1:1 mapping (docs assumption) | data quality tests |
 | Q&A answers always match dataset aggregates | `tests/test_qa_grounding.py` |
 | Unknown subgroups escalate instead of guessing | Q&A tests |

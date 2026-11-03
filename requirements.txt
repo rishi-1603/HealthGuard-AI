@@ -1,4 +1,5 @@
-streamlit>=1.35.0
+# Verified native containers, forms and isolated assistant fragment.
+streamlit>=1.66.1,<2
 pandas>=2.0.0
 numpy>=1.24.0
 # Match the version used to serialize the committed model and encoders.
@@ -7,4 +8,5 @@ joblib>=1.3.0
 plotly>=5.20.0
 pytest>=8.0.0
 shap>=0.44.0
-google-genai>=1.0.0
+# Verified structured-response, timeout and bounded-retry adapter.
+google-genai>=2.34.0,<3

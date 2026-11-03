@@ -9,9 +9,12 @@ import plotly.express as px
 import plotly.graph_objects as go
 from app.dashboard.utils import hospital_data as data
 from app.dashboard.utils import ai_risk
-from app.dashboard.utils import simple_qa
 from app.dashboard.utils import gemini_ai
 from app.dashboard.utils import ops_layer
+
+if getattr(ops_layer, "COMPARISON_SCHEMA_VERSION", 0) != 2:
+    from importlib import reload
+    ops_layer = reload(ops_layer)
 
 st.set_page_config(
     page_title="HealthGuard AI | Hospital Outcomes",
@@ -19,6 +22,19 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+def display_stat(value, kind="money"):
+    """Missing comparison groups are not measured zero-cost/zero-stay groups."""
+    if value is None or pd.isna(value):
+        return "Not available"
+    if kind == "money":
+        return f"₹{value:,.0f}"
+    if kind == "percent":
+        return f"{value:+.1f}%"
+    if kind == "difference":
+        return f"{value:+.1f}d"
+    return f"{value:.1f}d"
+
 
 # ---------------- Palette ----------------
 BG = "#0B1220"
@@ -35,6 +51,7 @@ RED = "#F87171"
 
 st.markdown(f"""
 <style>
+.chart-card:empty {{ display: none; }}
 [data-testid="stToolbarActionButtonLabel"] {{ color: {TEXT} !important; }}
 [data-testid="stAppViewContainer"] {{
     background: {BG};
@@ -359,11 +376,11 @@ def render_overview(df, kpis, cond_summary):
             f"""<div style="border:1px solid {CARD_BORDER}; border-radius:10px;
                  padding:12px 14px; background:rgba(251,191,36,0.06);">
               <div style="font-size:0.95rem; font-weight:700; color:{TEXT};">
-                Readmitted cost ₹{ops['readmitted_avg_cost']:,.0f} vs ₹{ops['non_readmitted_avg_cost']:,.0f}
-                ({ops['cost_premium_pct']:+.1f}%)</div>
+                Readmitted cost {display_stat(ops['readmitted_avg_cost'])} vs {display_stat(ops['non_readmitted_avg_cost'])}
+                ({display_stat(ops['cost_premium_pct'], 'percent')})</div>
               <div style="font-size:0.8rem; color:{MUTED}; margin-top:4px;">
-                Avg length of stay {ops['readmitted_avg_los']}d vs {ops['non_readmitted_avg_los']}d
-                ({ops['los_premium_days']:+.1f}d) — observed length-of-stay difference</div>
+                Avg length of stay {display_stat(ops['readmitted_avg_los'], 'days')} vs {display_stat(ops['non_readmitted_avg_los'], 'days')}
+                ({display_stat(ops['los_premium_days'], 'difference')}) — observed length-of-stay difference</div>
             </div>""", unsafe_allow_html=True)
     with o3:
         top_cond = ops_layer.readmission_by_condition(df).iloc[0]
@@ -853,11 +870,12 @@ def render_ops_drill(df):
     # cost / LOS profile for the selected condition
     p1, p2, p3 = st.columns(3)
     kpi_card(p1, "💰", RED if prof["readmit_rate_pct"] > overall["readmission_rate_pct"] else GREEN,
-             "READMITTED AVG COST", f"₹{prof['readmitted_avg_cost']:,.0f}")
-    kpi_card(p2, "💰", GREEN, "NON-READMITTED AVG COST", f"₹{prof['non_readmitted_avg_cost']:,.0f}")
+             "READMITTED AVG COST", display_stat(prof['readmitted_avg_cost']))
+    kpi_card(p2, "💰", GREEN, "NON-READMITTED AVG COST", display_stat(prof['non_readmitted_avg_cost']))
+    comparable = prof["readmitted_avg_cost"] is not None and bool(prof["non_readmitted_avg_cost"])
     _prem = ((prof["readmitted_avg_cost"] / prof["non_readmitted_avg_cost"] - 1) * 100
-             if prof["non_readmitted_avg_cost"] else 0)
-    kpi_card(p3, "📈", AMBER, "COST PREMIUM", f"{_prem:+.0f}%")
+             if comparable else None)
+    kpi_card(p3, "📈", AMBER, "COST DIFFERENCE", display_stat(_prem, "percent"))
 
     # findings (computed sentences — no LLM)
     findings = (
@@ -869,102 +887,172 @@ def render_ops_drill(df):
             f"Within {cond}, the {worst['Age_Band']} band concentrates risk at {worst['readmit_rate_pct']}% "
             f"(n={int(worst['patients'])}). "
         )
-    findings += (
-        f"Readmitted {cond} patients cost ₹{prof['readmitted_avg_cost']:,.0f} on average versus "
-        f"₹{prof['non_readmitted_avg_cost']:,.0f} ({_prem:+.0f}%), with average stays of "
-        f"{prof['readmitted_avg_los']}d versus {prof['non_readmitted_avg_los']}d. "
-        "Association, not causation — definitions in data/metrics.json."
-    )
+    if comparable:
+        findings += (
+            f"Mean recorded cost: {display_stat(prof['readmitted_avg_cost'])} versus "
+            f"{display_stat(prof['non_readmitted_avg_cost'])} ({display_stat(_prem, 'percent')}). "
+            f"Mean stays: {display_stat(prof['readmitted_avg_los'], 'days')} versus "
+            f"{display_stat(prof['non_readmitted_avg_los'], 'days')}. "
+        )
+    else:
+        findings += "A readmitted/non-readmitted cost comparison is not available because a comparison group is absent or has no usable cost baseline. "
+    findings += "Association, not causation — definitions in data/metrics.json."
     st.info(findings)
 
 
+@st.fragment
 def render_ai(df):
-    tab_intro("Ask about this cohort. Supported questions use dataset calculations; optional AI responses need review.")
+    """Scope-aware analytical Q&A and optional validated Gemini fact selection."""
+    import importlib
+    from app.dashboard.utils import assistant_service as assistant
 
-    # ---------------- AI Recommendations ----------------
-    st.markdown('<div class="section-title">AI Recommendations</div>', unsafe_allow_html=True)
-    st.markdown('<div class="chart-card">', unsafe_allow_html=True)
-    if not gemini_ai.is_configured():
-        st.info("Gemini API key not configured — set the `GOOGLE_API_KEY` environment "
-                "variable to enable AI-generated recommendations.")
-    else:
-        if st.button("Generate recommendations for this cohort"):
-            with st.spinner("Analyzing cohort with Gemini..."):
-                ctx = gemini_ai._cohort_context(df)
-                df_hash = str(hash((len(df), tuple(sorted(df.Condition.unique())))))
-                rec = gemini_ai.generate_recommendations(df_hash, ctx)
-            if rec["ok"]:
-                st.markdown(rec["text"])
-            else:
-                st.warning(rec["text"])
-        st.caption("Grounded in this filtered cohort's real statistics — Gemini is instructed "
-                   "not to invent numbers beyond what's provided.")
-    st.markdown('</div>', unsafe_allow_html=True)
+    # Streamlit may retain an imported adapter across a rolling source refresh.
+    if getattr(gemini_ai, "ADAPTER_VERSION", 0) != 2:
+        importlib.reload(gemini_ai)
+    provider_capable = getattr(gemini_ai, "ADAPTER_VERSION", 0) == 2
+    scope_id = assistant.scope_fingerprint(df)
+    previous_scope = st.session_state.get("hg_assistant_scope")
+    if previous_scope != scope_id:
+        st.session_state["hg_assistant_scope"] = scope_id
+        st.session_state["hg_assistant_history"] = []
+        st.session_state.pop("hg_assistant_brief", None)
+        st.session_state.pop("qa_input", None)
+    config_id = gemini_ai.configuration_id() if provider_capable else "updating"
+    if st.session_state.get("hg_assistant_config") != config_id:
+        st.session_state["hg_assistant_config"] = config_id
+        st.session_state.pop("hg_assistant_connection", None)
+        st.session_state.pop("hg_assistant_brief", None)
 
-    # ---------------- Ask HealthGuard AI ----------------
-    st.markdown('<div class="section-title">Ask HealthGuard AI</div>', unsafe_allow_html=True)
-    st.markdown('<div class="chart-card">', unsafe_allow_html=True)
-    st.caption("Common questions (readmission rate, cost, length of stay, satisfaction, "
-               "outcome, patient counts) are answered directly from this dataset with no LLM "
-               "involved. Anything else falls back to Gemini, grounded in the same real stats.")
+    tab_intro("Ask analytical questions, inspect the calculation, and prepare an evidence-based cohort brief.")
+    st.caption("Synthetic records · Current dashboard filters apply · No diagnosis, prescribing or care prioritisation")
+    n1, n2, n3 = st.columns(3)
+    n1.metric("Records in assistant scope", f"{len(df):,}")
+    n2.metric("Numerical answer engine", "Computed")
+    configured = provider_capable and gemini_ai.is_configured()
+    n3.metric("Optional Gemini assistance", "Configured" if configured else "Local mode")
+    if previous_scope and previous_scope != scope_id:
+        st.info("The cohort changed. Earlier answers and briefs were cleared so they cannot be mistaken for this scope.")
 
-    # Suggested questions — one click fills the input
-    suggestions = [
-        "What's the readmission rate?",
-        "What's the readmission rate for Diabetes?",
-        "What's the average cost?",
-        "How many patients recovered?",
-    ]
-    srow = st.columns(len(suggestions))
-    for c, q in zip(srow, suggestions):
-        if c.button(q, key=f"sugg_{abs(hash(q)) % 100000}"):
-            st.session_state["qa_input"] = q
-            st.rerun()
+    with st.container(border=True):
+        st.subheader("Ask the cohort data")
+        st.write("Get counts, rates, average or total costs, stays, satisfaction and outcome summaries. "
+                 "You can narrow by a named condition, gender or age range, or compare supported groups.")
+        examples = [
+            ("Readmission rate", "What is the overall readmission rate?"),
+            ("Readmitted count", "How many patients were readmitted?"),
+            ("Cost by condition", "What is the average cost by condition?"),
+            ("Recovered count", "How many patients recovered?"),
+            ("Gender comparison", "Compare readmission rate by gender"),
+            ("Diabetes rate", "What is the readmission rate for diabetes?"),
+        ]
+        selected_question = None
+        for start in (0, 3):
+            cols = st.columns(3)
+            for col, (label, question) in zip(cols, examples[start:start + 3]):
+                if col.button(label, key=f"hg_example_{start}_{label}", use_container_width=True):
+                    selected_question = question
+        with st.form("hg_analyst_question_form", clear_on_submit=True):
+            question = st.text_input("Ask a question about this dataset", key="qa_input", max_chars=500,
+                                     placeholder="For example: What is the total cost for male patients with diabetes?")
+            submitted = st.form_submit_button("Calculate answer", type="primary")
+        if submitted:
+            selected_question = question
+        history = st.session_state.setdefault("hg_assistant_history", [])
+        if selected_question is not None:
+            response = assistant.answer_question(df, selected_question)
+            history.append({"question": selected_question, "response": response})
+            st.session_state["hg_assistant_history"] = history[-6:]
+        if history and st.button("Clear answers", key="hg_clear_answers"):
+            st.session_state["hg_assistant_history"] = []
+            history = []
+        if not history:
+            st.caption("Choose an example or enter a question. Unsupported filters are refused rather than silently ignored.")
+        for item in st.session_state["hg_assistant_history"][-3:]:
+            with st.container(border=True):
+                st.markdown("**Question:** " + item["question"])
+                result = item["response"]
+                if result["ok"]:
+                    st.success(result["text"])
+                    st.caption(f"Computed from {result['row_count']:,} matching records within this "
+                               f"{result['dashboard_rows']:,}-record dashboard scope. No model calculated the answer.")
+                    with st.expander("How this was calculated"):
+                        st.code(result["formula"], language=None)
+                        st.write("Source columns: " + (", ".join(result["source_columns"]) or "row count"))
+                        st.write("Additional question filters: " + (str(result["filters"]) if result["filters"] else "none"))
+                        st.dataframe(pd.DataFrame(result["table"]), hide_index=True, width="stretch")
+                        for note in result["warnings"]:
+                            st.caption(note)
+                else:
+                    st.info(result["text"])
+                    st.caption("No external provider was called for this unsupported request.")
 
-    question = st.text_input("Ask a question about this dataset",
-                             placeholder="e.g. What's the readmission rate for Diabetes?",
-                             key="qa_input")
-    if question:
-        result = simple_qa.answer(df, question)
-        if result["ok"]:
-            st.success(result["text"])
-            st.markdown(
-                f'<span class="qa-trust">✓ Data-grounded — computed directly from the '
-                f'{len(df):,} patients in current scope, no LLM involved</span>',
-                unsafe_allow_html=True,
-            )
-        elif gemini_ai.is_configured():
-            with st.spinner("Asking Gemini..."):
-                gresult = gemini_ai.answer_grounded(df, question)
-            if gresult["ok"]:
-                st.success(gresult["text"])
-            else:
-                st.warning(gresult["text"])
+    cards = assistant.evidence_cards(df)
+    with st.container(border=True):
+        st.subheader("Computed cohort evidence")
+        st.caption("These facts are available without a provider key. They describe the current cohort and do not prescribe action.")
+        for card in cards[:3]:
+            st.markdown("**" + card["title"] + "**")
+            st.write(card["text"])
+        with st.expander("See all computed evidence and definitions"):
+            for card in cards:
+                st.markdown("**" + card["title"] + "**")
+                st.write(card["text"])
+                st.caption(card["formula"] + " · Columns: " + (", ".join(card["source_columns"]) or "row count"))
+
+    with st.container(border=True):
+        st.subheader("Optional Gemini-assisted brief")
+        st.write("Gemini can select a few relevant cards from the computed evidence. "
+                 "It cannot add new figures, clinical recommendations or unrestricted narration to this view.")
+        if not provider_capable:
+            st.info("The provider adapter is refreshing. Local questions and evidence remain available.")
+        elif not configured:
+            st.info("Local mode is ready. The app owner can configure GOOGLE_API_KEY to enable optional Gemini assistance.")
         else:
-            st.info(result["text"])
-    st.markdown('</div>', unsafe_allow_html=True)
+            if st.button("Check Gemini connection", key="hg_check_provider"):
+                with st.spinner("Verifying an available model with a small structured-response request…"):
+                    st.session_state["hg_assistant_connection"] = gemini_ai.connection_status()
+            connection = st.session_state.get("hg_assistant_connection")
+            if connection:
+                if connection["ok"]:
+                    st.success(connection["text"])
+                    st.caption("Verified model: " + connection["model"])
+                else:
+                    st.warning(connection["text"])
+            else:
+                st.caption("Configured does not mean verified. Use the connection check to test the provider.")
+            focus_label = st.selectbox("Brief focus", ["Balanced review", "Costs", "Readmissions", "Outcomes"], key="hg_brief_focus")
+            focus = {"Balanced review": "balanced", "Costs": "costs", "Readmissions": "readmissions", "Outcomes": "outcomes"}[focus_label]
+            if st.button("Prepare AI-assisted brief", key="hg_prepare_brief", disabled=len(df) < 5):
+                with st.spinner("Selecting from this cohort's computed evidence…"):
+                    st.session_state["hg_assistant_brief"] = gemini_ai.generate_brief(df, focus)
+            if len(df) < 5:
+                st.caption("For fewer than five records, keep the analysis local.")
+            brief = st.session_state.get("hg_assistant_brief")
+            if brief:
+                if brief["ok"]:
+                    st.success("Validated evidence selection received.")
+                    st.caption("Model: " + brief["model"] + " · " + brief["note"])
+                    for card in brief["cards"]:
+                        st.markdown("**" + card["title"] + "**")
+                        st.write(card["text"])
+                    export = "# Cohort evidence brief\n\n" + "\n\n".join(c["title"] + "\n" + c["text"] for c in brief["cards"])
+                    export += "\n\nSynthetic data. Descriptive analysis, not clinical advice or causal evidence.\n"
+                    st.download_button("Download evidence brief", export.encode("utf-8"),
+                                       "healthguard_evidence_brief.md", "text/markdown", key="hg_download_brief")
+                else:
+                    st.warning(brief["text"])
+                    st.caption("The computed evidence above remains the fallback; no unverified provider prose is displayed.")
 
-    # ---------------- Model quality note ----------------
-    with st.expander("About the AI risk model"):
+    with st.expander("About the readmission model and assistant limits"):
         m = ai_risk.get_metrics()
         if m:
-            mc1, mc2, mc3, mc4 = st.columns(4)
-            mc1.metric("ROC AUC", m.get("roc_auc"))
-            mc2.metric("Condition-only baseline", m.get("condition_baseline_auc", "—"))
-            mc3.metric("Precision", m.get("precision"))
-            mc4.metric("Recall", m.get("recall"))
-        st.caption(
-            "This is a RandomForest classifier trained on this dataset's own columns "
-            "(Age, Gender, Condition, Procedure, Cost, Length of Stay) to predict the "
-            "Readmission field. Accuracy looks very high because Condition alone is "
-            "an almost perfect predictor of Readmission in this specific dataset — "
-            "consistent with it being a synthetic/demo dataset rather than noisy real-world "
-            "clinical data. For scale: a trivial Condition-only lookup table (no ML) already "
-            "scores ~0.93 AUC here. Clinical performance depends on the endpoint, "
-            "population and validation protocol. See reports/model_honesty.md "
-            "(run scripts/model_honesty_audit.py to regenerate it). Treat this as a "
-            "demonstration of the technique, not a validated clinical risk model."
-        )
+            a, b = st.columns(2)
+            a.metric("Recorded model ROC-AUC", m.get("roc_auc"))
+            b.metric("Condition-only baseline", m.get("condition_baseline_auc", "—"))
+        st.write("The predictive model uses a synthetic target with strong condition/procedure structure. "
+                 "Its score and SHAP explanations are not clinical validation. The analyst assistant "
+                 "does not predict a patient's future readmission or provide treatment advice.")
+        st.caption("No validated 30-day admissions timeline is present. Aggregate provider context is not a privacy certification for real patient data.")
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -1010,6 +1098,8 @@ try:
     st.markdown('<div class="hg-page-title">Hospital Outcomes Intelligence Dashboard</div>', unsafe_allow_html=True)
     st.markdown(f'<div class="hg-page-sub">AI-assisted analytics across {len(df)} of {len(raw)} patients — cost, length of stay, readmissions, and outcomes, with per-patient risk scoring and explainability.</div>', unsafe_allow_html=True)
 
+    st.caption("Synthetic patient records · Descriptive demonstration · Not for clinical decisions")
+
     if df.empty:
         st.warning("No patients match the current filters.")
         st.stop()
@@ -1048,10 +1138,10 @@ try:
             "determinism (condition-only baseline: 0.93) — disclosed, not hidden. Fairness: "
             "gender AUC gap 0.006 with base-rate disparity reported.\n\n"
             "**AI answers:** common questions are answered by deterministic code over this "
-            "cohort (no LLM); anything else escalates to Gemini grounded in the same statistics. "
-            "The AI never computes numbers and never makes clinical determinations.\n\n"
+            "cohort. Unsupported requests are refused. Optional Gemini assistance selects only "
+            "precomputed evidence cards; provider text is not used as a source of numerical answers.\n\n"
             "**Not medical advice:** demo analytics — not for diagnosis, treatment, or clinical decisions. "
-            "Everything here is reproducible: `tests/` (133 automated) and `reports/` in the repo."
+            "Reproduction commands, automated checks and limitations are documented in the repository."
         )
 
     st.divider()

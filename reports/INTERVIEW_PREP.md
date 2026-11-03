@@ -61,7 +61,7 @@ An explainable healthcare-analytics platform: readmission risk scoring with per-
 1. **How is the model trained?** `scripts/train_readmission_model.py` — RandomForest, `random_state=42`, stratified 80/20, artifacts saved with joblib; CI retrains and re-evaluates every push.
 2. **How does the Q&A grounding work?** `app/dashboard/utils/simple_qa.py` computes answers from dataframe aggregates; unknown subgroups return a refusal instead of a guess; tests assert answers match dataset values.
 3. **How is SHAP used?** TreeExplainer on the RandomForest — per-patient attributions in the UI, cohort-level summary in `reports/cohort_shap.md`.
-4. **What happens when the Gemini API key is missing?** The AI fallback degrades gracefully — grounded Q&A keeps working; the key is env-only (`.env.example`, nothing committed).
+4. **What happens when the Gemini API key is missing?** Computed Q&A and evidence remain available. Optional Gemini fact selection is labelled local/disabled; credentials belong in deployment secrets or the environment, never in source.
 5. **Why joblib for artifacts?** Standard scikit-learn persistence; model + encoders + metrics travel together and are version-pinned in requirements.
 6. **How do you prevent the app from drifting from the analysis?** Tests load `data/metrics.json` and the committed artifacts and assert the dashboard's numbers match.
 7. **What's in the feature pipeline?** `src/features/feature_pipeline.py` — converts the FHIR-style bundle into a modeling frame; exercised by the smoke test.
