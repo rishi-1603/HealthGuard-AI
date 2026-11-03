@@ -29,20 +29,22 @@ VALID_READMIT = {"Yes", "No"}
 
 def run_audit(df: pd.DataFrame) -> list[dict]:
     n = len(df)
+    if not n:
+        raise ValueError("Cannot audit an empty dataset.")
     rows = []
 
     def check(name, issue, affected, severity, treatment, reason):
         rows.append({
             "check": name, "issue": issue, "affected": int(affected),
             "pct": round(affected / n * 100, 2), "severity": severity,
-            "treatment": treatment, "reason": reason,
+            "treatment": treatment if severity in ("Pass", "Warning") else "Investigate before use", "reason": reason,
         })
 
     # completeness
-    nulls = int(df.isna().sum().sum())
-    check("Completeness", "Null values in any column", nulls,
+    nulls = int(df.isna().any(axis=1).sum())
+    check("Completeness", "Records with null values in any column", nulls,
           "Pass" if nulls == 0 else "High", "None required",
-          "All 10 columns fully populated")
+          "Each affected record is counted once, even if multiple fields are null")
 
     # uniqueness
     dupes = int(df["Patient_ID"].duplicated().sum())
@@ -52,14 +54,14 @@ def run_audit(df: pd.DataFrame) -> list[dict]:
 
     # validity — ranges
     bad_age = int((~df["Age"].between(18, 90)).sum())
-    check("Validity — Age", "Age outside observed plausible range 18–90", bad_age,
+    check("Validity — Age", "Age outside project audit band 18–90", bad_age,
           "Pass" if bad_age == 0 else "High", "None required",
           "Implausible ages would distort demographic analysis")
 
     bad_cost = int((df["Cost"] <= 0).sum())
     check("Validity — Cost", "Non-positive cost", bad_cost,
           "Pass" if bad_cost == 0 else "High", "None required",
-          "Cost must be positive for AOV/margin analytics")
+          "This audit requires positive recorded cost")
 
     bad_los = int((df["Length_of_Stay"] < 1).sum())
     check("Validity — Length_of_Stay", "Stay below 1 day", bad_los,
@@ -69,7 +71,7 @@ def run_audit(df: pd.DataFrame) -> list[dict]:
     bad_sat = int((~df["Satisfaction"].between(1, 5)).sum())
     check("Validity — Satisfaction", "Score outside 1–5", bad_sat,
           "Pass" if bad_sat == 0 else "Medium", "None required",
-          "Survey scale bounds")
+          "Synthetic score scale bounds")
 
     # validity — categories
     bad_gender = int((~df["Gender"].isin(VALID_GENDERS)).sum())
@@ -88,8 +90,9 @@ def run_audit(df: pd.DataFrame) -> list[dict]:
           "Readmission is the model target")
 
     # consistency — condition/procedure mapping
-    multi = int((df.groupby("Condition")["Procedure"].nunique() > 1).sum())
-    check("Consistency", "Conditions mapped to >1 procedure", multi,
+    counts = df.groupby("Condition")["Procedure"].nunique()
+    multi = int(df["Condition"].isin(counts[counts > 1].index).sum())
+    check("Consistency", "Records in conditions mapped to >1 procedure", multi,
           "Pass" if multi == 0 else "Medium", "None required",
           "1:1 mapping is documented in the data dictionary; SHAP attribution assumes it")
 
@@ -101,45 +104,49 @@ def run_audit(df: pd.DataFrame) -> list[dict]:
           sev, "None — informational",
           "The 26.8% base rate is the documented headline; drift means the dataset changed")
 
-    # documented design characteristics (not defects — surfaced for the analyst)
+    # Descriptive characteristics are calculated for the supplied scope, not hard-coded.
+    condition_rates = df.groupby("Condition")["Readmission"].apply(lambda x: x.eq("Yes").mean())
+    extreme = int(((condition_rates > .95) | (condition_rates < .05)).sum())
+    group_rates = df.groupby("Gender")["Readmission"].apply(lambda x: x.eq("Yes").mean())
+    gender_text = ", ".join(f"{group}: {value:.1%}" for group, value in group_rates.items()) or "unavailable"
     rows.append({
-        "check": "Design characteristic", "issue":
-            "Readmission is near-deterministic given Condition (11/15 conditions "
-            "readmit at >95% or <5%)",
-        "affected": 984, "pct": 100.0, "severity": "Known (by design)",
-        "treatment": "Documented — not cleaned",
-        "reason": "Synthetic generator construction; quantified in reports/model_honesty.md",
+        "check": "Observed characteristic", "issue":
+            f"Readmission rates below 5% or above 95% in {extreme}/{len(condition_rates)} observed conditions",
+        "affected": n, "pct": 100.0, "severity": "Observed context",
+        "treatment": "Descriptive context — not cleaned",
+        "reason": "Scope-wide context; see reports/model_honesty.md for the full-data analysis",
     })
     rows.append({
-        "check": "Design characteristic", "issue":
-            "Gender base-rate disparity: Female 43.9% vs Male 7.4% actual readmission",
-        "affected": 984, "pct": 100.0, "severity": "Known (by design)",
-        "treatment": "Documented — not cleaned",
-        "reason": "Condition mix differs by gender; analyzed in reports/fairness_check.md",
+        "check": "Observed characteristic", "issue": f"Readmission rates by recorded gender: {gender_text}",
+        "affected": n, "pct": 100.0, "severity": "Observed context",
+        "treatment": "Descriptive context — not cleaned",
+        "reason": "Scope-wide context; see reports/fairness_check.md for the full-data analysis",
     })
     return rows
 
 
 def main() -> None:
-    df = data.load_patients()
+    df = pd.read_csv(data.DATA_PATH)
     rows = run_audit(df)
 
     lines = [
         "# Data Quality Report",
         f"### data/hospital/hospital_data.csv · {len(df):,} rows × {len(df.columns)} columns · synthetic",
         "",
-        "> Generated by `scripts/data_quality_report.py` on every run. The same",
-        "> checks are enforced as CI tests in `tests/test_hospital_data_quality.py` —",
-        "> this report is the documented audit trail; the tests are the gate.",
+        "> Generated by `scripts/data_quality_report.py` on every run.",
+        "> This is a descriptive audit of the committed CSV. Related tests check",
+        "> selected conditions; the workbench uses a separate project contract.",
         "",
         "## Summary",
         "",
-        f"- Checks executed: **{sum(1 for r in rows if r['severity'] not in ('Known (by design)',))}**",
-        f"- Failures: **{sum(1 for r in rows if r['severity'] in ('High', 'Critical'))}**",
+        f"- Checks executed: **{sum(1 for r in rows if r['severity'] not in ('Observed context',))}**",
+        f"- Failures: **{sum(1 for r in rows if r['severity'] in ('Medium', 'High', 'Critical'))}**",
         f"- Warnings: **{sum(1 for r in rows if r['severity'] == 'Warning')}**",
-        f"- Documented design characteristics: **{sum(1 for r in rows if r['severity'] == 'Known (by design)')}**",
+        f"- Observed characteristics: **{sum(1 for r in rows if r['severity'] == 'Observed context')}**",
         "",
         "## Full audit table",
+        "",
+        "Percentages use the number of source records as denominator; rules can overlap. Scope-wide observed context is not a defect count.",
         "",
         "| Check | Issue | Records | % | Severity | Treatment | Reason |",
         "|---|---|---|---|---|---|---|",
@@ -152,17 +159,11 @@ def main() -> None:
         "",
         "## Reading this report",
         "",
-        "1. **Zero failures, zero warnings on the current dataset** — expected: the",
-        "   synthetic generator produces clean data, and the CI tests would fail the",
-        "   build otherwise. The report's value is proving the audit runs and",
-        "   documenting what 'clean' means for this dataset.",
-        "2. **Design characteristics are not defects.** The two rows flagged",
-        "   'Known (by design)' are properties of the synthetic generator that an",
-        "   analyst must know (and that are analyzed, not hidden, in the honesty and",
-        "   fairness reports).",
-        "3. **Cleaning decisions: none required.** No records were dropped, imputed,",
-        "   or modified anywhere in this project — documented here so no one has to",
-        "   guess.",
+        "1. Review the summary and table above for the actual results of this run.",
+        "2. The observed-context rows describe the entire supplied scope, not defective records.",
+        "   Relationships in synthetic data do not establish clinical causation.",
+        "3. The audit does not modify, impute or remove source records; checks are",
+        "   not a certification of clinical validity or suitability for real data.",
         "",
         "## Reproduce",
         "",
@@ -173,7 +174,7 @@ def main() -> None:
     ]
     (REPORTS / "data_quality_report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-    fails = sum(1 for r in rows if r["severity"] in ("High", "Critical"))
+    fails = sum(1 for r in rows if r["severity"] in ("Medium", "High", "Critical"))
     print(f"Checks run: {len(rows) - 2} | Failures: {fails} | Warnings: "
           f"{sum(1 for r in rows if r['severity'] == 'Warning')}")
     print(f"Report written: {REPORTS / 'data_quality_report.md'}")

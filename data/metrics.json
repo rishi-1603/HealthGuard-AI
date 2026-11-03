@@ -41,17 +41,17 @@
       "caveat": "Association, not causation: readmitted patients are costlier, the data does not prove readmission causes the cost."
     },
     "age_bands": {
-      "definition": "18-30, 31-45, 46-60, 61-75, 76+ (exclusive lower, inclusive upper).",
+      "definition": "0-30, 31-45, 46-60, 61-75, 76-120 (inclusive integer boundaries; observed data starts at age 25).",
       "verified_readmit_rates_pct": {
-        "18-30": 0.0,
+        "0-30": 0.0,
         "31-45": 16.7,
         "46-60": 36.5,
         "61-75": 25.6,
-        "76+": 50.0
+        "76-120": 50.0
       }
     },
     "outcome": {
-      "definition": "Recovered or Stable at discharge.",
+      "definition": "Recorded Recovered or Stable label; discharge timing is not validated.",
       "caveat": "No patient died in this synthetic dataset \u2014 a generation property, disclosed."
     },
     "fairness": {

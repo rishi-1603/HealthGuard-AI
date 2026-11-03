@@ -910,11 +910,11 @@ def render_workbench(df, reference):
     import json
 
     # Streamlit can retain imported modules while deploying updated source files.
-    if getattr(workbench, "WORKBENCH_VERSION", 0) != 2:
+    if getattr(workbench, "WORKBENCH_VERSION", 0) != 3:
         workbench = importlib.reload(workbench)
     selected_id = assistant.scope_fingerprint(df)
     reference_id = assistant.scope_fingerprint(reference)
-    signature = selected_id + ":" + reference_id
+    signature = selected_id + ":" + reference_id + ":v" + str(workbench.WORKBENCH_VERSION)
     if st.session_state.get("hg_workbench_scope") != signature:
         st.session_state["hg_workbench_scope"] = signature
         st.session_state.pop("hg_workbench_result", None)
@@ -1015,6 +1015,8 @@ def render_workbench(df, reference):
             result = previous["result"]
             st.success(f"SQL/pandas reconciliation PASS: {result['checked_values']} result cells checked for {result['rows_in_scope']:,} selected records.")
             st.caption(result["scope_note"])
+            if result["small_groups"]:
+                st.warning(f"{result['small_groups']} result group(s) have fewer than 30 records. Interpret subgroup rates cautiously; this threshold is a heuristic, not a significance test.")
             st.dataframe(result["table"], hide_index=True, width="stretch")
             st.download_button("Download scoped SQL results (CSV)", result["table"].to_csv(index=False).encode("utf-8"),
                                f"healthguard_{key}_{selected_id[:8]}.csv", "text/csv", key="hg_download_sql")

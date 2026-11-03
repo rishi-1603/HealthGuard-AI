@@ -11,6 +11,13 @@ This is a synthetic-data analysis snapshot, not a care-period or clinical report
 - Reference scope ID: f703d2727895fdc3aa3f
 - Both source and selected data-contract checks: PASS.
 
+## Observed selected-cohort composition
+These are observed values in the resulting records, not the filter settings; they may not uniquely reconstruct the selection.
+- Condition: Diabetes (65)
+- Gender: Male (65)
+- Outcome: Stable (65)
+- Observed age range: 60–65 years.
+
 ## Selected cohort versus reference
 Differences use unrounded metrics; displayed numbers use two-decimal half-up rounding.
 | Metric | Selected | Full reference | Difference | Difference unit |

@@ -169,3 +169,46 @@ def test_broken_tracked_query_does_not_publish_an_unverified_result(patients, mo
     monkeypatch.setattr(workbench, 'load_queries', lambda: {'cost_by_condition': 'SELECT missing_column FROM scope_encounters'})
     with pytest.raises(ValueError, match='tracked SQL question could not execute'):
         workbench.execute_question(patients, 'cost_by_condition')
+
+@pytest.mark.parametrize('column,value', [
+    ('Age', 35.5), ('Age', '35'), ('Cost', '2000'),
+    ('Length_of_Stay', True), ('Satisfaction', '4'),
+])
+def test_contract_rejects_values_incompatible_with_analytics(patients, column, value):
+    data = patients.copy()
+    data[column] = data[column].astype(object)
+    data.loc[data.index[0], column] = value
+    assert not workbench.quality_report(data)['all_passed']
+    with pytest.raises(ValueError, match='data contract'):
+        workbench.execute_question(data, 'cost_by_condition')
+
+
+def test_sql_reconciliation_requires_complete_expected_columns(patients, monkeypatch):
+    incomplete = 'SELECT condition, COUNT(*) AS records FROM scope_encounters GROUP BY condition ORDER BY condition'
+    monkeypatch.setattr(workbench, 'load_queries', lambda: {'cost_by_condition': incomplete})
+    with pytest.raises(ValueError, match='columns'):
+        workbench.execute_question(patients, 'cost_by_condition')
+
+
+def test_report_describes_observed_cohort_not_claimed_filter_criteria(patients):
+    selected = patients[patients.Condition.eq('Diabetes') & patients.Gender.eq('Male')]
+    text = workbench.build_report(selected, patients, generated_at='test')
+    assert 'Observed selected-cohort composition' in text
+    assert 'Condition: Diabetes (' in text
+    assert 'Gender: Male (' in text
+    assert 'Observed age range:' in text
+    assert 'not the filter settings' in text
+
+
+def test_small_sql_groups_are_flagged_independent_of_cohort_size(patients):
+    selected = patients.head(40).copy()
+    selected['Gender'] = ['Male'] * 39 + ['Female']
+    query = workbench.execute_question(selected, 'readmission_by_gender')
+    assert query['small_groups'] == 1
+    # Report must use the unmodified reference rows: use a real subset with thin groups.
+    selected = pd.concat([patients[patients.Condition.eq('Diabetes')].head(39), patients[patients.Condition.eq('Stroke')].head(1)])
+    assert len(selected) == 40
+    report = workbench.build_report(selected, patients, 'outcomes', generated_at='test')
+    expected = workbench.execute_question(selected, 'outcomes_by_condition')['small_groups']
+    assert expected == 1
+    assert '1 SQL result group(s) have fewer than 30 records' in report

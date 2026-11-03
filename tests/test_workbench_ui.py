@@ -68,5 +68,31 @@ def test_rolling_update_reloads_older_workbench_module(monkeypatch):
     monkeypatch.delenv('GOOGLE_API_KEY', raising=False)
     app = AppTest.from_file(str(APP)).run(timeout=45)
     assert not app.exception
-    assert analyst_workbench.WORKBENCH_VERSION == 2
+    assert analyst_workbench.WORKBENCH_VERSION == 3
     assert next(m for m in app.metric if m.label == 'Selected contract checks').value == '12/12'
+
+
+def test_sql_warns_about_small_groups(monkeypatch):
+    monkeypatch.delenv('GOOGLE_API_KEY', raising=False)
+    app = AppTest.from_file(str(APP)).run(timeout=45)
+    app.slider(key='hg_age').set_value((25, 30)).run(timeout=45)
+    app.radio(key='hg_workbench_step').set_value('SQL').run(timeout=45)
+    button(app, 'Run scoped SQL').click().run(timeout=45)
+    assert not app.exception
+    assert app.session_state['hg_workbench_result']['result']['small_groups'] > 0
+    assert any('fewer than 30 records' in message.value for message in app.warning)
+
+
+def test_older_cached_workbench_result_is_cleared_after_version_change(monkeypatch):
+    from app.dashboard.utils import assistant_service
+    from app.dashboard.utils.hospital_data import load_patients
+    monkeypatch.delenv('GOOGLE_API_KEY', raising=False)
+    app = AppTest.from_file(str(APP)).run(timeout=45)
+    fingerprint = assistant_service.scope_fingerprint(load_patients())
+    app.session_state['hg_workbench_scope'] = f'{fingerprint}:{fingerprint}:v2'
+    app.session_state['hg_workbench_result'] = {'signature': 'old', 'result': {}}
+    app.session_state['hg_workbench_report'] = {'signature': 'old', 'text': 'old'}
+    app.run(timeout=45)
+    assert not app.exception
+    assert 'hg_workbench_result' not in app.session_state
+    assert 'hg_workbench_report' not in app.session_state
