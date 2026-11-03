@@ -907,9 +907,9 @@ def render_ai(df):
     from app.dashboard.utils import assistant_service as assistant
 
     # Streamlit may retain an imported adapter across a rolling source refresh.
-    if getattr(gemini_ai, "ADAPTER_VERSION", 0) != 2:
+    if getattr(gemini_ai, "ADAPTER_VERSION", 0) != 3:
         importlib.reload(gemini_ai)
-    provider_capable = getattr(gemini_ai, "ADAPTER_VERSION", 0) == 2
+    provider_capable = getattr(gemini_ai, "ADAPTER_VERSION", 0) == 3
     scope_id = assistant.scope_fingerprint(df)
     previous_scope = st.session_state.get("hg_assistant_scope")
     if previous_scope != scope_id:
@@ -1018,6 +1018,9 @@ def render_ai(df):
                     st.caption("Verified model: " + connection["model"])
                 else:
                     st.warning(connection["text"])
+                    st.caption("Selection mode: " + connection.get("selection_mode", "unknown") +
+                               " · Stage: " + connection.get("phase", "unknown") +
+                               " · Attempted models: " + (", ".join(connection.get("attempted_models", [])) or "none"))
             else:
                 st.caption("Configured does not mean verified. Use the connection check to test the provider.")
             focus_label = st.selectbox("Brief focus", ["Balanced review", "Costs", "Readmissions", "Outcomes"], key="hg_brief_focus")

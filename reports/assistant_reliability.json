@@ -183,7 +183,6 @@
     ]
   },
   "gender_comparison_correct": true,
-  "max_computed_answer_ms": 3.857,
   "scope": "Authored deterministic benchmark, not arbitrary NLP, clinical validity or live provider uptime.",
   "verdict": "PASS"
 }

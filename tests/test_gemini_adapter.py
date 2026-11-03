@@ -164,3 +164,13 @@ def test_public_demo_provider_budget_is_bounded(fake):
     result = gemini_ai.connection_status()
     assert not result['ok'] and result['status'] == 'rate_limited'
     assert len(fake.calls) == 4
+
+
+def test_automatic_selection_prefers_a_lightweight_catalog_model(fake):
+    fake.list = lambda config=None: [
+        SimpleNamespace(name='models/gemini-3.6-flash', supported_actions=['generateContent']),
+        SimpleNamespace(name='models/gemini-2.5-flash-lite', supported_actions=['generateContent']),
+    ]
+    fake.responses = ['{"status":"ready"}']
+    result = gemini_ai.connection_status()
+    assert result['ok'] and result['model'] == 'gemini-2.5-flash-lite'
