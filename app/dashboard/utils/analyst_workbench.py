@@ -54,10 +54,10 @@ def quality_report(df: pd.DataFrame) -> dict:
                        'affected': None, 'definition': 'Required columns must exist first.'})
     else:
         ids = df.Patient_ID
-        missing_ids = ids.isna() | ids.map(lambda value: isinstance(value, str) and not value.strip())
+        missing_ids = ids.isna() | ids.map(lambda value: isinstance(value, str) and not value.strip()).astype(bool)
         record('Complete unique patient identifiers', int(missing_ids.sum()) + int(ids[~missing_ids].duplicated().sum()),
                'One row per synthetic patient; missing/duplicated IDs are not silently repaired.')
-        blank_cells = sum(int(df[c].map(lambda value: isinstance(value, str) and not value.strip()).sum()) for c in BASE_COLUMNS)
+        blank_cells = sum(sum(isinstance(value, str) and not value.strip() for value in df[c]) for c in BASE_COLUMNS)
         record('Required cells present', int(df[BASE_COLUMNS].isna().sum().sum()) + blank_cells,
                'Missing values in the original schema are reported, not filled.')
         for column, lo, hi in [('Age', 0, 120), ('Cost', 0, float('inf')),
