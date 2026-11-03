@@ -952,7 +952,7 @@ def render_ai(df):
         for start in (0, 3):
             cols = st.columns(3)
             for col, (label, question) in zip(cols, examples[start:start + 3]):
-                if col.button(label, key=f"hg_example_{start}_{label}", use_container_width=True):
+                if col.button(label, key=f"hg_example_{start}_{label}", width="stretch"):
                     selected_question = question
         with st.form("hg_analyst_question_form", clear_on_submit=True):
             question = st.text_input("Ask a question about this dataset", key="qa_input", max_chars=500,
