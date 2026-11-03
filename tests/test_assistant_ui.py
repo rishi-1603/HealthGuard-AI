@@ -62,3 +62,14 @@ def test_single_outcome_cohort_does_not_show_a_fictitious_zero_comparator(monkey
     findings = [item.value for item in app.info if 'Findings (computed)' in item.value]
     assert findings and 'comparison group is absent' in findings[0]
     assert 'versus ₹0' not in findings[0]
+
+
+def test_outer_dashboard_error_does_not_expose_exception_body(monkeypatch, caplog):
+    from app.dashboard.utils import hospital_data
+    def broken_load():
+        raise RuntimeError('PRIVATE_BACKEND_SECRET_SHOULD_NOT_APPEAR')
+    monkeypatch.setattr(hospital_data, 'load_patients', broken_load)
+    app = AppTest.from_file(str(APP)).run(timeout=40)
+    assert not app.exception
+    assert any('This dashboard view could not load' in item.value for item in app.error)
+    assert 'PRIVATE_BACKEND_SECRET' not in '\n'.join(item.value for item in app.error) + caplog.text

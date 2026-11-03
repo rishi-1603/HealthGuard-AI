@@ -1,0 +1,18 @@
+{
+  "verification_date": "2026-11-03",
+  "expected_source_commit_at_check": "a75e461c982da7266337233c72e99f43682602e6",
+  "whole_runtime_commit_attested": false,
+  "deployed_url": "https://healthguard-ai-cyl2viwrsdrrff7pig7u6c.streamlit.app/",
+  "computed_count": 264,
+  "diabetes_scope_records": 65,
+  "diabetes_rate_pct": 1.5,
+  "provider_connection": true,
+  "provider_model": "gemini-3.5-flash-lite",
+  "validated_card_selection": true,
+  "brief_download": true,
+  "unsupported_refusal": true,
+  "scope_change_clears_brief": true,
+  "displayed_streamlit_exceptions": 0,
+  "javascript_errors": [],
+  "note": "Dated observations, not a provider uptime or clinical-validity guarantee. Provider credentials were not extracted."
+}

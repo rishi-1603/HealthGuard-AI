@@ -1,4 +1,5 @@
 import sys
+import logging
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
@@ -905,6 +906,8 @@ def render_ai(df):
     """Scope-aware analytical Q&A and optional validated Gemini fact selection."""
     import importlib
     from app.dashboard.utils import assistant_service as assistant
+    if getattr(assistant, "SERVICE_VERSION", 0) != 2:
+        assistant = importlib.reload(assistant)
 
     # Streamlit may retain an imported adapter across a rolling source refresh.
     if getattr(gemini_ai, "ADAPTER_VERSION", 0) != 3:
@@ -1151,4 +1154,5 @@ try:
     st.caption("Demo analytics dashboard. Not intended for diagnosis, treatment, or clinical decision-making.")
 
 except Exception as e:
-    st.error(f"Error loading dashboard: {str(e)}")
+    logging.getLogger(__name__).error("Dashboard view could not load (%s)", type(e).__name__)
+    st.error("This dashboard view could not load. Refresh or reset the filters; the app owner can inspect the server logs.")

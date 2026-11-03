@@ -96,7 +96,11 @@ The AI Assistant tab now separates numerical answers from provider assistance:
 
 The new deterministic benchmark passes **14 numerical/scope cases, 12 refusals and an independent gender comparison**. The original 8-answer/6-refusal benchmark also passes. These are authored cases, not a guarantee for arbitrary questions or provider uptime.
 
-The audited regression suite contains **213 tests**. The saved model/encoders still use scikit-learn **1.9.0**; they were not replaced for this assistant update.
+The audited regression suite contains **214 tests**. The saved model/encoders still use scikit-learn **1.9.0**; they were not replaced for this assistant update.
+
+![Computed answer with calculation evidence](docs/screenshots/assistant_computed_evidence.png)
+
+![Live-verified Gemini selection of computed evidence](docs/screenshots/assistant_gemini_brief.png)
 
 [Assistant behavior and configuration](docs/ASSISTANT_GUIDE.md) · [New evaluation](reports/assistant_reliability.md) · [Original Q&A evaluation](reports/qa_eval.md) · [Publication scope](docs/FINAL_RELEASE_AUDIT.md)
 
