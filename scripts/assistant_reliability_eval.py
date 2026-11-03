@@ -46,6 +46,19 @@ def run():
         ('Compare cost and readmission rate', 'all'),
         ('Readmission rate for heart attack', 'diabetes'),
         ('What is the capital of France?', 'all'),
+        ('How many patients not diabetes?', 'all'),
+        ('How many patients not female?', 'all'),
+        ('How many non recovered patients?', 'all'),
+        ('Compare readmission rate by condition and gender', 'all'),
+        ('How many patients and what is the average cost?', 'all'),
+        ('Readmission rate for non-readmitted patients', 'all'),
+        ('How many patients were readmitted or recovered?', 'all'),
+        ('How many recovered and stable patients?', 'all'),
+        ('How many readmitted and not readmitted patients?', 'all'),
+        ('What is the highest readmission rate?', 'all'),
+        ('What is the average cost over 60?', 'all'),
+        ('Top 7 most expensive conditions', 'all'),
+        ('How many patients five?', 'all'),
     ]
     rows = []
     for question, expected, scope in cases:

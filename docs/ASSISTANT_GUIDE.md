@@ -12,7 +12,9 @@ Examples:
 - Compare readmission rate by gender.
 - What is the average cost for patients older than 60?
 
-The input language is deliberately bounded. Unknown filters, ambiguous multi-metric requests, missing conditions, unavailable time windows and clinical requests are refused rather than silently reinterpreted. The service cannot expand a filtered DataFrame back to the full patient population.
+Explicit top or bottom 3, 5 or 10 condition rankings are supported; other ranking counts are refused. Age bands use inclusive whole-number boundaries 0–30, 31–45, 46–60, 61–75 and 76–120.
+
+The input language is deliberately bounded. Unsupported negation (except not readmitted), OR combinations, multiple grouping dimensions, ambiguous multi-metric requests, unknown filters, missing conditions, unavailable time windows and clinical requests are refused rather than silently reinterpreted. The service cannot expand a filtered DataFrame back to the full patient population.
 
 ## Numerical answer path
 
@@ -24,7 +26,7 @@ Question + filtered cohort
   -> answer + scope + formula + source columns + evidence table
 ```
 
-`assistant_service.py` does not call a model or execute generated SQL/code. `simple_qa.answer()` remains a compatibility entry point. Missing or invalid metric values are excluded with denominator disclosure; an empty cohort is not reported as a zero rate. Absent cost-comparison groups are not assigned zero cost.
+`assistant_service.py` does not call a model or execute generated SQL/code. `simple_qa.answer()` remains a compatibility entry point. Missing or invalid metric values are excluded with denominator disclosure in both grouped and ungrouped answers; evidence cards carry exclusion and small-denominator cautions; an empty cohort is not reported as a zero rate. Absent cost-comparison groups are not assigned zero cost.
 
 The assistant is isolated in a Streamlit fragment so a question does not need to rebuild unrelated charts. Conversation and brief state are keyed to a content-based cohort fingerprint and cleared when the cohort changes. A maximum of six recent question results is retained per session, with the last three displayed.
 
@@ -56,7 +58,7 @@ python scripts/assistant_reliability_eval.py
 python -m pytest -q
 ```
 
-The original benchmark remains 8/8 answerable, 3/3 unsupported refusals and 3/3 false-premise cases. The new benchmark independently checks 14 numerical/scope cases, 12 refusals and one grouped comparison. Tests also cover provider JSON contracts, transient failover, quota/authentication failures, redaction, small-cohort handling and real Streamlit form/scope workflows.
+The original benchmark remains 8/8 answerable, 3/3 unsupported refusals and 3/3 false-premise cases. The new benchmark independently checks 14 numerical/scope cases, 25 refusals and one grouped comparison. Tests also cover provider JSON contracts, transient failover, quota/authentication failures, redaction, small-cohort handling and real Streamlit form/scope workflows.
 
 CI does not use an actual provider credential. Live provider availability, selected model and exact release commit are separate deployment evidence in the delivery report; mocked provider tests do not establish provider uptime.
 

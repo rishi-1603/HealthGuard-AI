@@ -73,3 +73,25 @@ def test_outer_dashboard_error_does_not_expose_exception_body(monkeypatch, caplo
     assert not app.exception
     assert any('This dashboard view could not load' in item.value for item in app.error)
     assert 'PRIVATE_BACKEND_SECRET' not in '\n'.join(item.value for item in app.error) + caplog.text
+
+
+def test_ambiguous_question_is_refused_in_app(monkeypatch):
+    monkeypatch.delenv('GOOGLE_API_KEY', raising=False)
+    app = AppTest.from_file(str(APP)).run(timeout=40)
+    app.text_input(key='qa_input').set_value('How many patients not female?')
+    button(app, 'Calculate answer').click().run(timeout=40)
+    assert not app.exception
+    response = app.session_state['hg_assistant_history'][-1]['response']
+    assert not response['ok'] and response['status'] == 'clarification'
+
+
+def test_service_version_change_clears_old_assistant_history(monkeypatch):
+    monkeypatch.delenv('GOOGLE_API_KEY', raising=False)
+    app = AppTest.from_file(str(APP)).run(timeout=40)
+    app.session_state['hg_assistant_scope'] = 'old-scope:v2'
+    app.session_state['hg_assistant_history'] = [{'question': 'old', 'response': {}}]
+    app.session_state['hg_assistant_brief'] = {'old': True}
+    app.run(timeout=40)
+    assert not app.exception
+    assert app.session_state['hg_assistant_history'] == []
+    assert 'hg_assistant_brief' not in app.session_state
