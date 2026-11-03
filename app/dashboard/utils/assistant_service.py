@@ -24,8 +24,8 @@ CONDITION_SYNONYMS = {
     'Kidney Stones': ['renal stones'], 'Allergic Reaction': ['allergy'],
     'Osteoarthritis': ['arthritis'], 'Appendicitis': [], 'Childbirth': [],
 }
-SERVICE_VERSION = 2
-AGE_LABELS = ['18-30', '31-45', '46-60', '61-75', '76+']
+SERVICE_VERSION = 3
+AGE_LABELS = ['0-30', '31-45', '46-60', '61-75', '76-120']
 CAUTION = 'Synthetic patient records; descriptive analysis, not medical advice or causal evidence.'
 METRICS = {'count', 'readmission_rate', 'average_cost', 'total_cost', 'average_stay',
            'satisfaction', 'recovery_rate', 'average_age'}
@@ -40,7 +40,7 @@ length stay days satisfaction satisfied outcome outcomes recovered recovery stab
 rate rates percent percentage share compare comparison breakdown distribution
 condition conditions gender genders sex age ages aged band bands group groups between than older
 younger over under above below non not marked had have has having there value values
-three five ten first'''.split())
+'''.split())
 
 
 @dataclass(frozen=True)
@@ -99,7 +99,30 @@ def parse_question(question) -> QueryPlan | dict:
         return _refuse('I do not diagnose, prescribe or recommend care. Ask a descriptive question about the records.', 'medical_request')
     if re.search(r'\b(predict\w*|forecast\w*|tomorrow|yesterday|future|mortality|death\w*|revenue)\b|next\s+(?:month|year|week)|last\s+(?:month|year|week)|over time|\btrend\w*|\b(?:19|20)\d{2}\b|\b\d+[- ]day\s+readmission|readmission.*\bwithin\b', q):
         return _refuse('There is no validated admissions timeline, prediction horizon, revenue or mortality measure here.', 'unavailable_data')
-    conditions, remaining = _conditions(q)
+    if re.search(r'\bor\b', q):
+        return _refuse('OR combinations are not supported; ask one question at a time.', 'clarification')
+    if re.search(r'\brecovered\b', q) and re.search(r'\bstable\b', q):
+        return _refuse('Choose one outcome or ask for a breakdown by outcome.', 'clarification')
+    if re.search(r'\b(?:non[- ]readmitted|not\s+readmitted)\b', q) and re.search(r'\breadmitted\b', re.sub(r'\b(?:non[- ]readmitted|not\s+readmitted)\b', '', q)):
+        return _refuse('Choose one readmission status or ask for a breakdown.', 'clarification')
+    # Only the explicitly supported negative readmission phrasing is interpreted.
+    # Every other negation must fail closed rather than turn into the opposite filter.
+    negation_check = re.sub(r'\b(?:non[- ]readmitted|not\s+readmitted)\b', 'readmitted', q)
+    if re.search(r"\b(?:not|non|without|exclude|excluding|except|neither|nor)\b|n't\b", negation_check):
+        return _refuse('Negated filters are not supported except not readmitted. Rephrase using a supported positive filter.', 'clarification')
+    group_terms = r'(?:conditions?|genders?|sex|age(?:\s+(?:bands?|groups?))?|outcomes?|readmission)'
+    if re.search(r'\b(?:by|per|across|for each|in each)\s+' + group_terms + r'\s+(?:and|or)\s+(?:(?:by|per|across)\s+)?' + group_terms + r'\b', q):
+        return _refuse('Compare one grouping dimension at a time.', 'clarification')
+    # Explicit ranking counts are consumed before checking for unsupported digits.
+    ranking = re.search(r'\b(top|bottom)\s+(3|5|10|three|five|ten)\b', q)
+    ranking_n = None
+    remaining_q = q
+    if ranking:
+        ranking_n = {'3': 3, 'three': 3, '5': 5, 'five': 5, '10': 10, 'ten': 10}[ranking.group(2)]
+        remaining_q = q[:ranking.start(2)] + ' ' + q[ranking.end(2):]
+    elif re.search(r'\b(?:top|bottom|first)\s+\w+', q) and re.search(r'\b(?:three|five|ten)\b', q):
+        return _refuse('Use top or bottom 3, 5 or 10 conditions.', 'clarification')
+    conditions, remaining = _conditions(remaining_q)
     if len(conditions) > 1:
         return _refuse('Use one named condition, or ask for a breakdown by condition.', 'clarification')
     gender_matches = []
@@ -115,13 +138,17 @@ def parse_question(question) -> QueryPlan | dict:
     else:
         match = re.search(r'\b(?:older than|over|above)\s+(\d{1,3})\b', remaining)
         if match:
+            if re.match(r'(?:over|above)', match.group()) and not re.search(r'\b(?:age|aged|patients?|people)(?:\s+aged?)?\s+(?:over|above)\s+\d+\b', q):
+                return _refuse('Specify that the threshold is an age; cost thresholds are not supported.', 'clarification')
             age_min = int(match.group(1)) + 1
             remaining = remaining[:match.start()] + ' ' + remaining[match.end():]
         match = re.search(r'\b(?:younger than|under|below)\s+(\d{1,3})\b', remaining)
         if match:
+            if re.match(r'(?:under|below)', match.group()) and not re.search(r'\b(?:age|aged|patients?|people)(?:\s+aged?)?\s+(?:under|below)\s+\d+\b', q):
+                return _refuse('Specify that the threshold is an age; cost thresholds are not supported.', 'clarification')
             age_max = int(match.group(1)) - 1
             remaining = remaining[:match.start()] + ' ' + remaining[match.end():]
-    if (age_min is not None and age_min < 0) or (age_max is not None and age_max > 120) or (age_min is not None and age_max is not None and age_min > age_max):
+    if (age_min is not None and not 0 <= age_min <= 120) or (age_max is not None and not 0 <= age_max <= 120) or (age_min is not None and age_max is not None and age_min > age_max):
         return _refuse('Use a valid age range between 0 and 120.', 'invalid_input')
     if re.search(r'\d', remaining):
         return _refuse('I cannot apply that numeric filter. Age ranges are supported; dates, patient IDs and time windows are not.', 'unsupported_filter')
@@ -140,9 +167,11 @@ def parse_question(question) -> QueryPlan | dict:
     recovery_rate_requested = ('recovered' in q or 'recovery' in q) and (recovery_explicit or not (other_metric or readmission_rate_requested))
     metric_mentions = sum([readmission_rate_requested, cost_mentioned, 'satisfaction' in q,
                            'stay' in q, recovery_rate_requested, age_metric])
+    if count_requested and re.search(r'\b(?:average|avg|mean|rate|rates|percent|percentage|satisfaction|costs?|spend|expenditure)\b|length of stay', q):
+        return _refuse('Ask for a count or another metric separately.', 'clarification')
     if not count_requested and metric_mentions > 1:
         return _refuse('Ask one metric at a time so no part of the question is silently ignored.', 'clarification')
-    by_condition = bool(re.search(r'(?:by|per|across|for each|in each) conditions?|which condition|most expensive conditions|cheapest conditions|highest.*conditions|top.*conditions', q))
+    by_condition = bool(re.search(r'(?:by|per|across|for each|in each) conditions?|which condition|most expensive conditions|cheapest conditions|highest.*conditions|lowest.*conditions|top.*conditions|bottom.*conditions', q))
     group = None
     if by_condition:
         group = 'Condition'
@@ -170,6 +199,16 @@ def parse_question(question) -> QueryPlan | dict:
         metric = 'count' if group == 'Outcome' else 'recovery_rate'
     else:
         return _refuse('Ask about counts, readmission, cost, stay, satisfaction, age or recovered outcomes.')
+    if len(gender_matches) > 1 and group != 'Gender':
+        return _refuse('Compare gender as the grouping dimension, or use one gender filter.', 'clarification')
+    if group is None and re.search(r'\b(?:highest|lowest|most|least|top|bottom|cheapest)\b', q):
+        return _refuse('Specify a supported grouping for the requested ranking.', 'clarification')
+    if group and group != 'Condition' and re.search(r'\b(?:highest|lowest|most|least|top|bottom|cheapest)\b', q):
+        return _refuse('Ranking is only supported for condition breakdowns.', 'clarification')
+    if ranking_n and group != 'Condition':
+        return _refuse('Rankings are supported only for a condition breakdown.', 'clarification')
+    if readmission_rate_requested and not count_requested and re.search(r'\b(?:readmitted|non[- ]readmitted|not\s+readmitted)\b', q):
+        return _refuse('A readmission rate cannot also use a readmission-status filter. Ask for a count or compare by readmission.', 'clarification')
     target_readmission = None
     if readmission_mentioned and group != 'Readmission' and (count_requested or not readmission_rate_requested):
         target_readmission = 'No' if re.search(r'non[- ]readmitted|not readmitted', q) else 'Yes'
@@ -179,12 +218,12 @@ def parse_question(question) -> QueryPlan | dict:
             outcome = 'Recovered'
         elif re.search(r'\bstable\b', q):
             outcome = 'Stable'
-    top = 3 if group == 'Condition' and re.search(r'\btop\b|\bmost\b|\bhighest\b|\bcheapest\b', q) else None
+    top = (ranking_n or 3) if group == 'Condition' and re.search(r'\btop\b|\bbottom\b|\bmost\b|\bhighest\b|\bcheapest\b|\blowest\b', q) else None
     return QueryPlan(metric=metric, condition=conditions[0] if conditions else None,
                      gender=gender_matches[0] if len(gender_matches) == 1 else None,
                      outcome=outcome, readmission=target_readmission, age_min=age_min,
                      age_max=age_max, group_by=group, top=top,
-                     ascending=bool(re.search(r'lowest|least|cheapest', q)))
+                     ascending=bool(re.search(r'\b(?:lowest|least|cheapest|bottom)\b', q)))
 
 
 def _apply_plan(df: pd.DataFrame, plan: QueryPlan) -> pd.DataFrame:
@@ -262,8 +301,10 @@ def answer_plan(df: pd.DataFrame, plan: QueryPlan) -> dict:
         if plan.group_by == 'Age_Band':
             if 'Age' not in sub:
                 raise ValueError('The required column is missing: Age')
-            sub = sub.assign(Age_Band=pd.cut(pd.to_numeric(sub.Age, errors='coerce'),
-                             [0, 30, 45, 60, 75, 120], labels=AGE_LABELS))
+            age = pd.to_numeric(sub.Age, errors='coerce')
+            if age.isna().any() or not age.between(0, 120).all() or not age.mod(1).eq(0).all():
+                raise ValueError('Age bands require whole-number ages from 0 to 120 for every matching record.')
+            sub = sub.assign(Age_Band=pd.cut(age, [-1, 30, 45, 60, 75, 120], labels=AGE_LABELS))
         sources = []
         if plan.group_by:
             if plan.group_by not in sub:
@@ -306,8 +347,11 @@ def answer_plan(df: pd.DataFrame, plan: QueryPlan) -> dict:
             text += f' Gender filter: **{plan.gender}**.'
         filters = {k: v for k, v in asdict(plan).items() if k not in {'metric', 'group_by', 'top', 'ascending'} and v is not None}
         warnings = [CAUTION]
-        if not plan.group_by and denominator < len(sub):
-            warnings.append(f'{len(sub)-denominator} missing or invalid metric values were excluded; denominator is {denominator}.')
+        displayed_rows = sum(row['rows'] for row in rows)
+        if denominator < displayed_rows:
+            warnings.append(f'{displayed_rows-denominator} missing or invalid metric values were excluded from displayed results; valid denominator is {denominator}.')
+        if plan.group_by and any(row['denominator'] < 30 for row in rows):
+            warnings.append('At least one displayed group has fewer than 30 valid records in its denominator; interpret descriptive rates cautiously. This threshold is a heuristic, not a significance test.')
         sources = sorted(set(sources + list({'condition': 'Condition', 'gender': 'Gender', 'outcome': 'Outcome', 'readmission': 'Readmission', 'age_min': 'Age', 'age_max': 'Age'}[k] for k in filters)))
         if plan.group_by:
             sources = sorted(set(sources + ['Age' if plan.group_by == 'Age_Band' else plan.group_by]))
@@ -341,7 +385,9 @@ def evidence_cards(df: pd.DataFrame) -> list[dict]:
     ]:
         answer = answer_question(df, question)
         if answer['ok']:
-            cards.append({'id': id, 'title': title, 'text': answer['text'],
+            exclusions = [note for note in answer['warnings'] if note != CAUTION]
+            card_text = answer['text'] + ('\n' + ' '.join(exclusions) if exclusions else '')
+            cards.append({'id': id, 'title': title, 'text': card_text,
                           'formula': answer['formula'], 'source_columns': answer['source_columns'],
                           'row_count': answer['row_count'], 'scope_id': answer['scope_id']})
     return cards

@@ -203,3 +203,134 @@ def test_spend_is_a_total_unless_average_was_requested(patients):
     result = service.answer_question(patients, 'How much do we spend on readmitted patients?')
     assert result['ok'] and result['intent'] == 'total_cost'
     assert result['value'] == patients.loc[patients.Readmission.eq('Yes'), 'Cost'].sum()
+
+
+@pytest.mark.parametrize('question', [
+    'How many patients not diabetes?',
+    'How many patients not female?',
+    'How many non recovered patients?',
+    'How many patients without diabetes?',
+    'Compare readmission rate by condition and gender',
+    'Average cost by gender and by condition',
+    'How many patients and what is the average cost?',
+    'Readmission rate for non-readmitted patients',
+    'Readmission rate for readmitted patients',
+    'What is the average cost over 120?',
+])
+def test_ambiguous_requests_refuse_instead_of_dropping_intent(patients, question):
+    result = service.answer_question(patients, question)
+    assert not result['ok'], (question, result)
+    assert result['mode'] == 'refused'
+
+
+@pytest.mark.parametrize('q,n,ascending', [
+    ('What are the top five most expensive conditions?', 5, False),
+    ('What are the top ten most expensive conditions?', 10, False),
+    ('What are the top 3 most expensive conditions?', 3, False),
+    ('What are the bottom five cheapest conditions?', 5, True),
+    ('Bottom 5 conditions by cost', 5, True),
+])
+def test_explicit_ranking_count_and_order(patients, q, n, ascending):
+    answer = service.answer_question(patients, q)
+    assert answer['ok'], answer
+    rows = answer['table']
+    assert len(rows) == n
+    expected = sorted(patients.groupby('Condition').Cost.mean().tolist(), reverse=not ascending)[:n]
+    assert [r['value'] for r in rows] == expected
+
+
+def test_assistant_age_bands_match_chart_and_include_all_valid_boundaries(patients):
+    from app.dashboard.utils.hospital_data import age_group_readmission
+    ages = [0, 17, 18, 30, 31, 45, 46, 60, 61, 75, 76, 120]
+    sample = patients.head(len(ages)).copy()
+    sample['Age'] = ages
+    result = service.answer_question(sample, 'How many patients by age bands?')
+    chart = age_group_readmission(sample)
+    assert result['ok'], result
+    actual = {r['group']: r['rows'] for r in result['table']}
+    expected = {str(row[0]).replace('–', '-'): row[1] for row in chart.itertuples(index=False, name=None)}
+    assert actual == expected and sum(actual.values()) == len(ages)
+
+
+def test_grouped_answers_disclose_invalid_measurements(patients):
+    sub = patients.head(4).copy()
+    sub['Gender'] = ['Male', 'Male', 'Female', 'Female']
+    sub['Cost'] = [10, float('nan'), 20, 40]
+    answer = service.answer_question(sub, 'Average cost by gender')
+    assert answer['ok']
+    assert any('1 missing or invalid' in w for w in answer['warnings'])
+    assert {r['group']: r['denominator'] for r in answer['table']} == {'Male': 1, 'Female': 2}
+
+
+def test_unsupported_numeric_ranking_does_not_silently_default(patients):
+    assert not service.answer_question(patients, 'Top 7 most expensive conditions')['ok']
+
+
+@pytest.mark.parametrize('invalid_age', [-1, 121, 0.5, float('nan')])
+def test_age_bands_refuse_invalid_ages_without_silent_record_loss(patients, invalid_age):
+    sample = patients.head(4).copy()
+    sample['Age'] = sample.Age.astype(float)
+    sample.loc[sample.index[0], 'Age'] = invalid_age
+    result = service.answer_question(sample, 'How many patients by age bands?')
+    assert not result['ok'] and result['status'] == 'data_unavailable'
+
+
+def test_exclusion_warning_is_in_computed_evidence_card(patients):
+    sample = patients.head(6).copy()
+    sample.loc[sample.index[0], 'Cost'] = float('nan')
+    card = next(card for card in service.evidence_cards(sample) if card['id'] == 'cost')
+    assert '1 missing or invalid' in card['text']
+
+
+@pytest.mark.parametrize('question', ['How many patients five?', 'How many patients cost?',
+                                      'How many patients and average age?'])
+def test_count_does_not_ignore_extra_measure_or_count_words(patients, question):
+    assert not service.answer_question(patients, question)['ok']
+
+
+@pytest.mark.parametrize('q', [
+    'How many patients have diabetes or stroke?',
+    'How many patients were readmitted or recovered?',
+    'How many recovered and stable patients?',
+    'How many readmitted and not readmitted patients?',
+    'What is the highest readmission rate?',
+    'What is the average cost over 60?',
+    'What is the average cost below 500?',
+])
+def test_unresolved_boolean_or_ranking_or_threshold_intent_is_refused(patients, q):
+    answer = service.answer_question(patients, q)
+    assert not answer['ok'], (q, answer)
+
+
+def test_group_sizes_are_cautioned_in_answers_and_evidence(patients):
+    sample = patients.head(20).copy()
+    result = service.answer_question(sample, 'Average cost by condition')
+    assert result['ok']
+    assert any('fewer than 30' in w for w in result['warnings'])
+    card = next(c for c in service.evidence_cards(sample) if c['id'] == 'condition_cost')
+    assert 'fewer than 30' in card['text']
+
+
+@pytest.mark.parametrize('phrase', ['not readmitted', 'non-readmitted', 'non readmitted'])
+def test_supported_negative_readmission_wording_stays_functional(patients, phrase):
+    result = service.answer_question(patients, f'How many patients {phrase}?')
+    assert result['ok'], result
+    assert result['value'] == patients.Readmission.eq('No').sum()
+
+
+def test_cost_threshold_is_not_misinterpreted_as_age_even_with_patient_word(patients):
+    q = 'Average cost for patients with cost over 60'
+    assert not service.answer_question(patients, q)['ok']
+
+
+def test_ranked_question_by_gender_is_not_silently_expanded(patients):
+    assert not service.answer_question(patients, 'Highest readmission rate by gender')['ok']
+
+
+def test_group_caution_uses_valid_denominator_not_only_total_group_size(patients):
+    sample = patients.head(40).copy()
+    sample['Gender'] = 'Male'
+    sample.loc[sample.index[:15], 'Cost'] = float('nan')
+    result = service.answer_question(sample, 'Average cost by gender')
+    assert result['ok'] and result['table'][0]['denominator'] == 25
+    assert any('fewer than 30 valid' in w for w in result['warnings'])

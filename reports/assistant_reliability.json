@@ -105,8 +105,8 @@
     ]
   },
   "refusals": {
-    "cases": 12,
-    "correct": 12,
+    "cases": 25,
+    "correct": 25,
     "details": [
       {
         "question": "Readmission rate for lung cancer",
@@ -176,6 +176,84 @@
       },
       {
         "question": "What is the capital of France?",
+        "scope": "all",
+        "correct_refusal": true,
+        "status": "unsupported_filter"
+      },
+      {
+        "question": "How many patients not diabetes?",
+        "scope": "all",
+        "correct_refusal": true,
+        "status": "clarification"
+      },
+      {
+        "question": "How many patients not female?",
+        "scope": "all",
+        "correct_refusal": true,
+        "status": "clarification"
+      },
+      {
+        "question": "How many non recovered patients?",
+        "scope": "all",
+        "correct_refusal": true,
+        "status": "clarification"
+      },
+      {
+        "question": "Compare readmission rate by condition and gender",
+        "scope": "all",
+        "correct_refusal": true,
+        "status": "clarification"
+      },
+      {
+        "question": "How many patients and what is the average cost?",
+        "scope": "all",
+        "correct_refusal": true,
+        "status": "clarification"
+      },
+      {
+        "question": "Readmission rate for non-readmitted patients",
+        "scope": "all",
+        "correct_refusal": true,
+        "status": "clarification"
+      },
+      {
+        "question": "How many patients were readmitted or recovered?",
+        "scope": "all",
+        "correct_refusal": true,
+        "status": "clarification"
+      },
+      {
+        "question": "How many recovered and stable patients?",
+        "scope": "all",
+        "correct_refusal": true,
+        "status": "clarification"
+      },
+      {
+        "question": "How many readmitted and not readmitted patients?",
+        "scope": "all",
+        "correct_refusal": true,
+        "status": "clarification"
+      },
+      {
+        "question": "What is the highest readmission rate?",
+        "scope": "all",
+        "correct_refusal": true,
+        "status": "clarification"
+      },
+      {
+        "question": "What is the average cost over 60?",
+        "scope": "all",
+        "correct_refusal": true,
+        "status": "clarification"
+      },
+      {
+        "question": "Top 7 most expensive conditions",
+        "scope": "all",
+        "correct_refusal": true,
+        "status": "unsupported_filter"
+      },
+      {
+        "question": "How many patients five?",
         "scope": "all",
         "correct_refusal": true,
         "status": "unsupported_filter"

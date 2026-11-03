@@ -1054,14 +1054,14 @@ def render_ai(df):
     """Scope-aware analytical Q&A and optional validated Gemini fact selection."""
     import importlib
     from app.dashboard.utils import assistant_service as assistant
-    if getattr(assistant, "SERVICE_VERSION", 0) != 2:
+    if getattr(assistant, "SERVICE_VERSION", 0) != 3:
         assistant = importlib.reload(assistant)
 
     # Streamlit may retain an imported adapter across a rolling source refresh.
     if getattr(gemini_ai, "ADAPTER_VERSION", 0) != 3:
         importlib.reload(gemini_ai)
     provider_capable = getattr(gemini_ai, "ADAPTER_VERSION", 0) == 3
-    scope_id = assistant.scope_fingerprint(df)
+    scope_id = assistant.scope_fingerprint(df) + ":v" + str(assistant.SERVICE_VERSION)
     previous_scope = st.session_state.get("hg_assistant_scope")
     if previous_scope != scope_id:
         st.session_state["hg_assistant_scope"] = scope_id

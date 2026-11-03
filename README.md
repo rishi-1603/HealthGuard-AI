@@ -60,7 +60,7 @@ The model's reported AUC is approximately **0.99**, but a condition-only lookup 
 
 The useful finding is the audit explaining why the headline metric is so high. Different evaluation protocols produce slightly different AUCs, which are reported separately rather than treated as interchangeable.
 
-[Model honesty audit](reports/model_honesty.md) · [Model card](models/readmission/MODEL_CARD.md) · [Calibration](reports/calibration_and_decision_curve.md)
+[Model honesty audit](reports/model_honesty.md) · [Model card](models/readmission/MODEL_CARD.md) · [Prediction-time boundaries](docs/PREDICTION_POINT_METHODOLOGY.md) · [Calibration](reports/calibration_and_decision_curve.md)
 
 ### Subgroup comparisons need more than one fairness metric
 
@@ -112,7 +112,7 @@ The AI Assistant tab now separates numerical answers from provider assistance:
 - **Optional Gemini selection:** Gemini may select three to five backend-computed fact cards. Invalid JSON, extra text and unsupported selections are rejected; model-generated figures or clinical prose are not displayed as verified evidence.
 - **Honest failure states:** configured is not the same as connected. A real connection check verifies a small generation request, while authentication, quota and temporary outages leave local analysis available.
 
-The new deterministic benchmark passes **14 numerical/scope cases, 12 refusals and an independent gender comparison**. The original 8-answer/6-refusal benchmark also passes. These are authored cases, not a guarantee for arbitrary questions or provider uptime.
+The new deterministic benchmark passes **14 numerical/scope cases, 25 refusals and an independent gender comparison**. The original 8-answer/6-refusal benchmark also passes. These are authored cases, not a guarantee for arbitrary questions or provider uptime.
 
 The regression suite covers data contracts, analytical calculations, model boundaries and UI behavior. The saved model/encoders still use scikit-learn **1.9.0**; they were not replaced for this assistant update.
 

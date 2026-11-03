@@ -1,39 +1,23 @@
-# Prediction Point & Feature Boundary Methodology
-**Use Case:** 30-Day Inpatient All-Cause Readmission Risk Modeling  
-**Dataset Grain:** 984 Inpatient Admission Encounters
+# Prediction point and feature boundaries
 
----
+## What the current project establishes
 
-## 1. Defining the Clinical Decision Moment
+The dashboard dataset contains 984 **synthetic patient records**, one row per patient. It has a Yes/No readmission flag, but **no validated admission and discharge timeline or 30-day target**. The shipped model is an educational demonstration on this synthetic target; it is not a prospective clinical model and is not for diagnosis, triage or treatment. It is not evidence of patient benefit.
 
-To avoid catastrophic target leakage in prospective predictive healthcare models, the feature space must strictly respect chronological boundaries:
+Several model inputs—procedure, cost and length of stay—may only become available during or after a stay. The dataset does not establish when they were known or billed. In particular, final cost is not necessarily available at discharge. A high score on this dataset cannot resolve timing leakage or establish prospective performance. See [the model card](../models/readmission/MODEL_CARD.md) and [model honesty audit](../reports/model_honesty.md).
 
-```
-[Timeline Point 1: Admission]        [Timeline Point 2: In-Hospital Stay]        [Timeline Point 3: DISCHARGE]
-  * Patient Demographics               * Daily Lab Trends & Panels                  * Final Completed Length of Stay
-  * Primary Inpatient Diagnosis        * Procedures Administered                    * Total Inpatient Cost Incurred
-  * Baseline Comorbidity Index         * In-Hospital Complications                  * Discharge Disposition / Destination
-  * Historical Utilization             * Discharge Medication Count                 * Planned Post-Acute Follow-up
-                                                                                    
-                                                                                    ▲
-                                                                                    │
-                                                                 [CANONICAL PREDICTION MOMENT]
-                                                                 "Which patients need post-discharge 
-                                                                  transitional care management?"
-```
+## Hypothetical future study: a discharge-time prediction
 
----
+The following is a **design checklist**, not a description of the committed dataset or proof that any feature is safe. A real 30-day study would first define the decision, cohort, encounter grain, index discharge, complete follow-up, outcome and observation window with clinical and data-governance experts.
 
-## 2. Feature Eligibility Matrix
+| Candidate input | Hypothetical timing question | Required verification before use |
+|---|---|---|
+| Age, demographic data | Available at prediction? | Source timestamps, missingness, fairness implications and governance. |
+| Condition or diagnosis | Known and recorded by prediction time? | Coding latency, corrections and relation to the outcome. |
+| Procedure | Completed and recorded by prediction time? | Confirm timestamp and source; planned or post-discharge procedures are not eligible. |
+| Length of stay | Fully observed at prediction time? | Confirm index discharge and timing; unavailable for an admission-time decision. |
+| Recorded cost | Known at prediction time? | Billing may arrive or change after discharge; exclude if timing cannot be established. |
+| Historical utilization or comorbidities | Strictly prior to prediction? | These fields are not in the dashboard CSV; validate source and look-back window. |
+| 30-day readmission outcome | Observed after the index discharge? | It would be the target, never an input. Establish linkage, definition, censoring and follow-up first; current CSV does not provide this. |
 
-| Variable Name | Availability Point | Prospective Model Status | Leakage Risk Assessment |
-|---|---|---|---|
-| `admission_age` | At Admission | **Eligible** | Zero leakage |
-| `gender` | At Admission | **Eligible** | Zero leakage |
-| `primary_condition` | At Admission | **Eligible** | Zero leakage |
-| `comorbidity_score` | At Admission | **Eligible** | Zero leakage |
-| `procedure_type` | In-Hospital | **Eligible (at discharge)** | Valid only if completed during stay |
-| `medication_count` | In-Hospital | **Eligible (at discharge)** | Valid discharge prescription record |
-| `length_of_stay` | At Discharge | **Eligible (at discharge)** | Total realized inpatient duration |
-| `total_inpatient_cost` | At Discharge | **Eligible (at discharge)** | Final billed cost |
-| `readmission_30d` | Post-Discharge (Day 1-30) | **TARGET VARIABLE ONLY** | Target label — strictly forbidden in features |
+Timing is necessary but not sufficient to prevent leakage. A future evaluation also needs representative governed data, independent temporal/external validation, subgroup and calibration analysis, clinical review, and an intervention study before any operational claim. No variable here is certified as leakage-free or clinically suitable.
