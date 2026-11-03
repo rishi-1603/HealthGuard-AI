@@ -9,6 +9,9 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from app.dashboard.utils import hospital_data as data
+if getattr(data, "AGE_GROUP_SCHEMA_VERSION", 0) != 1:
+    from importlib import reload
+    data = reload(data)
 from app.dashboard.utils import ai_risk
 from app.dashboard.utils import gemini_ai
 from app.dashboard.utils import ops_layer
@@ -515,22 +518,23 @@ def render_overview(df, kpis, cond_summary):
 
 
 def render_clinical(df, cond_summary):
+    tab_intro("Compare descriptive rates and recorded costs across the selected cohort.")
+    st.caption("Rates use records in the current scope. Small subgroups can be unstable; comparisons do not establish cause or clinical risk.")
     st.markdown('<div class="section-title">Readmission Analytics</div>', unsafe_allow_html=True)
     c4, c5 = st.columns(2)
 
     with c4:
         st.markdown('<div class="chart-card">', unsafe_allow_html=True)
         st.markdown('<div class="card-heading">Readmission Rate by Condition</div>', unsafe_allow_html=True)
-        cs2 = cond_summary.sort_values("readmission_rate", ascending=False)
+        cs2 = cond_summary.sort_values("readmission_rate", ascending=True)
         fig = px.bar(
-            cs2, x="Condition", y="readmission_rate",
-            color="readmission_rate",
-            color_continuous_scale=[GREEN, AMBER, RED],
-            labels={"readmission_rate": "Rate (%)", "Condition": ""},
+            cs2, y="Condition", x="readmission_rate", orientation="h",
+            color_discrete_sequence=[INDIGO], hover_data={"patients": True},
+            labels={"readmission_rate": "Recorded readmission rate (%)", "Condition": "", "patients": "Records"},
         )
-        fig.update_xaxes(tickangle=-40)
-        fig.update_coloraxes(showscale=False)
-        st.plotly_chart(style_fig(fig, height=330, legend=False), width='stretch', config={"displayModeBar": False})
+        fig.update_xaxes(range=[0, 100], automargin=True)
+        fig.update_yaxes(automargin=True)
+        st.plotly_chart(style_fig(fig, height=max(340, len(cs2) * 29 + 70), legend=False), width='stretch', config={"displayModeBar": False})
         st.markdown('</div>', unsafe_allow_html=True)
 
     with c5:
@@ -547,43 +551,38 @@ def render_clinical(df, cond_summary):
             color_discrete_sequence=[RED], text=proc["readmission_rate"],
             labels={"readmission_rate": "Rate (%)", "Procedure": ""},
         )
-        fig.update_traces(textposition="outside", marker_line_width=0)
-        st.plotly_chart(style_fig(fig, height=330, legend=False), width='stretch', config={"displayModeBar": False})
+        fig.update_traces(textposition="outside", marker_line_width=0, cliponaxis=False)
+        fig.update_xaxes(range=[0, 115], automargin=True)
+        fig.update_yaxes(automargin=True)
+        st.plotly_chart(style_fig(fig, height=360, legend=False), width='stretch', config={"displayModeBar": False})
         st.markdown('</div>', unsafe_allow_html=True)
 
     c6, c7 = st.columns(2)
     with c6:
         st.markdown('<div class="chart-card">', unsafe_allow_html=True)
         st.markdown('<div class="card-heading">Readmission Rate by Age Group</div>', unsafe_allow_html=True)
-        age_df = df.copy()
-        age_df["Age Group"] = pd.cut(
-            age_df["Age"], bins=[0, 30, 45, 60, 120],
-            labels=["<30", "30–44", "45–59", "60+"],
-        )
-        ag = age_df.groupby("Age Group", observed=True).agg(
-            patients=("Patient_ID", "count"),
-            readmissions=("Readmission", lambda s: (s == "Yes").sum()),
-        ).reset_index()
-        ag["readmission_rate"] = (ag["readmissions"] / ag["patients"] * 100).round(1)
+        ag = data.age_group_readmission(df)
         fig = px.bar(ag, x="Age Group", y="readmission_rate",
                      color_discrete_sequence=[AMBER], text=ag["readmission_rate"],
-                     labels={"readmission_rate": "Rate (%)", "Age Group": ""})
-        fig.update_traces(textposition="outside", marker_line_width=0)
+                     hover_data={"patients": True, "readmissions": True},
+                     labels={"readmission_rate": "Rate (%)", "Age Group": "", "patients": "Records"})
+        fig.update_traces(textposition="outside", marker_line_width=0, cliponaxis=False)
+        fig.update_yaxes(range=[0, 115], automargin=True)
         st.plotly_chart(style_fig(fig, height=300, legend=False), width='stretch', config={"displayModeBar": False})
         st.markdown('</div>', unsafe_allow_html=True)
 
     with c7:
         st.markdown('<div class="chart-card">', unsafe_allow_html=True)
         st.markdown('<div class="card-heading">Average Length of Stay by Condition</div>', unsafe_allow_html=True)
-        los = cond_summary.sort_values("avg_los", ascending=False)
+        los = cond_summary.sort_values("avg_los", ascending=True)
         fig = px.bar(
-            los, x="Condition", y="avg_los",
-            color_discrete_sequence=[CYAN],
-            labels={"avg_los": "Avg days", "Condition": ""},
+            los, y="Condition", x="avg_los", orientation="h",
+            color_discrete_sequence=[CYAN], hover_data={"patients": True},
+            labels={"avg_los": "Average recorded days", "Condition": "", "patients": "Records"},
         )
         fig.update_traces(marker_line_width=0)
-        fig.update_xaxes(tickangle=-40)
-        st.plotly_chart(style_fig(fig, height=300, legend=False), width='stretch', config={"displayModeBar": False})
+        fig.update_yaxes(automargin=True)
+        st.plotly_chart(style_fig(fig, height=max(340, len(los) * 29 + 70), legend=False), width='stretch', config={"displayModeBar": False})
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ---- Demographics ----
@@ -618,7 +617,7 @@ def render_clinical(df, cond_summary):
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ---- Cohort explainability ----
-    st.markdown('<div class="section-title">Model Explainability — What Drives Risk Across This Cohort</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Model Explainability — How the Model Uses Its Inputs</div>', unsafe_allow_html=True)
     e1, e2 = st.columns([1.5, 1])
     with e1:
         st.markdown('<div class="chart-card">', unsafe_allow_html=True)
@@ -643,7 +642,7 @@ def render_clinical(df, cond_summary):
         st.markdown('<div class="chart-card">', unsafe_allow_html=True)
         st.markdown('<div class="card-heading">How to read this</div>', unsafe_allow_html=True)
         st.markdown(
-            """
+            f"""
             <p style="color:{TEXT}; font-size:0.88rem; line-height:1.5;">
             Each bar shows how much a factor moves readmission risk scores across
             this cohort, averaged over patients (mean |SHAP|).
@@ -661,7 +660,7 @@ def render_clinical(df, cond_summary):
 
 
 def render_patients(df):
-    tab_intro("Which patients carry the highest predicted risk — and what drives each score (SHAP)?")
+    tab_intro("Explore synthetic-record model scores and their SHAP explanations; neither is a clinical prediction.")
     # ---- Cohort-level views ----
     st.markdown('<div class="section-title">Cohort Risk & Utilization</div>', unsafe_allow_html=True)
     r1, r2 = st.columns(2)

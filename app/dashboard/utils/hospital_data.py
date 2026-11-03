@@ -1,6 +1,6 @@
 """
-Data access layer for the hospital outcomes dataset (984 patients).
-Pure stats/outcomes dashboard -- no risk model, per user's request.
+Data access and descriptive calculations for the synthetic hospital dataset.
+The dashboard also contains separately documented model and assistant views.
 """
 from pathlib import Path
 
@@ -8,6 +8,7 @@ import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DATA_PATH = REPO_ROOT / "data" / "hospital" / "hospital_data.csv"
+AGE_GROUP_SCHEMA_VERSION = 1
 
 # Two-letter condition codes for patient IDs, e.g. PTDB0001 (Diabetes), PTHD0001 (Heart Disease)
 CONDITION_CODES = {
@@ -77,6 +78,25 @@ def condition_summary(df: pd.DataFrame) -> pd.DataFrame:
         avg_satisfaction=("Satisfaction", "mean"),
     ).reset_index().sort_values("patients", ascending=False)
     return g
+
+
+def age_group_readmission(df: pd.DataFrame) -> pd.DataFrame:
+    """Observed age bands with truthful inclusive integer boundaries.
+
+    The project data contract uses whole-number ages from 0 to 120. A valid
+    record cannot silently vanish from this chart because of a boundary label.
+    """
+    age = pd.to_numeric(df["Age"], errors="coerce")
+    if age.isna().any() or not age.between(0, 120).all() or not (age % 1 == 0).all():
+        raise ValueError("Age grouping requires whole-number ages between 0 and 120.")
+    labels = ["0–30", "31–45", "46–60", "61–75", "76–120"]
+    grouped = df.assign(**{"Age Group": pd.cut(age, bins=[-1, 30, 45, 60, 75, 120], labels=labels)})
+    result = grouped.groupby("Age Group", observed=True).agg(
+        patients=("Patient_ID", "size"),
+        readmissions=("Readmission", lambda x: int(x.eq("Yes").sum())),
+    ).reset_index()
+    result["readmission_rate"] = (result["readmissions"] / result["patients"] * 100).round(1)
+    return result
 
 
 def apply_filters(df: pd.DataFrame, conditions, genders, outcomes, age_range) -> pd.DataFrame:

@@ -94,3 +94,9 @@ See `ANALYST_WORKFLOW.md` for steps, reproduction and limitations. Final deploym
 ### CI and rolling-update follow-up
 
 The initial GitHub CI run exposed pandas 3.1 behavior for an empty string-typed Series; the contract check now counts blank values without relying on Series summation. The full suite passed with pandas 2.2 and, after the fix, with pandas 3.1. A module version guard refreshes an older workbench import during Streamlit rolling updates; a UI regression exercises this state. Full local suite: 250 tests. Exact deployed commit and CI results must still be checked separately.
+
+## Senior UI review — 2026-11-03
+
+Reviewed rendered desktop, laptop, tablet and mobile views and tested navigation, representative filters, downloads and assistant interactions. The previous age-chart labels did not match the inclusive cut boundaries; the chart now uses explicit 0–30, 31–45, 46–60, 61–75 and 76–120 labels with boundary and denominator regression tests. The readmission-by-condition and length-of-stay plots use horizontal bars and display group sizes on hover, improving readability. Procedure-value labels have axis headroom, and model-related wording is explicitly non-clinical. These changes do not alter the underlying records or invent clinical conclusions.
+
+Automated accessibility scans and keyboard tab activation cover the checked states, not a complete screen-reader review. See the external UI review evidence for deployed verification; overall accessibility and production-load limits still apply.
