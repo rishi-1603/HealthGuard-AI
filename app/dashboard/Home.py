@@ -907,8 +907,12 @@ def render_workbench(df, reference):
     """Validate -> compare -> execute trusted SQL -> export a stakeholder snapshot."""
     from app.dashboard.utils import analyst_workbench as workbench
     from app.dashboard.utils import assistant_service as assistant
+    import importlib
     import json
 
+    # Streamlit can retain imported modules while deploying updated source files.
+    if getattr(workbench, "WORKBENCH_VERSION", 0) != 2:
+        workbench = importlib.reload(workbench)
     selected_id = assistant.scope_fingerprint(df)
     reference_id = assistant.scope_fingerprint(reference)
     signature = selected_id + ":" + reference_id

@@ -90,3 +90,7 @@ A business-reporting workflow was added using the existing synthetic records, SQ
 The workbench does not generate arbitrary SQL, invent dates or measure clinical/financial outcomes. Model evaluation is supporting evidence; the AI assistant remains a bounded separate workflow. The sample report records scope and definitions. New unit and Streamlit workflow tests cover scope integrity, missing/bad values, query failure, SQL parity, empty comparison groups, report generation and stale-state invalidation.
 
 See `ANALYST_WORKFLOW.md` for steps, reproduction and limitations. Final deployment and exact-commit CI verification are recorded separately after publication.
+
+### CI and rolling-update follow-up
+
+The initial GitHub CI run exposed pandas 3.1 behavior for an empty string-typed Series; the contract check now counts blank values without relying on Series summation. The full suite passed with pandas 2.2 and, after the fix, with pandas 3.1. A module version guard refreshes an older workbench import during Streamlit rolling updates; a UI regression exercises this state. Full local suite: 250 tests. Exact deployed commit and CI results must still be checked separately.

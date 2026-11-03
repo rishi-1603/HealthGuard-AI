@@ -18,7 +18,7 @@ import pandas as pd
 from . import assistant_service as assistant
 from .hospital_data import CONDITION_CODES
 
-WORKBENCH_VERSION = 1
+WORKBENCH_VERSION = 2
 ROOT = Path(__file__).resolve().parents[3]
 SQL_FILE = ROOT / 'sql/02_analyst_workbench.sql'
 BASE_COLUMNS = ['Patient_ID', 'Age', 'Gender', 'Condition', 'Procedure', 'Cost',
