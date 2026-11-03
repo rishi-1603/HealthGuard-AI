@@ -113,12 +113,17 @@ def test_age_filter_and_invalid_range(patients):
 
 
 def test_grouped_rates_and_sources(patients):
-    result = service.answer_question(patients, 'Compare readmission rate by gender')
-    assert result['ok'] and result['group_by'] == 'Gender'
-    for row in result['table']:
-        sub = patients[patients.Gender.eq(row['group'])]
-        assert row['value'] == pytest.approx(sub.Readmission.eq('Yes').mean() * 100)
-        assert row['denominator'] == len(sub)
+    for question in ['Compare readmission rate by gender', 'Readmission rate per gender',
+                     'Readmission rate for each gender']:
+        result = service.answer_question(patients, question)
+        assert result['ok'] and result['group_by'] == 'Gender'
+        for row in result['table']:
+            sub = patients[patients.Gender.eq(row['group'])]
+            assert row['value'] == pytest.approx(sub.Readmission.eq('Yes').mean() * 100)
+            assert row['denominator'] == len(sub)
+    comparison = service.answer_question(patients, 'Average cost per condition')
+    assert comparison['ok'] and comparison['group_by'] == 'Condition'
+    assert len(comparison['table']) == patients.Condition.nunique()
 
 
 def test_top_three_requires_actual_condition_values(patients):

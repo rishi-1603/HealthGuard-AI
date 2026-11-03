@@ -24,6 +24,7 @@ CONDITION_SYNONYMS = {
     'Kidney Stones': ['renal stones'], 'Allergic Reaction': ['allergy'],
     'Osteoarthritis': ['arthritis'], 'Appendicitis': [], 'Childbirth': [],
 }
+SERVICE_VERSION = 2
 AGE_LABELS = ['18-30', '31-45', '46-60', '61-75', '76+']
 CAUTION = 'Synthetic patient records; descriptive analysis, not medical advice or causal evidence.'
 METRICS = {'count', 'readmission_rate', 'average_cost', 'total_cost', 'average_stay',
@@ -37,7 +38,7 @@ readmission readmissions readmit readmitted cost costs spend spending expenditur
 expensive cheapest cheap highest lowest most least top bottom average avg mean
 length stay days satisfaction satisfied outcome outcomes recovered recovery stable
 rate rates percent percentage share compare comparison breakdown distribution
-condition conditions gender genders sex age ages aged band bands between than older
+condition conditions gender genders sex age ages aged band bands group groups between than older
 younger over under above below non not marked had have has having there value values
 three five ten first'''.split())
 
@@ -141,17 +142,17 @@ def parse_question(question) -> QueryPlan | dict:
                            'stay' in q, recovery_rate_requested, age_metric])
     if not count_requested and metric_mentions > 1:
         return _refuse('Ask one metric at a time so no part of the question is silently ignored.', 'clarification')
-    by_condition = bool(re.search(r'by condition|across conditions|which condition|most expensive conditions|cheapest conditions|highest.*conditions|top.*conditions', q))
+    by_condition = bool(re.search(r'(?:by|per|across|for each|in each) conditions?|which condition|most expensive conditions|cheapest conditions|highest.*conditions|top.*conditions', q))
     group = None
     if by_condition:
         group = 'Condition'
-    elif re.search(r'by gender|by sex|compare.*(?:women|female).*(?:men|male)', q) or len(gender_matches) > 1:
+    elif re.search(r'(?:by|per|across|for each|in each) (?:genders?|sex)|gender comparison|compare.*(?:women|female).*(?:men|male)', q) or len(gender_matches) > 1:
         group = 'Gender'
-    elif re.search(r'by age|age bands|age groups', q):
+    elif re.search(r'(?:by|per|for each|in each) age|age bands|age groups', q):
         group = 'Age_Band'
-    elif re.search(r'by outcome|outcome distribution|outcome breakdown', q):
+    elif re.search(r'(?:by|per|across|for each|in each) outcomes?|outcome distribution|outcome breakdown', q):
         group = 'Outcome'
-    elif re.search(r'by readmission|compare.*readmitted.*non', q):
+    elif re.search(r'(?:by|per|for each|in each) readmission|compare.*readmitted.*non', q):
         group = 'Readmission'
     if count_requested:
         metric = 'count'
