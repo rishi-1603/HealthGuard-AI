@@ -352,7 +352,7 @@ def render_overview(df, kpis, cond_summary):
     kpi_card(k2[0], "✅", GREEN, "RECOVERED RATE", f"{kpis['recovered_rate']}%",
              context=f"{n_recovered:,} patients recovered")
     kpi_card(k2[1], "⭐", CYAN, "AVG SATISFACTION", f"{kpis['avg_satisfaction']} / 5",
-             context="self-reported, scale of 5")
+             context="recorded synthetic score, scale of 5")
     kpi_card(k2[2], "🩺", INDIGO, "CONDITIONS TRACKED", f"{df.Condition.nunique()}",
              context="in current filter scope")
     kpi_card(k2[3], "📊", AMBER, "AVG AGE", f"{kpis['avg_age']}",

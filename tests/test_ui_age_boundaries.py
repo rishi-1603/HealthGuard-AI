@@ -32,3 +32,14 @@ def test_actual_full_dataset_is_accounted_for():
     out = age_group_readmission(frame)
     assert out.patients.sum() == len(frame) == 984
     assert out.readmissions.sum() == (frame.Readmission == 'Yes').sum() == 264
+
+
+def test_overview_does_not_present_synthetic_satisfaction_as_self_reported(monkeypatch):
+    from streamlit.testing.v1 import AppTest
+    root = Path(__file__).resolve().parents[1]
+    monkeypatch.delenv('GOOGLE_API_KEY', raising=False)
+    app = AppTest.from_file(str(root / 'app/dashboard/Home.py')).run(timeout=45)
+    assert not app.exception
+    markup = '\n'.join(x.value for x in app.markdown)
+    assert 'recorded synthetic score, scale of 5' in markup
+    assert 'self-reported, scale of 5' not in markup
