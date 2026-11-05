@@ -96,3 +96,22 @@ def test_older_cached_workbench_result_is_cleared_after_version_change(monkeypat
     assert not app.exception
     assert 'hg_workbench_result' not in app.session_state
     assert 'hg_workbench_report' not in app.session_state
+
+
+def test_decision_record_is_scoped_and_cleared_on_filter_change(monkeypatch):
+    monkeypatch.delenv('GOOGLE_API_KEY', raising=False)
+    app = AppTest.from_file(str(APP)).run(timeout=45)
+    app.radio(key='hg_workbench_step').set_value('Decision').run(timeout=45)
+    button(app, 'Build decision record').click().run(timeout=45)
+    assert not app.exception
+    record = app.session_state['hg_decision_record']
+    assert record['scope']['selected_records'] == 984
+    assert record['scope']['filter_context']['conditions'] == []
+    assert record['scenarios']['base']['records'] == 50
+    assert record['observed_outcome'] is None
+    app.multiselect(key='hg_cond').set_value(['Diabetes']).run(timeout=45)
+    assert not app.exception
+    assert 'hg_decision_record' not in app.session_state
+    button(app, 'Build decision record').click().run(timeout=45)
+    assert app.session_state['hg_decision_record']['scope']['selected_records'] == 65
+    assert app.session_state['hg_decision_record']['scope']['filter_context']['conditions'] == ['Diabetes']

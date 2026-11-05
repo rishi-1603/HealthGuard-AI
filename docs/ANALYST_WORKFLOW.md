@@ -31,6 +31,10 @@ Choose a supported cost, readmission or outcome focus and build a Markdown repor
 
 Reports and query outputs are cleared when the scope or selected focus/question changes. The full reference cannot be substituted for the selected data; altered or unrelated selected records are rejected. Small cohorts are flagged for cautious interpretation.
 
+## 5. Create a decision record
+
+The **Decision** step uses the validated selected cohort to model administrative review hours and costs under explicit assumptions. It reconciles selected cost-by-condition SQL against pandas, exports a JSON proposal and optionally includes a user-entered unverified follow-up. It does not select patients, calculate clinical benefit or persist a case history. See [BUSINESS_VALUE_DECISION_ENGINE.md](BUSINESS_VALUE_DECISION_ENGINE.md).
+
 ## Assistant and model boundaries
 
 The existing AI Assistant supports bounded computed Q&A and optional Gemini selection of existing aggregate evidence cards; see [ASSISTANT_GUIDE.md](ASSISTANT_GUIDE.md). A provider connection or a benchmark score is not proof of clinical validity. Individual model scores and SHAP are synthetic demonstrations; their costs, readmission flags and outcomes are not real patient-care evidence.
