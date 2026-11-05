@@ -914,11 +914,16 @@ def render_workbench(df, reference):
         workbench = importlib.reload(workbench)
     selected_id = assistant.scope_fingerprint(df)
     reference_id = assistant.scope_fingerprint(reference)
-    signature = selected_id + ":" + reference_id + ":v" + str(workbench.WORKBENCH_VERSION)
+    filter_context = {"conditions": list(st.session_state.get("hg_cond", [])),
+                      "genders": list(st.session_state.get("hg_gender", [])),
+                      "outcomes": list(st.session_state.get("hg_outcome", [])),
+                      "age_range": list(st.session_state.get("hg_age", (int(reference.Age.min()), int(reference.Age.max()))))}
+    signature = selected_id + ":" + reference_id + ":v" + str(workbench.WORKBENCH_VERSION) + ":" + json.dumps(filter_context, sort_keys=True)
     if st.session_state.get("hg_workbench_scope") != signature:
         st.session_state["hg_workbench_scope"] = signature
         st.session_state.pop("hg_workbench_result", None)
         st.session_state.pop("hg_workbench_report", None)
+        st.session_state.pop("hg_decision_record", None)
     selected_quality = workbench.quality_report(df)
     source_quality = workbench.quality_report(reference)
     tab_intro("A reporting workflow: validate the records, investigate a cohort, inspect executed SQL and share an evidence-led summary.")
@@ -929,7 +934,7 @@ def render_workbench(df, reference):
     st.caption("Reference = the full supplied synthetic dataset, including the selection. It is not an independent control group or a time-period comparison.")
     if (reference.Condition == "Diabetes").any():
         st.caption(f"Try the sidebar Condition filter: Diabetes selects {int(reference.Condition.eq('Diabetes').sum())} records. The comparison, SQL and exports will use that selection.")
-    step = st.radio("Workbench step", ["Check data", "Compare", "SQL", "Report"],
+    step = st.radio("Workbench step", ["Check data", "Compare", "SQL", "Report", "Decision"],
                     horizontal=True, key="hg_workbench_step")
     if not source_quality["all_passed"]:
         st.warning("The full reference fails the project data contract. Inspect the checks before trusting a baseline or exporting a comparison.")
@@ -1023,7 +1028,7 @@ def render_workbench(df, reference):
         else:
             st.info("Choose a question and run it. A query being displayed is not proof that it has executed.")
 
-    else:
+    elif step == "Report":
         st.subheader("Prepare a stakeholder snapshot")
         st.write("Create a short report with the population, definitions, comparison, a fresh SQL/pandas check and questions for follow-up. No provider key is required.")
         focus = st.selectbox("Stakeholder focus", list(workbench.FOCUSES),
@@ -1047,6 +1052,47 @@ def render_workbench(df, reference):
             with st.expander("Read the report", expanded=True):
                 st.markdown(previous["text"])
         st.caption("Use the AI Assistant tab if you also want optional Gemini selection of existing computed evidence cards. That does not change these deterministic report figures.")
+
+
+    else:
+        from app.dashboard.utils import decision_engine
+        st.subheader("Decision & value — administrative review")
+        st.caption("Validated selected cohort → assumptions → effort scenarios → a portable decision record. Not a clinical or patient-selection tool.")
+        if not selected_quality["all_passed"] or not source_quality["all_passed"]:
+            st.warning("Resolve the data-contract failures before preparing a decision record.")
+            return
+        with st.form("hg_decision_form"):
+            c1, c2, c3 = st.columns(3)
+            capacity = c1.number_input("Review capacity (records)", min_value=0, max_value=1000000, value=50, step=1, key="hg_dec_capacity")
+            minutes = c2.number_input("Assumed minutes per record", min_value=0.0, max_value=1440.0, value=15.0, step=1.0, key="hg_dec_minutes")
+            rate = c3.number_input("Assumed hourly cost (₹)", min_value=0.0, max_value=10000000.0, value=500.0, step=50.0, key="hg_dec_rate")
+            action = st.text_input("Proposed administrative action", value="Review readmission data definitions and case mix", max_chars=500, key="hg_dec_action")
+            metric = st.text_input("Follow-up KPI", value="Documented readmission-flag definition", max_chars=500, key="hg_dec_metric")
+            follow_up = st.text_input("Validation plan", value="Review source definitions and subgroup composition", max_chars=500, key="hg_dec_follow")
+            status = st.selectbox("Decision status", ["proposed", "approved", "deferred"], key="hg_dec_status")
+            observed = st.text_input("Optional observed follow-up note (user-entered, unverified)", max_chars=500, key="hg_dec_observed")
+            submitted = st.form_submit_button("Build decision record", type="primary")
+        if submitted:
+            try:
+                record = decision_engine.plan_review(df, reference, capacity, minutes, rate,
+                            action=action, success_metric=metric, follow_up=follow_up,
+                            observed_note=observed, status=status, filter_context=filter_context)
+                st.session_state["hg_decision_record"] = record
+            except ValueError as error:
+                st.session_state.pop("hg_decision_record", None)
+                st.error(str(error))
+        record = st.session_state.get("hg_decision_record")
+        if record:
+            st.caption("Snapshot uses the submitted inputs; change the cohort or rebuild to refresh it. User-entered follow-up is not independently verified.")
+            st.write(f"Selected records: {record['scope']['selected_records']:,}; planned reviews: {record['scenarios']['base']['records']:,}.")
+            st.caption(f"Scoped cost-by-condition SQL/pandas reconciliation: {record['source']['reconciliation']} ({record['source']['reconciled_result_cells']} cells). This does not validate the assumed scenario costs.")
+            st.dataframe(pd.DataFrame([{'scenario': name, **record['scenarios'][name]} for name in ('low', 'base', 'high')]), hide_index=True, width="stretch")
+            st.info("Costs are modeled administrative effort, not preventable savings or patient benefit. The low/base/high cases use 0.5×/1×/1.5× assumed review time.")
+            st.download_button("Download decision record (JSON)", json.dumps(record, indent=2, allow_nan=False).encode("utf-8"),
+                               f"healthguard_decision_{selected_id[:8]}.json", "application/json", key="hg_download_decision")
+        else:
+            st.info("Enter assumptions and build a record. Nothing is saved to a server; download the JSON to keep the snapshot.")
+        st.caption("Use synthetic or non-sensitive notes only. A JSON export is not a privacy, clinical-validity or realized-value certification.")
 
 
 @st.fragment

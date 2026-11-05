@@ -78,6 +78,7 @@ The **Analyst Workbench** brings the routine reporting steps into one place:
 2. **Compare:** inspect the selected cohort against the full synthetic reference, with population counts and percentage-point differences.
 3. **SQL:** choose one of four tracked, read-only questions. The query executes on the selected cohort in SQLite; its required result schema and values are reconciled independently in pandas before results or CSV exports are shown. Small result groups are flagged.
 4. **Report:** export a stakeholder snapshot containing observed cohort composition, scope, metric comparison, executed SQL, checked results and limitations. No AI key is needed.
+5. **Decision:** model administrative review effort under explicit low/base/high time assumptions, then download a versioned JSON proposal with an optional user-entered follow-up note. This is not clinical advice, a measured saving or persistent case management.
 
 For example, the Diabetes filter selects 65 records: a 1.54% readmission rate versus 26.83% in the full reference. The reference includes those records and is not an independent control; the comparison is descriptive, not a causal conclusion.
 
@@ -85,7 +86,7 @@ For example, the Diabetes filter selects 65 records: a 1.54% readmission rate ve
 
 ![Analyst workbench: executed SQL and reconciliation](docs/screenshots/workbench_sql.png)
 
-[Step-by-step analyst workflow](docs/ANALYST_WORKFLOW.md) · [Four SQL questions](sql/02_analyst_workbench.sql) · [Reproducible sample stakeholder report](reports/analyst_workbench_example.md)
+[Decision workflow and scenario limits](docs/BUSINESS_VALUE_DECISION_ENGINE.md) · [Step-by-step analyst workflow](docs/ANALYST_WORKFLOW.md) · [Four SQL questions](sql/02_analyst_workbench.sql) · [Reproducible sample stakeholder report](reports/analyst_workbench_example.md)
 
 ## Explore the dashboard
 
