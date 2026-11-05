@@ -1055,7 +1055,7 @@ def render_workbench(df, reference):
 
 
     else:
-        from app.dashboard.utils import decision_engine
+        from app.dashboard.utils import decision_engine, decision_history
         st.subheader("Decision & value — administrative review")
         st.caption("Validated selected cohort → assumptions → effort scenarios → a portable decision record. Not a clinical or patient-selection tool.")
         if not selected_quality["all_passed"] or not source_quality["all_passed"]:
@@ -1093,6 +1093,7 @@ def render_workbench(df, reference):
         else:
             st.info("Enter assumptions and build a record. Nothing is saved to a server; download the JSON to keep the snapshot.")
         st.caption("Use synthetic or non-sensitive notes only. A JSON export is not a privacy, clinical-validity or realized-value certification.")
+        decision_history.render_history("hospital_operations", record, "hg_decision")
 
 
 @st.fragment
