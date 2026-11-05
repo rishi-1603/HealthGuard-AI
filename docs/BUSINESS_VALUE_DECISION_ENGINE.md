@@ -21,7 +21,7 @@ The record contains **costs only**, not preventable savings, patient benefits or
 
 ## Decision record
 
-A user can enter a proposed/approved/deferred status, administrative action, follow-up KPI, validation plan and optional user-entered outcome note. The versioned JSON export separates source, scope (including effective sidebar filter context), evidence, assumptions, scenarios, decision and `observed_outcome`. The context is recorded from UI selections, not an independent reconstruction of how the data was filtered. The latter is null unless explicitly supplied, and then is labeled unverified. No server persistence, historical case management, import, causal attribution or verified follow-up exists. Changing dashboard scope clears the in-session snapshot; the form must be rebuilt after changing assumptions. Do not enter real patient data in notes.
+A user can enter a proposed/approved/deferred status, administrative action, follow-up KPI, validation plan and optional user-entered outcome note. The versioned JSON export separates source, scope (including effective sidebar filter context), evidence, assumptions, scenarios, decision and `observed_outcome`. The context is recorded from UI selections, not an independent reconstruction of how the data was filtered. The observed outcome is null unless explicitly supplied, and then is labeled unverified. User-managed history files can be exported and re-imported, but no server persistence, authenticated case management, causal attribution or verified follow-up exists. Changing dashboard scope clears the in-session snapshot; the form must be rebuilt after changing assumptions. Do not enter real patient data in notes.
 
 No LLM calculates the record. The separate AI Assistant has its own bounded question contract and authored benchmark; this scenario is not a clinical model or an unrestricted AI answer.
 
@@ -32,3 +32,7 @@ python -m pytest tests/test_business_decision_engine.py tests/test_workbench_ui.
 ```
 
 Tests cover cohort filtering/integrity, scenario arithmetic, invalid assumptions and Streamlit state changes. These are authored checks, not a certification for healthcare use.
+
+## User-managed decision history
+
+The Decision step can add multiple submitted snapshots to a session history, record user-entered metric/unit, optional baseline, observed value, date and evidence note, and export/import the bounded versioned JSON history. Re-import replaces the session history and marks it unverified. A difference between user-entered observed and baseline values is arithmetic, not evidence of causality, clinical effectiveness or savings. There is no authenticated server-side persistence, verified outcome ingestion or approval/audit system. Never include patient-identifying or other sensitive information in these files.

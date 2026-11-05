@@ -115,3 +115,22 @@ def test_decision_record_is_scoped_and_cleared_on_filter_change(monkeypatch):
     button(app, 'Build decision record').click().run(timeout=45)
     assert app.session_state['hg_decision_record']['scope']['selected_records'] == 65
     assert app.session_state['hg_decision_record']['scope']['filter_context']['conditions'] == ['Diabetes']
+
+
+def test_decision_history_add_and_manual_followup(monkeypatch):
+    monkeypatch.delenv('GOOGLE_API_KEY', raising=False)
+    app = AppTest.from_file(str(APP)).run(timeout=45)
+    app.radio(key='hg_workbench_step').set_value('Decision').run(timeout=45)
+    button(app, 'Build decision record').click().run(timeout=45)
+    button(app, 'Add current snapshot to history').click().run(timeout=45)
+    assert not app.exception
+    assert len(app.session_state['hg_decision_history']['entries']) == 1
+    app.text_input(key='hg_decision_follow_metric').set_value('Coding completeness')
+    app.text_input(key='hg_decision_follow_unit').set_value('percent')
+    app.text_input(key='hg_decision_follow_baseline').set_value('70')
+    app.text_input(key='hg_decision_follow_observed').set_value('80')
+    button(app, 'Add follow-up').click().run(timeout=45)
+    assert not app.exception
+    followup = app.session_state['hg_decision_history']['entries'][0]['followups'][0]
+    assert followup['difference'] == 10
+    assert followup['verification'] == 'user-entered, unverified'
