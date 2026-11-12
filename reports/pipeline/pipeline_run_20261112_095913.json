@@ -1,0 +1,161 @@
+{
+  "status": "success",
+  "started_at": "2026-11-12T09:59:13.154334+00:00",
+  "finished_at": "2026-11-12T09:59:13.659249+00:00",
+  "bronze": {
+    "rows_in": 984,
+    "rows_loaded": 984,
+    "source_hash": "3aec12fd31f98920b2007f4294ca476a16dba42de0803d9503111302300561c1"
+  },
+  "silver": {
+    "rows_written": 984,
+    "dq_report": {
+      "total_checks": 19,
+      "passed": 19,
+      "failed_critical": 0,
+      "gate_passed": 1,
+      "details": [
+        {
+          "check": "null_rate:Patient_ID",
+          "severity": "Severity.CRITICAL",
+          "passed": 1,
+          "detail": "0.0% null (threshold 5%)",
+          "affected_rows": 0
+        },
+        {
+          "check": "null_rate:Age",
+          "severity": "Severity.CRITICAL",
+          "passed": 1,
+          "detail": "0.0% null (threshold 5%)",
+          "affected_rows": 0
+        },
+        {
+          "check": "null_rate:Gender",
+          "severity": "Severity.CRITICAL",
+          "passed": 1,
+          "detail": "0.0% null (threshold 5%)",
+          "affected_rows": 0
+        },
+        {
+          "check": "null_rate:Condition",
+          "severity": "Severity.CRITICAL",
+          "passed": 1,
+          "detail": "0.0% null (threshold 5%)",
+          "affected_rows": 0
+        },
+        {
+          "check": "null_rate:Procedure",
+          "severity": "Severity.CRITICAL",
+          "passed": 1,
+          "detail": "0.0% null (threshold 5%)",
+          "affected_rows": 0
+        },
+        {
+          "check": "null_rate:Cost",
+          "severity": "Severity.CRITICAL",
+          "passed": 1,
+          "detail": "0.0% null (threshold 5%)",
+          "affected_rows": 0
+        },
+        {
+          "check": "null_rate:Length_of_Stay",
+          "severity": "Severity.CRITICAL",
+          "passed": 1,
+          "detail": "0.0% null (threshold 5%)",
+          "affected_rows": 0
+        },
+        {
+          "check": "null_rate:Readmission",
+          "severity": "Severity.CRITICAL",
+          "passed": 1,
+          "detail": "0.0% null (threshold 5%)",
+          "affected_rows": 0
+        },
+        {
+          "check": "null_rate:Outcome",
+          "severity": "Severity.CRITICAL",
+          "passed": 1,
+          "detail": "0.0% null (threshold 5%)",
+          "affected_rows": 0
+        },
+        {
+          "check": "null_rate:Satisfaction",
+          "severity": "Severity.CRITICAL",
+          "passed": 1,
+          "detail": "0.0% null (threshold 5%)",
+          "affected_rows": 0
+        },
+        {
+          "check": "duplicate_patient_ids",
+          "severity": "Severity.CRITICAL",
+          "passed": 1,
+          "detail": "0 duplicates (0.00%)",
+          "affected_rows": 0
+        },
+        {
+          "check": "categorical:Readmission",
+          "severity": "Severity.CRITICAL",
+          "passed": 1,
+          "detail": "all values valid",
+          "affected_rows": 0
+        },
+        {
+          "check": "categorical:Gender",
+          "severity": "Severity.CRITICAL",
+          "passed": 1,
+          "detail": "all values valid",
+          "affected_rows": 0
+        },
+        {
+          "check": "categorical:Outcome",
+          "severity": "Severity.CRITICAL",
+          "passed": 1,
+          "detail": "all values valid",
+          "affected_rows": 0
+        },
+        {
+          "check": "range:Age",
+          "severity": "Severity.CRITICAL",
+          "passed": 1,
+          "detail": "0 rows outside [0, 120]",
+          "affected_rows": 0
+        },
+        {
+          "check": "range:Cost",
+          "severity": "Severity.CRITICAL",
+          "passed": 1,
+          "detail": "0 rows outside [0, 10000000]",
+          "affected_rows": 0
+        },
+        {
+          "check": "range:Length_of_Stay",
+          "severity": "Severity.CRITICAL",
+          "passed": 1,
+          "detail": "0 rows outside [0, 365]",
+          "affected_rows": 0
+        },
+        {
+          "check": "range:Satisfaction",
+          "severity": "Severity.CRITICAL",
+          "passed": 1,
+          "detail": "0 rows outside [1, 10]",
+          "affected_rows": 0
+        },
+        {
+          "check": "minimum_row_count",
+          "severity": "Severity.CRITICAL",
+          "passed": 1,
+          "detail": "984 rows (minimum 100)",
+          "affected_rows": 0
+        }
+      ]
+    }
+  },
+  "gold": {
+    "gold_condition_mart": 15,
+    "gold_age_band_mart": 5,
+    "gold_gender_mart": 2,
+    "gold_outcome_mart": 2,
+    "gold_daily_summary": 1
+  }
+}
