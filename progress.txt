@@ -1,0 +1,48 @@
+## Codebase Patterns
+- Schema contract defined in `pipeline/config.py`: always import column lists, types, and constraints from there.
+- Warehouse layer (`pipeline/warehouse.py`) enforces WAL journal mode and foreign keys.
+- Idempotency pattern: Truncate-and-reload per run snapshot keeps tables deterministic across re-runs.
+- SQLite + PostgreSQL dual compatibility: Standard ANSI SQL queries run cleanly across both.
+- Python 3.14 JSON serializability: Boolean values in DQ summary must be cast to `int` (`0`/`1`) or `str` before json.dumps.
+- Data Quality Gate: Pure functions in `pipeline/silver/quality.py` return `DQResult` dataclasses; zero mutation of inputs.
+- Test Execution Rule: Always execute pytest from repository root (`HealthGuard-AI/`) so relative fixtures (`data/hospital/hospital_data.csv`) resolve properly.
+- Silver column naming: After `transform_to_silver(cfg)`, columns are snake_case (patient_id, cost, condition, age_band, readmission_flag). Use `managed_connection(cfg.warehouse_db)` + `pd.read_sql_query` to load the Silver DataFrame in test fixtures.
+- DuckDB `_resolve_col`: Engine must dynamically resolve actual column names from DESCRIBE to handle Bronze (PascalCase) vs Silver (snake_case) differences.
+- Hive partitioning: `export_partitioned_parquet` uses PyArrow `ds.write_dataset` with `partitioning_flavor="hive"`. DuckDB reads back via `read_parquet('**/*.parquet', hive_partitioning=true)`.
+
+---
+
+## 2026-11-12 - DE-001 (Day 1)
+- What was implemented: Schema contract, numerical ranges, categorical allowed sets, repository audit.
+- Files changed: `pipeline/config.py`, `tests/conftest.py`.
+- **Learnings for future iterations:**
+  - Existing test suite has 132 tests that must remain green at all times.
+  - Readmission model uses 6 features that rely on exact condition/procedure values.
+
+---
+
+## 2026-11-12 - DE-002 (Day 2)
+- What was implemented: Core Medallion Architecture (Bronze -> Silver -> Gold), SHA-256 lineage, 19-check DQ gate, 5 Gold mart tables, pipeline orchestrator CLI.
+- Files changed: `pipeline/bronze/ingestor.py`, `pipeline/silver/quality.py`, `pipeline/silver/transformer.py`, `pipeline/gold/aggregator.py`, `pipeline/audit/lineage.py`, `pipeline/orchestrator.py`, `scripts/run_pipeline.py`, 4 new test suites (81 tests).
+- **Learnings for future iterations:**
+  - Headline figures: exactly 984 total rows, 264 readmitted (26.83%), cost share 43.8%. All Gold marts must reconcile to these counts.
+  - Full project test suite benchmark: **417 passed, 0 failures, 0 errors in 173.76s**.
+  - All 5 plugins integrated: Addy Osmani Agent Skills, CodeRabbit, Awesome Skills, Google Cloud Developer, Chrome DevTools.
+
+---
+
+## 2026-11-13 - DE-003 (Day 3)
+- What was implemented: Scalable Analytical Processing Engine with DuckDB OLAP, Hive-partitioned Parquet storage, SHA-256 row-level incremental delta CDC, and PySpark fallback router.
+- Files created:
+  - `pipeline/engine/__init__.py` — module manifest
+  - `pipeline/engine/duckdb_runner.py` — DuckDBEngine: in-memory/persistent connections, context manager, parameterized queries, `compute_condition_metrics`, `compute_age_band_metrics`, `compute_cost_percentiles`, dynamic `_resolve_col` for PascalCase/snake_case
+  - `pipeline/engine/parquet_exporter.py` — Hive-partitioned Parquet export via PyArrow + read back
+  - `pipeline/engine/delta.py` — `compute_row_hashes` (SHA-256 per row), `detect_deltas` (new/updated/unchanged CDC), `DeltaReport` dataclass
+  - `pipeline/engine/spark_session.py` — `is_spark_available`, `get_spark_session` with DuckDB fallback, `get_processing_engine` router
+  - `tests/test_duckdb_engine.py` — 16 new tests (all PASSED)
+- **Full project benchmark: 433 passed, 0 failures in ~180s**
+- **Learnings for future iterations:**
+  - PySpark not installed — engine router gracefully falls back to DuckDBEngine; skip pyspark install (too heavy).
+  - Silver uses snake_case columns; Bronze uses PascalCase. DuckDB engine DESCRIBE-based `_resolve_col` required to query either.
+  - `ds.write_dataset` with `hive` flavor produces `Condition=Diabetes/age_band=18-30/` partition tree readable by DuckDB `hive_partitioning=true`.
+---

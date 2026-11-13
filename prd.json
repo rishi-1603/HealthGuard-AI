@@ -1,0 +1,132 @@
+{
+  "name": "HealthGuard-AI",
+  "version": "1.0.0",
+  "branchName": "feature/data-engineering-pipeline",
+  "projectGoal": "Senior-Level Data Engineering Transformation of HealthGuard AI into an Enterprise Healthcare Analytics Platform",
+  "userStories": [
+    {
+      "id": "DE-001",
+      "title": "Establish Schema Contracts and Repository Baseline Audit",
+      "day": 1,
+      "priority": 1,
+      "passes": true,
+      "acceptanceCriteria": [
+        "Audit existing codebase and verify all 132 tests pass",
+        "Lock column schema contracts in pipeline/config.py",
+        "Define numerical boundaries and categorical enum constraints"
+      ]
+    },
+    {
+      "id": "DE-002",
+      "title": "Build Core Medallion Pipeline (Bronze/Silver/Gold) with Audit Lineage",
+      "day": 2,
+      "priority": 2,
+      "passes": true,
+      "acceptanceCriteria": [
+        "Bronze layer SHA-256 hash idempotency and schema validation",
+        "Silver layer type coercion and 19-check Data Quality gate",
+        "Gold layer 5 aggregated analytics marts matching headline figures",
+        "Audit pipeline_runs logging and JSON run manifests",
+        "81 new pytest tests passing with zero regressions (213/213 total)"
+      ]
+    },
+    {
+      "id": "DE-003",
+      "title": "Scalable Analytical Processing Engine (DuckDB / PySpark & Parquet Partitioning)",
+      "day": 3,
+      "priority": 3,
+      "passes": true,
+      "acceptanceCriteria": [
+        "Implement DuckDB high-performance local OLAP query engine",
+        "Add PySpark local session fallback for distributed processing",
+        "Partition parquet data by condition and age_band for partition pruning",
+        "Add incremental loading using SHA-256 hash deltas",
+        "Add unit tests for DuckDB engine and partition queries"
+      ]
+    },
+    {
+      "id": "DE-004",
+      "title": "Automated Data Quality Suite (Great Expectations & Quarantine Engine)",
+      "day": 4,
+      "priority": 4,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Rule-based suite for clinical value ranges and referential integrity",
+        "Divert failing rows to silver_quarantine table without failing pipeline",
+        "Generate automated JSON & Markdown Data Quality Scorecards"
+      ]
+    },
+    {
+      "id": "DE-005",
+      "title": "Enterprise Star Schema Data Warehouse Modeling (PostgreSQL / SQLite)",
+      "day": 5,
+      "priority": 5,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Design fact_patient_encounters with composite indexing",
+        "Implement dim_patient, dim_clinical_pathway, dim_outcome",
+        "Ensure full compatibility across SQLite and PostgreSQL 16"
+      ]
+    },
+    {
+      "id": "DE-006",
+      "title": "dbt Transformation Models & Automated Analytics Tests",
+      "day": 6,
+      "priority": 6,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Create staging (stg_), intermediate (int_), and mart (fct_) SQL models",
+        "Add dbt tests (unique, not_null, accepted_values, relationships)",
+        "Document automated lineage from source to mart"
+      ]
+    },
+    {
+      "id": "DE-007",
+      "title": "Pipeline Orchestration DAG (Apache Airflow / Prefect Workflow)",
+      "day": 7,
+      "priority": 7,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Define Bronze -> Silver -> Gold DAG with retry backoff",
+        "Implement file arrival sensors and automated failure alert stubs",
+        "Provide lightweight CLI fallback runner"
+      ]
+    },
+    {
+      "id": "DE-008",
+      "title": "Streamlit Live Data Warehouse Integration & Pipeline Ops Tab",
+      "day": 8,
+      "priority": 8,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Switch Streamlit dashboard queries from static CSV to live Gold marts",
+        "Add telemetry tab showing pipeline run status and table metrics",
+        "Implement TTL cached queries via @st.cache_data"
+      ]
+    },
+    {
+      "id": "DE-009",
+      "title": "Dockerization, GitHub Actions CI/CD & 50,000-Row Load Benchmark",
+      "day": 9,
+      "priority": 9,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Multi-container docker-compose.yml for DW, pipeline, and dashboard",
+        "GitHub Actions CI running lint, typecheck, and 220+ tests",
+        "Benchmark report measuring RPS and warehouse latency under load"
+      ]
+    },
+    {
+      "id": "DE-010",
+      "title": "Production Governance, ADRs, Data Dictionary & Interview Defense",
+      "day": 10,
+      "priority": 10,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Write 3 Architectural Decision Records (ADRs)",
+        "Complete enterprise Data Dictionary v2",
+        "Deliver interview prep defense pack and elevator pitch"
+      ]
+    }
+  ]
+}
