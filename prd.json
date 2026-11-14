@@ -1,8 +1,8 @@
 {
-  "name": "HealthGuard-AI",
+  "name": "HealthGuard-360",
   "version": "1.0.0",
-  "branchName": "feature/data-engineering-pipeline",
-  "projectGoal": "Senior-Level Data Engineering Transformation of HealthGuard AI into an Enterprise Healthcare Analytics Platform",
+  "branchName": "feature/healthguard-360-platform",
+  "projectGoal": "Flagship AI-Ready Healthcare Lakehouse & Streaming Platform: Batch, Streaming, CDC, Delta Lake, Airflow, dbt Star Schema, Data Trust Console, and Governed AI Copilot.",
   "userStories": [
     {
       "id": "DE-001",
@@ -11,7 +11,7 @@
       "priority": 1,
       "passes": true,
       "acceptanceCriteria": [
-        "Audit existing codebase and verify all 132 tests pass",
+        "Audit existing codebase and verify all tests pass",
         "Lock column schema contracts in pipeline/config.py",
         "Define numerical boundaries and categorical enum constraints"
       ]
@@ -26,13 +26,12 @@
         "Bronze layer SHA-256 hash idempotency and schema validation",
         "Silver layer type coercion and 19-check Data Quality gate",
         "Gold layer 5 aggregated analytics marts matching headline figures",
-        "Audit pipeline_runs logging and JSON run manifests",
-        "81 new pytest tests passing with zero regressions (213/213 total)"
+        "Audit pipeline_runs logging and JSON run manifests"
       ]
     },
     {
       "id": "DE-003",
-      "title": "Scalable Analytical Processing Engine (DuckDB / PySpark & Parquet Partitioning)",
+      "title": "Scalable Analytical Processing Engine (DuckDB OLAP & Parquet Partitioning)",
       "day": 3,
       "priority": 3,
       "passes": true,
@@ -46,86 +45,157 @@
     },
     {
       "id": "DE-004",
-      "title": "Automated Data Quality Suite (Great Expectations & Quarantine Engine)",
+      "title": "Synthea FHIR R4 Multi-Source Ingestion Engine",
       "day": 4,
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
-        "Rule-based suite for clinical value ranges and referential integrity",
-        "Divert failing rows to silver_quarantine table without failing pipeline",
-        "Generate automated JSON & Markdown Data Quality Scorecards"
+        "Ingest synthetic FHIR R4 resources: Patient, Encounter, Observation, Condition",
+        "Normalize source identifiers without key collisions across systems",
+        "Generate Bronze Parquet landing with SHA-256 batch checksums and manifest",
+        "Unit and integration tests for FHIR parsing"
       ]
     },
     {
       "id": "DE-005",
-      "title": "Enterprise Star Schema Data Warehouse Modeling (PostgreSQL / SQLite)",
+      "title": "Automated Data Quality Suite & Quarantine Engine",
       "day": 5,
       "priority": 5,
       "passes": false,
       "acceptanceCriteria": [
-        "Design fact_patient_encounters with composite indexing",
-        "Implement dim_patient, dim_clinical_pathway, dim_outcome",
-        "Ensure full compatibility across SQLite and PostgreSQL 16"
+        "Rule-based quality validation for clinical value ranges and referential integrity",
+        "Divert failing rows to silver_quarantine table without failing pipeline",
+        "Generate automated JSON & Markdown Data Quality Scorecards",
+        "Unit tests verifying quarantined record diversion and recovery"
       ]
     },
     {
       "id": "DE-006",
-      "title": "dbt Transformation Models & Automated Analytics Tests",
+      "title": "Enterprise Star Schema & Dimensional Modeling",
       "day": 6,
       "priority": 6,
       "passes": false,
       "acceptanceCriteria": [
-        "Create staging (stg_), intermediate (int_), and mart (fct_) SQL models",
-        "Add dbt tests (unique, not_null, accepted_values, relationships)",
-        "Document automated lineage from source to mart"
+        "Design dim_patient (with SCD Type 2 tracking), dim_condition, dim_facility, dim_date",
+        "Design fact_encounter, fact_observation, fact_pipeline_run, fact_data_quality",
+        "Implement surrogate keys, composite indices, and cross-DB ANSI DDL",
+        "Unit tests verifying star schema referential integrity"
       ]
     },
     {
       "id": "DE-007",
-      "title": "Pipeline Orchestration DAG (Apache Airflow / Prefect Workflow)",
+      "title": "dbt Transformation Models & Automated Schema Testing",
       "day": 7,
       "priority": 7,
       "passes": false,
       "acceptanceCriteria": [
-        "Define Bronze -> Silver -> Gold DAG with retry backoff",
-        "Implement file arrival sensors and automated failure alert stubs",
-        "Provide lightweight CLI fallback runner"
+        "Create staging (stg_), intermediate (int_), and mart (fct_) models",
+        "Add dbt tests (unique, not_null, accepted_values, relationships)",
+        "Document automated lineage from source to mart with idempotent incremental materialization"
       ]
     },
     {
       "id": "DE-008",
-      "title": "Streamlit Live Data Warehouse Integration & Pipeline Ops Tab",
+      "title": "PostgreSQL Operational Source & Debezium CDC Engine",
       "day": 8,
       "priority": 8,
       "passes": false,
       "acceptanceCriteria": [
-        "Switch Streamlit dashboard queries from static CSV to live Gold marts",
-        "Add telemetry tab showing pipeline run status and table metrics",
-        "Implement TTL cached queries via @st.cache_data"
+        "Deploy and configure operational PostgreSQL schema for EHR updates",
+        "Implement CDC pipeline tracking inserts, updates, and soft deletes via WAL",
+        "Sync change capture stream to Lakehouse Bronze layer",
+        "Tests verifying CDC event replay and state consistency"
       ]
     },
     {
       "id": "DE-009",
-      "title": "Dockerization, GitHub Actions CI/CD & 50,000-Row Load Benchmark",
+      "title": "Real-Time Healthcare Event Simulation & Kafka Streaming Transport",
       "day": 9,
       "priority": 9,
       "passes": false,
       "acceptanceCriteria": [
-        "Multi-container docker-compose.yml for DW, pipeline, and dashboard",
-        "GitHub Actions CI running lint, typecheck, and 220+ tests",
-        "Benchmark report measuring RPS and warehouse latency under load"
+        "Generate synthetic real-time clinical events (admitted, observation, medication, discharged)",
+        "Configure Kafka topics, partition strategy, and schema registry validation",
+        "Ensure deterministic event IDs and idempotent producer guarantees",
+        "Unit tests verifying event generation and schema validation"
       ]
     },
     {
       "id": "DE-010",
-      "title": "Production Governance, ADRs, Data Dictionary & Interview Defense",
+      "title": "Spark / DuckDB Streaming & Late-Arriving Event Reconciliation",
       "day": 10,
       "priority": 10,
       "passes": false,
       "acceptanceCriteria": [
-        "Write 3 Architectural Decision Records (ADRs)",
-        "Complete enterprise Data Dictionary v2",
-        "Deliver interview prep defense pack and elevator pitch"
+        "Implement streaming consumer engine with checkpointing and state store",
+        "Support event-time sliding/tumbling windows with watermarking for late records",
+        "Idempotent micro-batch upserts to Silver Delta/Parquet storage",
+        "Tests verifying recovery from mid-stream consumer interruption"
+      ]
+    },
+    {
+      "id": "DE-011",
+      "title": "Apache Airflow DAG Orchestration & Backfill Engine",
+      "day": 11,
+      "priority": 11,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Build modular Airflow DAGs for batch medallion and CDC reconciliation",
+        "Implement task retry backoff, SLA monitoring, and dependency sensor gates",
+        "Support automated historical backfill with zero duplicate state",
+        "Test DAG execution, failure retries, and task idempotency"
+      ]
+    },
+    {
+      "id": "DE-012",
+      "title": "HealthGuard Data Trust Score & Observability Console",
+      "day": 12,
+      "priority": 12,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Calculate 4-pillar Data Trust Score: Completeness, Validity, Uniqueness, Referential Integrity",
+        "Monitor data freshness, schema drift, and quarantine trends",
+        "Build Streamlit Data Trust Ops Console UI",
+        "Unit tests verifying scoring algorithms against known corrupted datasets"
+      ]
+    },
+    {
+      "id": "DE-013",
+      "title": "Governed Healthcare AI Data Copilot (NL-to-SQL)",
+      "day": 13,
+      "priority": 13,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Build clinical business metric catalog mapping natural language to Gold tables",
+        "SQLGlot AST validation enforcing read-only role, table whitelisting, and query limits",
+        "Grounded response synthesis with exact SQL and table provenance citations",
+        "35-question evaluation suite measuring correctness, latency, and injection safety"
+      ]
+    },
+    {
+      "id": "DE-014",
+      "title": "Cloud Infrastructure, Docker Compose & GitHub Actions CI/CD",
+      "day": 14,
+      "priority": 14,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Multi-container docker-compose.yml (Postgres, Kafka, Airflow, DuckDB, Dashboard)",
+        "Azure ADLS Gen2 & Databricks deployment templates and Terraform specs",
+        "GitHub Actions CI running lint, format, typecheck, and full 450+ test suite",
+        "Tests verifying end-to-end container health checks"
+      ]
+    },
+    {
+      "id": "DE-015",
+      "title": "Performance Benchmarking, Chaos Fault Testing & 100% Release",
+      "day": 15,
+      "priority": 15,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Execute 10k, 50k, 100k synthetic load benchmarks with latency and throughput metrics",
+        "Chaos fault injection testing: Kafka pause, corrupt batch, Airflow crash recovery",
+        "Complete enterprise documentation (ARCHITECTURE, DATA_DICTIONARY, DATA_GOVERNANCE, RUNBOOK)",
+        "Clean tagged release v1.0.0-healthguard-360 pushed to GitHub"
       ]
     }
   ]

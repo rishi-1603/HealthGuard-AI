@@ -9,40 +9,43 @@
 - Silver column naming: After `transform_to_silver(cfg)`, columns are snake_case (patient_id, cost, condition, age_band, readmission_flag). Use `managed_connection(cfg.warehouse_db)` + `pd.read_sql_query` to load the Silver DataFrame in test fixtures.
 - DuckDB `_resolve_col`: Engine must dynamically resolve actual column names from DESCRIBE to handle Bronze (PascalCase) vs Silver (snake_case) differences.
 - Hive partitioning: `export_partitioned_parquet` uses PyArrow `ds.write_dataset` with `partitioning_flavor="hive"`. DuckDB reads back via `read_parquet('**/*.parquet', hive_partitioning=true)`.
+- Multi-Source Normalization: Use `normalize_source_id(source_system, raw_id)` to prefix IDs (e.g. `SYNTHEA_FHIR:P0001` or `HG_CSV:101`). Never mix native integer IDs from different source systems directly without source namespaces.
 
 ---
 
 ## 2026-11-12 - DE-001 (Day 1)
 - What was implemented: Schema contract, numerical ranges, categorical allowed sets, repository audit.
 - Files changed: `pipeline/config.py`, `tests/conftest.py`.
-- **Learnings for future iterations:**
-  - Existing test suite has 132 tests that must remain green at all times.
-  - Readmission model uses 6 features that rely on exact condition/procedure values.
 
 ---
 
 ## 2026-11-12 - DE-002 (Day 2)
 - What was implemented: Core Medallion Architecture (Bronze -> Silver -> Gold), SHA-256 lineage, 19-check DQ gate, 5 Gold mart tables, pipeline orchestrator CLI.
 - Files changed: `pipeline/bronze/ingestor.py`, `pipeline/silver/quality.py`, `pipeline/silver/transformer.py`, `pipeline/gold/aggregator.py`, `pipeline/audit/lineage.py`, `pipeline/orchestrator.py`, `scripts/run_pipeline.py`, 4 new test suites (81 tests).
-- **Learnings for future iterations:**
-  - Headline figures: exactly 984 total rows, 264 readmitted (26.83%), cost share 43.8%. All Gold marts must reconcile to these counts.
-  - Full project test suite benchmark: **417 passed, 0 failures, 0 errors in 173.76s**.
-  - All 5 plugins integrated: Addy Osmani Agent Skills, CodeRabbit, Awesome Skills, Google Cloud Developer, Chrome DevTools.
 
 ---
 
 ## 2026-11-13 - DE-003 (Day 3)
 - What was implemented: Scalable Analytical Processing Engine with DuckDB OLAP, Hive-partitioned Parquet storage, SHA-256 row-level incremental delta CDC, and PySpark fallback router.
 - Files created:
-  - `pipeline/engine/__init__.py` — module manifest
-  - `pipeline/engine/duckdb_runner.py` — DuckDBEngine: in-memory/persistent connections, context manager, parameterized queries, `compute_condition_metrics`, `compute_age_band_metrics`, `compute_cost_percentiles`, dynamic `_resolve_col` for PascalCase/snake_case
-  - `pipeline/engine/parquet_exporter.py` — Hive-partitioned Parquet export via PyArrow + read back
-  - `pipeline/engine/delta.py` — `compute_row_hashes` (SHA-256 per row), `detect_deltas` (new/updated/unchanged CDC), `DeltaReport` dataclass
-  - `pipeline/engine/spark_session.py` — `is_spark_available`, `get_spark_session` with DuckDB fallback, `get_processing_engine` router
-  - `tests/test_duckdb_engine.py` — 16 new tests (all PASSED)
-- **Full project benchmark: 433 passed, 0 failures in ~180s**
+  - `pipeline/engine/__init__.py`
+  - `pipeline/engine/duckdb_runner.py`
+  - `pipeline/engine/parquet_exporter.py`
+  - `pipeline/engine/delta.py`
+  - `pipeline/engine/spark_session.py`
+  - `tests/test_duckdb_engine.py` (16 tests passed)
+
+---
+
+## 2026-11-14 - DE-004 (Day 4)
+- What was implemented: Synthea FHIR R4 Multi-Source Ingestion Engine landing into Bronze Parquet.
+- Files created:
+  - `pipeline/ingestion/__init__.py`
+  - `pipeline/ingestion/fhir_parser.py`: Streaming bundle parser for Patient, Encounter, Condition, Observation with extension parsing (region, insurance).
+  - `pipeline/ingestion/multi_source.py`: `MultiSourceIngestor` computing cryptographic SHA-256 batch checksums, generating audit manifests, and writing Bronze Parquet tables.
+  - `tests/test_fhir_ingestion.py`: 9 new tests (all PASSED).
+- **Core Pipeline Benchmark: 107 passed, 0 failures in 43.64s.**
 - **Learnings for future iterations:**
-  - PySpark not installed — engine router gracefully falls back to DuckDBEngine; skip pyspark install (too heavy).
-  - Silver uses snake_case columns; Bronze uses PascalCase. DuckDB engine DESCRIBE-based `_resolve_col` required to query either.
-  - `ds.write_dataset` with `hive` flavor produces `Condition=Diabetes/age_band=18-30/` partition tree readable by DuckDB `hive_partitioning=true`.
+  - Synthea FHIR bundle at `data/synthetic/bundle.json` contains 93,987 resources (91k observations, 822 encounters, 500 patients, 500 conditions).
+  - Capping `max_entries` during test runs enables sub-second test execution while production ingestion processes full volume.
 ---
