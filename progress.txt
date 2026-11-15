@@ -10,6 +10,8 @@
 - DuckDB `_resolve_col`: Engine must dynamically resolve actual column names from DESCRIBE to handle Bronze (PascalCase) vs Silver (snake_case) differences.
 - Hive partitioning: `export_partitioned_parquet` uses PyArrow `ds.write_dataset` with `partitioning_flavor="hive"`. DuckDB reads back via `read_parquet('**/*.parquet', hive_partitioning=true)`.
 - Multi-Source Normalization: Use `normalize_source_id(source_system, raw_id)` to prefix IDs (e.g. `SYNTHEA_FHIR:P0001` or `HG_CSV:101`). Never mix native integer IDs from different source systems directly without source namespaces.
+- Quarantine Routing: Corrupt or out-of-boundary records are diverted to `silver_quarantine` table with exact violation reasons and severity, without crashing the pipeline. Valid records proceed to `silver_encounters` using `INSERT OR REPLACE` for idempotency.
+- Data Trust Scoring: 4 engineering pillars (Validity, Completeness, Uniqueness, Referential Integrity) form the composite Data Trust Score.
 
 ---
 
@@ -41,11 +43,20 @@
 - What was implemented: Synthea FHIR R4 Multi-Source Ingestion Engine landing into Bronze Parquet.
 - Files created:
   - `pipeline/ingestion/__init__.py`
-  - `pipeline/ingestion/fhir_parser.py`: Streaming bundle parser for Patient, Encounter, Condition, Observation with extension parsing (region, insurance).
-  - `pipeline/ingestion/multi_source.py`: `MultiSourceIngestor` computing cryptographic SHA-256 batch checksums, generating audit manifests, and writing Bronze Parquet tables.
-  - `tests/test_fhir_ingestion.py`: 9 new tests (all PASSED).
-- **Core Pipeline Benchmark: 107 passed, 0 failures in 43.64s.**
-- **Learnings for future iterations:**
-  - Synthea FHIR bundle at `data/synthetic/bundle.json` contains 93,987 resources (91k observations, 822 encounters, 500 patients, 500 conditions).
-  - Capping `max_entries` during test runs enables sub-second test execution while production ingestion processes full volume.
+  - `pipeline/ingestion/fhir_parser.py`: Streaming bundle parser for Patient, Encounter, Condition, Observation.
+  - `pipeline/ingestion/multi_source.py`: `MultiSourceIngestor` computing SHA-256 batch checksums and landing Parquet tables.
+  - `tests/test_fhir_ingestion.py` (9 tests passed).
+
+---
+
+## 2026-11-15 - DE-005 (Day 5)
+- What was implemented: Automated Data Quality Suite, Quarantine Isolation Engine & 4-Pillar Scorecards.
+- Files created/updated:
+  - `pipeline/warehouse.py`: Added `silver_quarantine` table DDL with indexing.
+  - `pipeline/data_quality/__init__.py`
+  - `pipeline/data_quality/rules.py`: `ClinicalRuleSuite` validating ranges, formats, non-negative cost, and allowed categorical enums.
+  - `pipeline/data_quality/quarantine.py`: `QuarantineEngine` routing corrupt rows to `silver_quarantine` and clean rows to `silver_encounters`.
+  - `pipeline/data_quality/scorecard.py`: `generate_scorecard` evaluating Validity, Completeness, Uniqueness, and Referential Integrity, producing JSON & Markdown reports.
+  - `tests/test_data_quality_suite.py` (7 tests passed).
+- **Core Pipeline Benchmark: 114 passed, 0 failures in 21.57s.**
 ---

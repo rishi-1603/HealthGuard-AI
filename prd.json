@@ -61,7 +61,7 @@
       "title": "Automated Data Quality Suite & Quarantine Engine",
       "day": 5,
       "priority": 5,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Rule-based quality validation for clinical value ranges and referential integrity",
         "Divert failing rows to silver_quarantine table without failing pipeline",

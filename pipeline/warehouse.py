@@ -69,6 +69,19 @@ CREATE INDEX IF NOT EXISTS idx_silver_condition ON silver_encounters(condition);
 CREATE INDEX IF NOT EXISTS idx_silver_age_band  ON silver_encounters(age_band);
 CREATE INDEX IF NOT EXISTS idx_silver_readmit   ON silver_encounters(readmission_flag);
 CREATE INDEX IF NOT EXISTS idx_silver_gender    ON silver_encounters(gender);
+
+CREATE TABLE IF NOT EXISTS silver_quarantine (
+    quarantine_id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    quarantined_at      TEXT NOT NULL,
+    patient_id          INTEGER,
+    raw_payload_json    TEXT NOT NULL,
+    quarantine_reason   TEXT NOT NULL,
+    severity            TEXT NOT NULL,
+    reprocessed_flag    INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS idx_quarantine_patient ON silver_quarantine(patient_id);
+CREATE INDEX IF NOT EXISTS idx_quarantine_time    ON silver_quarantine(quarantined_at);
 """
 
 # ---------------------------------------------------------------------------
