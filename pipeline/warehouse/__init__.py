@@ -1,8 +1,9 @@
 """Warehouse connection and DDL management.
 
 Provides a single connection factory and applies all CREATE TABLE / VIEW
-statements for Bronze, Silver, and Gold layers.  Using SQLite here — the
-same DDL works against PostgreSQL by swapping the connection string.
+statements for Bronze, Silver, Gold layers, and Star Schema dimensional models.
+Using SQLite here — the same DDL works against PostgreSQL by swapping the
+connection string.
 """
 
 from __future__ import annotations
@@ -191,4 +192,8 @@ def apply_ddl(cfg: PipelineConfig) -> None:
         conn.executescript(_SILVER_DDL)
         conn.executescript(_GOLD_DDL)
         conn.executescript(_AUDIT_DDL)
+    
+    # Also apply star schema DDL to warehouse
+    from pipeline.warehouse.star_schema import apply_star_schema_ddl
+    apply_star_schema_ddl(cfg)
     logger.info("DDL applied to %s", cfg.warehouse_db)

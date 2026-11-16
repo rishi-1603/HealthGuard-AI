@@ -74,7 +74,7 @@
       "title": "Enterprise Star Schema & Dimensional Modeling",
       "day": 6,
       "priority": 6,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Design dim_patient (with SCD Type 2 tracking), dim_condition, dim_facility, dim_date",
         "Design fact_encounter, fact_observation, fact_pipeline_run, fact_data_quality",

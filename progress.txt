@@ -60,3 +60,19 @@
   - `tests/test_data_quality_suite.py` (7 tests passed).
 - **Core Pipeline Benchmark: 114 passed, 0 failures in 21.57s.**
 ---
+
+## 2026-11-16 - DE-006 (Day 6)
+- What was implemented: Enterprise Star Schema & Dimensional Modeling with SCD Type 2 tracking and referential integrity.
+- Files created/updated:
+  - `pipeline/warehouse/__init__.py`: Converted warehouse module to package, preserving backward compatibility, auto-applying star schema DDL.
+  - `pipeline/warehouse/star_schema.py`:
+    - Dimensions: `dim_patient` (SCD Type 2 with `effective_from`, `effective_to`, `is_current`, `row_hash`), `dim_condition`, `dim_facility`, `dim_date` (calendar dimension with day_of_week and weekend flag).
+    - Facts: `fact_encounter` (with FK constraints to dimensions), `fact_observation`, `fact_pipeline_run`, `fact_data_quality`.
+    - Auto-incrementing surrogate keys, composite indices (`idx_dim_patient_id_current`, FK indices), cross-DB ANSI DDL.
+    - `DimensionLoader`: Idempotent date generator, SCD Type 2 upsert for patients (closing previous versions with effective timestamp), condition & facility loaders.
+    - `FactLoader`: Strictly validated FK referential integrity, automated DQ pass rate calculation.
+    - `populate_star_schema_from_silver`: End-to-end bridge loading Silver records into dimensional facts and dimensions.
+  - `tests/test_star_schema.py`: 27 tests covering all 4 acceptance criteria, DDL structures, autoincrement surrogate keys, composite indices, SCD Type 2 updates, and FK integrity enforcement.
+- **Full Pipeline Benchmark: 140 passed, 0 failures in 43.47s.**
+---
+
