@@ -87,7 +87,7 @@
       "title": "dbt Transformation Models & Automated Schema Testing",
       "day": 7,
       "priority": 7,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Create staging (stg_), intermediate (int_), and mart (fct_) models",
         "Add dbt tests (unique, not_null, accepted_values, relationships)",

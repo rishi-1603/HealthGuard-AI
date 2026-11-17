@@ -1,0 +1,52 @@
+version: 2
+
+models:
+  - name: fct_hospital_admissions
+    description: "Incremental admissions fact table with financial and clinical outcome indicators"
+    columns:
+      - name: patient_id
+        description: "Primary key patient identifier"
+        tests:
+          - not_null
+          - unique
+      - name: readmission_flag
+        description: "Readmission status"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+      - name: outcome
+        description: "Clinical outcome category with referential integrity back to staging"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_hospital_encounters')
+              field: outcome
+
+  - name: dim_patient_demographics
+    description: "Patient demographic dimension table"
+    columns:
+      - name: patient_id
+        description: "Unique patient identifier"
+        tests:
+          - not_null
+          - unique
+      - name: age_band
+        description: "Categorical age band"
+        tests:
+          - not_null
+
+  - name: fct_readmission_analysis
+    description: "Aggregated condition risk tiers based on historical readmission rates"
+    columns:
+      - name: condition
+        description: "Clinical condition identifier"
+        tests:
+          - not_null
+          - unique
+      - name: risk_tier
+        description: "Calculated risk categorization tier"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['HIGH_RISK', 'MODERATE_RISK', 'LOW_RISK']

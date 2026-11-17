@@ -1,0 +1,13 @@
+version: 2
+
+sources:
+  - name: raw_hospital
+    description: "Raw bronze hospital encounter records ingested from operational CSV and streaming sources"
+    tables:
+      - name: bronze_encounters
+        description: "Raw immutable bronze encounters with metadata columns"
+  - name: raw_fhir
+    description: "Raw bronze Synthea FHIR R4 resources ingested from JSON bundles"
+    tables:
+      - name: bronze_patients
+        description: "Raw bronze patient demographics from FHIR bundle"

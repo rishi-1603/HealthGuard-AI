@@ -1,0 +1,30 @@
+version: 2
+
+models:
+  - name: int_patient_clinical_history
+    description: "Enriched clinical encounters with derived age band and cost-per-day metrics"
+    columns:
+      - name: patient_id
+        description: "Unique patient identifier"
+        tests:
+          - not_null
+          - unique
+      - name: age_band
+        description: "Demographic age bracket"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['18-30', '31-45', '46-60', '61-75', '76+']
+
+  - name: int_condition_cost_summary
+    description: "Aggregated condition metrics including readmission rates and average LOS"
+    columns:
+      - name: condition
+        description: "Primary diagnosed medical condition"
+        tests:
+          - not_null
+          - unique
+      - name: readmission_rate_pct
+        description: "Calculated readmission percentage"
+        tests:
+          - not_null

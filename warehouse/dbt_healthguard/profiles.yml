@@ -1,0 +1,11 @@
+healthguard_duckdb:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "warehouse/healthguard_warehouse.db"
+      threads: 4
+    prod:
+      type: duckdb
+      path: "warehouse/healthguard_warehouse.db"
+      threads: 8

@@ -76,3 +76,19 @@
 - **Full Pipeline Benchmark: 140 passed, 0 failures in 43.47s.**
 ---
 
+## 2026-11-17 - DE-007 (Day 7)
+- What was implemented: dbt Transformation Models & Automated Schema Testing (`dbt_healthguard`).
+- Files created:
+  - `warehouse/dbt_healthguard/dbt_project.yml`: Core dbt configuration and model layer materializations.
+  - `warehouse/dbt_healthguard/profiles.yml`: Analytical DuckDB warehouse connection profiles.
+  - Staging (`models/staging/`): `sources.yml`, `stg_hospital_encounters.sql`, `stg_fhir_patients.sql`, `schema.yml`.
+  - Intermediate (`models/intermediate/`): `int_patient_clinical_history.sql`, `int_condition_cost_summary.sql`, `schema.yml`.
+  - Marts (`models/marts/`): `fct_hospital_admissions.sql` (idempotent incremental), `dim_patient_demographics.sql`, `fct_readmission_analysis.sql`, `schema.yml`.
+  - `pipeline/dbt/compiler.py`: Topological DAG sorting, Jinja ref/source/config compiler, incremental expression evaluator.
+  - `pipeline/dbt/runner.py`: DAG execution engine, schema test runner (unique, not_null, accepted_values, relationships), automated lineage graph & markdown table generator.
+  - `pipeline/dbt/__init__.py`: Public exports.
+  - `tests/test_dbt_models.py`: 11 tests verifying model discovery, DAG order, test runner catching synthetic anomalies, and idempotent incremental merges.
+- **Full Pipeline Benchmark: 151 passed, 0 failures in 34.30s.**
+---
+
+

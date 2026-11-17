@@ -1,0 +1,40 @@
+version: 2
+
+models:
+  - name: stg_hospital_encounters
+    description: "Cleaned and cast hospital encounter records from Bronze"
+    columns:
+      - name: patient_id
+        description: "Primary key patient identifier"
+        tests:
+          - not_null
+          - unique
+      - name: gender
+        description: "Standardized biological sex"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Male', 'Female', 'Other']
+      - name: cost
+        description: "Billed financial cost"
+        tests:
+          - not_null
+      - name: readmission_flag
+        description: "Binary readmission indicator (0 = No, 1 = Yes)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+
+  - name: stg_fhir_patients
+    description: "Standardized Synthea FHIR patient demographics"
+    columns:
+      - name: patient_id
+        description: "Source-scoped patient identifier"
+        tests:
+          - not_null
+          - unique
+      - name: source_system
+        description: "Originating ingestion system tag"
+        tests:
+          - not_null
