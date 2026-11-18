@@ -99,7 +99,7 @@
       "title": "PostgreSQL Operational Source & Debezium CDC Engine",
       "day": 8,
       "priority": 8,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Deploy and configure operational PostgreSQL schema for EHR updates",
         "Implement CDC pipeline tracking inserts, updates, and soft deletes via WAL",

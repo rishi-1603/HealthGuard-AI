@@ -196,4 +196,10 @@ def apply_ddl(cfg: PipelineConfig) -> None:
     # Also apply star schema DDL to warehouse
     from pipeline.warehouse.star_schema import apply_star_schema_ddl
     apply_star_schema_ddl(cfg)
+
+    # Also apply CDC DDL to warehouse
+    from pipeline.cdc.lakehouse_sync import _CDC_LAKEHOUSE_DDL
+    with managed_connection(cfg.warehouse_db) as conn:
+        conn.executescript(_CDC_LAKEHOUSE_DDL)
+
     logger.info("DDL applied to %s", cfg.warehouse_db)

@@ -91,4 +91,18 @@
 - **Full Pipeline Benchmark: 151 passed, 0 failures in 34.30s.**
 ---
 
+## 2026-11-18 - DE-008 (Day 8)
+- What was implemented: PostgreSQL Operational Source & Debezium CDC Engine with Lakehouse Bronze sync & Silver compaction.
+- Files created/updated:
+  - `pipeline/cdc/models.py`: Debezium CDC envelope schemas (`CdcOp`, `CdcSource`, `CdcEvent`).
+  - `pipeline/cdc/operational_db.py`: Operational EHR database managing live transactions with atomic WAL transaction logging.
+  - `pipeline/cdc/cdc_engine.py`: Debezium streaming connector extracting WAL change events into standard envelopes.
+  - `pipeline/cdc/lakehouse_sync.py`: Bronze changelog storage (`bronze_cdc_events`), partitioned Parquet persistence, and LSN-ordered Silver compaction (`silver_operational_encounters`).
+  - `pipeline/cdc/__init__.py`: Public package exports.
+  - `pipeline/warehouse/__init__.py`: Added CDC DDL to warehouse initialization.
+  - `tests/test_cdc_engine.py`: 13 tests verifying operational transactions, Debezium envelopes, Bronze Parquet landing, out-of-order LSN handling, and replay idempotency.
+- **Full Pipeline Benchmark: 164 passed, 0 failures in 61.04s.**
+---
+
+
 
