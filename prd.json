@@ -112,7 +112,7 @@
       "title": "Real-Time Healthcare Event Simulation & Kafka Streaming Transport",
       "day": 9,
       "priority": 9,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Generate synthetic real-time clinical events (admitted, observation, medication, discharged)",
         "Configure Kafka topics, partition strategy, and schema registry validation",
