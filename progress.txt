@@ -119,3 +119,5 @@
 
 
 
+
+Day 10 (DE-010) COMPLETE — 2026-11-20 17:43: DuckDB streaming processor, tumbling/sliding windows, watermark late-event handling, Silver idempotent upserts. 20 new tests. Full regression TBD.
