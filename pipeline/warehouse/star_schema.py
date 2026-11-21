@@ -211,6 +211,7 @@ class DimensionLoader:
         conn = _get_connection(self.db_path)
         count = 0
         curr = start_date
+        rows: list[tuple[Any, ...]] = []
         try:
             while curr <= end_date:
                 date_sk = int(curr.strftime("%Y%m%d"))
@@ -221,18 +222,19 @@ class DimensionLoader:
                 day_of_week = curr.weekday()
                 is_weekend = 1 if curr.weekday() >= 5 else 0
 
-                conn.execute(
-                    """
-                    INSERT OR REPLACE INTO dim_date
-                    (date_sk, full_date, year, quarter, month, day_of_week, is_weekend)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    (date_sk, full_date, year, quarter, month, day_of_week, is_weekend),
-                )
-                count += 1
+                rows.append((date_sk, full_date, year, quarter, month, day_of_week, is_weekend))
                 curr += timedelta(days=1)
+
+            conn.executemany(
+                """
+                INSERT OR REPLACE INTO dim_date
+                (date_sk, full_date, year, quarter, month, day_of_week, is_weekend)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                rows,
+            )
             conn.commit()
-            return count
+            return len(rows)
         finally:
             conn.close()
 
