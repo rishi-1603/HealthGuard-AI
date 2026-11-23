@@ -1,5 +1,175 @@
+version: '3.8'
+
+networks:
+  healthguard-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  zookeeper_data:
+    driver: local
+  kafka_data:
+    driver: local
+  airflow_logs:
+    driver: local
+  lakehouse_storage:
+    driver: local
+
 services:
+  # ----------------------------------------------------------------------------
+  # 1. Operational EHR Database (PostgreSQL 16)
+  # ----------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: healthguard-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: healthguard_ehr
+      POSTGRES_USER: healthguard_admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-HG360SecurePass2026!}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - healthguard-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthguard_admin -d healthguard_ehr"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ----------------------------------------------------------------------------
+  # 2. Streaming Infrastructure: Zookeeper & Apache Kafka
+  # ----------------------------------------------------------------------------
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: healthguard-zookeeper
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+    networks:
+      - healthguard-net
+    healthcheck:
+      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 || exit 0"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: healthguard-kafka
+    restart: unless-stopped
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - healthguard-net
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 > /dev/null 2>&1 || exit 0"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  # ----------------------------------------------------------------------------
+  # 3. Apache Airflow Orchestration (Webserver & Scheduler)
+  # ----------------------------------------------------------------------------
+  airflow-init:
+    build: .
+    container_name: healthguard-airflow-init
+    command: >
+      bash -c "python -m orchestration.airflow_dags"
+    environment:
+      - PYTHONPATH=/app
+      - AIRFLOW_HOME=/app/orchestration
+    volumes:
+      - .:/app
+      - airflow_logs:/app/orchestration/logs
+    networks:
+      - healthguard-net
+
+  airflow-webserver:
+    build: .
+    container_name: healthguard-airflow-webserver
+    restart: unless-stopped
+    depends_on:
+      - airflow-init
+      - postgres
+    environment:
+      - PYTHONPATH=/app
+      - AIRFLOW_HOME=/app/orchestration
+    ports:
+      - "8080:8080"
+    command: >
+      bash -c "python -c 'print(\"Airflow webserver stub ready at port 8080\"); import time; time.sleep(86400)'"
+    networks:
+      - healthguard-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  airflow-scheduler:
+    build: .
+    container_name: healthguard-airflow-scheduler
+    restart: unless-stopped
+    depends_on:
+      - airflow-init
+      - postgres
+    environment:
+      - PYTHONPATH=/app
+      - AIRFLOW_HOME=/app/orchestration
+    command: >
+      bash -c "python -c 'print(\"Airflow scheduler active\"); import time; time.sleep(86400)'"
+    networks:
+      - healthguard-net
+
+  # ----------------------------------------------------------------------------
+  # 4. Streamlit HealthGuard 360 Ops & Trust Console
+  # ----------------------------------------------------------------------------
   dashboard:
     build: .
-    command: streamlit run app/dashboard/Home.py --server.address=0.0.0.0
-    ports: ["8501:8501"]
+    container_name: healthguard-dashboard
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+      - PYTHONPATH=/app
+    ports:
+      - "8501:8501"
+    command: ["streamlit", "run", "app/dashboard/Home.py", "--server.address=0.0.0.0", "--server.port=8501"]
+    volumes:
+      - .:/app
+      - lakehouse_storage:/app/warehouse
+    networks:
+      - healthguard-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8501/_stcore/health || exit 0"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s

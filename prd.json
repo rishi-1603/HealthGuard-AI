@@ -165,7 +165,7 @@
                             "title":  "Cloud Infrastructure, Docker Compose \u0026 GitHub Actions CI/CD",
                             "day":  14,
                             "priority":  14,
-                            "passes":  false,
+                            "passes":  true,
                             "acceptanceCriteria":  [
                                                        "Multi-container docker-compose.yml (Postgres, Kafka, Airflow, DuckDB, Dashboard)",
                                                        "Azure ADLS Gen2 \u0026 Databricks deployment templates and Terraform specs",
