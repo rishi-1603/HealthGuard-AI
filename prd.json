@@ -152,7 +152,7 @@
                             "title":  "Governed Healthcare AI Data Copilot (NL-to-SQL)",
                             "day":  13,
                             "priority":  13,
-                            "passes":  false,
+                            "passes":  true,
                             "acceptanceCriteria":  [
                                                        "Build clinical business metric catalog mapping natural language to Gold tables",
                                                        "SQLGlot AST validation enforcing read-only role, table whitelisting, and query limits",
