@@ -61,7 +61,16 @@ def render_data_trust_console(cfg: Optional[PipelineConfig] = None) -> None:
     with col_sel:
         target_table = st.selectbox(
             "Select Lakehouse Layer for Real-Time Trust Evaluation:",
-            options=["silver_encounters", "bronze_encounters", "gold_patient_mart", "gold_cost_mart"],
+            options=[
+                "silver_encounters",
+                "bronze_encounters",
+                "gold_condition_mart",
+                "gold_daily_summary",
+                "gold_gender_mart",
+                "gold_outcome_mart",
+                "fact_encounter",
+                "dim_patient",
+            ],
             index=0,
             key="hg_dt_target_table",
         )
