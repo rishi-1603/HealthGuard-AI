@@ -1,0 +1,333 @@
+# Observation Resource Contract
+# FHIR R4 Observation - https://hl7.org/fhir/R4/observation.html
+# Source: Synthea FHIR R4 Bulk NDJSON Export
+
+resource_type: "Observation"
+source_system: "SYNTHEA_FHIR"
+
+identity:
+  primary_key: "id"
+  source_scoped_prefix: "SYNTHEA_FHIR"
+
+fields:
+  - source: "id"
+    target: "observation_id"
+    required: true
+    type: "string"
+    description: "FHIR resource ID"
+
+  - source: "identifier"
+    target: "identifiers"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "basedOn"
+    target: "based_on"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "partOf"
+    target: "part_of"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "status"
+    target: "status"
+    required: true
+    type: "string"
+    enum: ["registered", "preliminary", "final", "amended", "corrected", "cancelled", "entered-in-error", "unknown"]
+    description: "Observation status"
+
+  - source: "category"
+    target: "categories"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "code"
+    target: "code"
+    required: true
+    type: "object"
+    description: "Observation code (LOINC, SNOMED CT)"
+    nested: true
+
+  - source: "subject"
+    target: "subject"
+    required: true
+    type: "object"
+    description: "Reference to Patient (or Group, Device, Location)"
+    nested: true
+    reference:
+      target_type: "Patient"
+      extract_id: true
+
+  - source: "focus"
+    target: "focus"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "encounter"
+    target: "encounter"
+    required: false
+    type: "object"
+    description: "Reference to Encounter"
+    nested: true
+    reference:
+      target_type: "Encounter"
+      extract_id: true
+
+  - source: "effectiveDateTime"
+    target: "effective_datetime"
+    required: false
+    type: "datetime"
+
+  - source: "effectivePeriod"
+    target: "effective_period"
+    required: false
+    type: "object"
+    nested: true
+
+  - source: "effectiveTiming"
+    target: "effective_timing"
+    required: false
+    type: "object"
+    nested: true
+
+  - source: "issued"
+    target: "issued"
+    required: false
+    type: "datetime"
+
+  - source: "performer"
+    target: "performers"
+    required: false
+    type: "array"
+    nested: true
+
+  # Value representations - FHIR supports multiple value types
+  - source: "valueQuantity"
+    target: "value_quantity"
+    required: false
+    type: "object"
+    description: "Numeric value with unit (vitals, lab results)"
+    nested: true
+    nested_fields:
+      - source: "value"
+        target: "value"
+        required: true
+        type: "number"
+      - source: "unit"
+        target: "unit"
+        required: false
+        type: "string"
+      - source: "system"
+        target: "unit_system"
+        required: false
+        type: "string"
+      - source: "code"
+        target: "unit_code"
+        required: false
+        type: "string"
+
+  - source: "valueCodeableConcept"
+    target: "value_codeable_concept"
+    required: false
+    type: "object"
+    description: "Coded value (categorical observations)"
+    nested: true
+
+  - source: "valueString"
+    target: "value_string"
+    required: false
+    type: "string"
+
+  - source: "valueBoolean"
+    target: "value_boolean"
+    required: false
+    type: "boolean"
+
+  - source: "valueInteger"
+    target: "value_integer"
+    required: false
+    type: "integer"
+
+  - source: "valueRange"
+    target: "value_range"
+    required: false
+    type: "object"
+    nested: true
+
+  - source: "valueRatio"
+    target: "value_ratio"
+    required: false
+    type: "object"
+    nested: true
+
+  - source: "valueSampledData"
+    target: "value_sampled_data"
+    required: false
+    type: "object"
+    nested: true
+
+  - source: "valueTime"
+    target: "value_time"
+    required: false
+    type: "time"
+
+  - source: "valueDateTime"
+    target: "value_datetime"
+    required: false
+    type: "datetime"
+
+  - source: "valuePeriod"
+    target: "value_period"
+    required: false
+    type: "object"
+    nested: true
+
+  - source: "dataAbsentReason"
+    target: "data_absent_reason"
+    required: false
+    type: "object"
+    nested: true
+
+  - source: "interpretation"
+    target: "interpretations"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "note"
+    target: "notes"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "bodySite"
+    target: "body_site"
+    required: false
+    type: "object"
+    nested: true
+
+  - source: "method"
+    target: "method"
+    required: false
+    type: "object"
+    nested: true
+
+  - source: "specimen"
+    target: "specimen"
+    required: false
+    type: "object"
+    nested: true
+
+  - source: "device"
+    target: "device"
+    required: false
+    type: "object"
+    nested: true
+
+  - source: "referenceRange"
+    target: "reference_ranges"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "hasMember"
+    target: "has_member"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "derivedFrom"
+    target: "derived_from"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "component"
+    target: "components"
+    required: false
+    type: "array"
+    nested: true
+
+validation:
+  reject_missing_id: true
+  reject_missing_subject: true
+  reject_missing_code: true
+  reject_missing_status: true
+  preserve_unmapped_fields: true
+  required_fhir_fields: ["id", "status", "subject", "code"]
+  optional_fhir_fields: ["identifier", "basedOn", "partOf", "category", "focus", "encounter", "effectiveDateTime", "effectivePeriod", "effectiveTiming", "issued", "performer", "valueQuantity", "valueCodeableConcept", "valueString", "valueBoolean", "valueInteger", "valueRange", "valueRatio", "valueSampledData", "valueTime", "valueDateTime", "valuePeriod", "dataAbsentReason", "interpretation", "note", "bodySite", "method", "specimen", "device", "referenceRange", "hasMember", "derivedFrom", "component"]
+
+quarantine_policy:
+  missing_id: "REJECT"
+  missing_subject: "REJECT"
+  missing_code: "REJECT"
+  missing_status: "REJECT"
+  invalid_reference_format: "QUARANTINE"
+  subject_not_patient: "QUARANTINE"  # for this scope; Group/Device/Location would be out of scope
+  encounter_not_encounter: "QUARANTINE"
+  malformed_json: "QUARANTINE"
+  duplicate_id: "DEDUP_KEEP_LATEST_VERSION"
+
+normalization:
+  - field: "status"
+    mapping:
+      "registered": "registered"
+      "preliminary": "preliminary"
+      "final": "final"
+      "amended": "amended"
+      "corrected": "corrected"
+      "cancelled": "cancelled"
+      "entered-in-error": "entered-in-error"
+      "unknown": "unknown"
+    default: "unknown"
+
+  - field: "effective_datetime"
+    format: "ISO8601"
+    coerce_errors: "QUARANTINE"
+
+  - field: "issued"
+    format: "ISO8601"
+    coerce_errors: "QUARANTINE"
+
+  - field: "value_quantity.value"
+    type: "number"
+    coerce_errors: "QUARANTINE"
+
+  - field: "value_quantity.unit"
+    type: "string"
+    preserve_original: true
+
+  - field: "value_quantity.unit_code"
+    type: "string"
+    preserve_original: true
+
+reference_resolution:
+  subject:
+    target_resource: "Patient"
+    required: true
+    on_missing: "QUARANTINE"
+  encounter:
+    target_resource: "Encounter"
+    required: false
+    on_missing: "PRESERVE_AS_NULL"
+  performer:
+    target_resource: "Practitioner"
+    required: false
+    on_missing: "PRESERVE_AS_NULL"
+  device:
+    target_resource: "Device"
+    required: false
+    on_missing: "PRESERVE_AS_NULL"
+
+# Observation-specific notes:
+# - Subject can reference Patient, Group, Device, or Location. In this scope, only Patient is supported.
+# - Encounter reference is optional. Do not reject Observations without Encounter.
+# - Value can be one of 11+ types. Preserve all representations in Silver.
+# - Components allow nested observations (e.g., blood pressure with systolic/diastolic).

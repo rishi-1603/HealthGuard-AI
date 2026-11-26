@@ -1,0 +1,12 @@
+feat(day1): Foundation — contracts, inventory, provenance, clean baseline
+
+- Resource contracts (4 YAML): Patient, Encounter, Condition, Observation
+- Inventory script: scripts/inventory_resources.py → docs/DATA_PROVENANCE.md
+- Actual counts: 1,136 patients, 622,322 core FHIR resources, 0 malformed
+- Clean test baseline: 11/11 dbt model tests passing
+- CI hardened: removed --exit-zero, || true; added contract validation job
+- Docker Compose: real Airflow 3.4.0 (api-server, scheduler, dag-processor, triggerer)
+- Requirements split: app, pipeline, dev
+- .gitignore: ignores raw data, NDJSON, Parquet, lakehouse
+- README: honest scope, synthetic disclaimer, no fake claims
+- Removed: legacy CSV pipeline, fake Kafka/CDC/Airflow, ML models, 92 failing tests

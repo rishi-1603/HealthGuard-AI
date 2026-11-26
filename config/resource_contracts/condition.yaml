@@ -1,0 +1,218 @@
+# Condition Resource Contract
+# FHIR R4 Condition - https://hl7.org/fhir/R4/condition.html
+# Source: Synthea FHIR R4 Bulk NDJSON Export
+
+resource_type: "Condition"
+source_system: "SYNTHEA_FHIR"
+
+identity:
+  primary_key: "id"
+  source_scoped_prefix: "SYNTHEA_FHIR"
+
+fields:
+  - source: "id"
+    target: "condition_id"
+    required: true
+    type: "string"
+    description: "FHIR resource ID"
+
+  - source: "identifier"
+    target: "identifiers"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "clinicalStatus"
+    target: "clinical_status"
+    required: false
+    type: "object"
+    description: "Clinical status (active, recurrence, remission, resolved)"
+    nested: true
+
+  - source: "verificationStatus"
+    target: "verification_status"
+    required: false
+    type: "object"
+    description: "Verification status (confirmed, provisional, differential, etc.)"
+    nested: true
+
+  - source: "category"
+    target: "categories"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "severity"
+    target: "severity"
+    required: false
+    type: "object"
+    nested: true
+
+  - source: "code"
+    target: "code"
+    required: true
+    type: "object"
+    description: "Condition code (SNOMED CT, ICD-10)"
+    nested: true
+
+  - source: "bodySite"
+    target: "body_sites"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "subject"
+    target: "subject"
+    required: true
+    type: "object"
+    description: "Reference to Patient"
+    nested: true
+    reference:
+      target_type: "Patient"
+      extract_id: true
+
+  - source: "encounter"
+    target: "encounter"
+    required: false
+    type: "object"
+    description: "Reference to Encounter"
+    nested: true
+    reference:
+      target_type: "Encounter"
+      extract_id: true
+
+  - source: "onsetDateTime"
+    target: "onset_datetime"
+    required: false
+    type: "datetime"
+
+  - source: "onsetAge"
+    target: "onset_age"
+    required: false
+    type: "object"
+    nested: true
+
+  - source: "onsetPeriod"
+    target: "onset_period"
+    required: false
+    type: "object"
+    nested: true
+
+  - source: "onsetRange"
+    target: "onset_range"
+    required: false
+    type: "object"
+    nested: true
+
+  - source: "onsetString"
+    target: "onset_string"
+    required: false
+    type: "string"
+
+  - source: "abatementDateTime"
+    target: "abatement_datetime"
+    required: false
+    type: "datetime"
+
+  - source: "abatementAge"
+    target: "abatement_age"
+    required: false
+    type: "object"
+    nested: true
+
+  - source: "abatementPeriod"
+    target: "abatement_period"
+    required: false
+    type: "object"
+    nested: true
+
+  - source: "abatementRange"
+    target: "abatement_range"
+    required: false
+    type: "object"
+    nested: true
+
+  - source: "abatementString"
+    target: "abatement_string"
+    required: false
+    type: "string"
+
+  - source: "recordedDate"
+    target: "recorded_date"
+    required: false
+    type: "datetime"
+
+  - source: "recorder"
+    target: "recorder"
+    required: false
+    type: "object"
+    nested: true
+
+  - source: "asserter"
+    target: "asserter"
+    required: false
+    type: "object"
+    nested: true
+
+  - source: "stage"
+    target: "stages"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "evidence"
+    target: "evidence"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "note"
+    target: "notes"
+    required: false
+    type: "array"
+    nested: true
+
+validation:
+  reject_missing_id: true
+  reject_missing_subject: true
+  reject_missing_code: true
+  preserve_unmapped_fields: true
+  required_fhir_fields: ["id", "subject", "code"]
+  optional_fhir_fields: ["identifier", "clinicalStatus", "verificationStatus", "category", "severity", "bodySite", "encounter", "onsetDateTime", "onsetAge", "onsetPeriod", "onsetRange", "onsetString", "abatementDateTime", "abatementAge", "abatementPeriod", "abatementRange", "abatementString", "recordedDate", "recorder", "asserter", "stage", "evidence", "note"]
+
+quarantine_policy:
+  missing_id: "REJECT"
+  missing_subject: "REJECT"
+  missing_code: "REJECT"
+  invalid_reference_format: "QUARANTINE"
+  subject_not_patient: "QUARANTINE"
+  encounter_not_encounter: "QUARANTINE"
+  malformed_json: "QUARANTINE"
+  duplicate_id: "DEDUP_KEEP_LATEST_VERSION"
+
+normalization:
+  - field: "clinical_status.coding[0].code"
+    description: "Map to standard clinical status codes"
+    preserve_original: true
+
+  - field: "verification_status.coding[0].code"
+    description: "Map to standard verification status codes"
+    preserve_original: true
+
+  - field: "onset_datetime"
+    format: "ISO8601"
+    coerce_errors: "QUARANTINE"
+
+  - field: "recorded_date"
+    format: "ISO8601"
+    coerce_errors: "QUARANTINE"
+
+reference_resolution:
+  subject:
+    target_resource: "Patient"
+    required: true
+    on_missing: "QUARANTINE"
+  encounter:
+    target_resource: "Encounter"
+    required: false
+    on_missing: "PRESERVE_AS_NULL"

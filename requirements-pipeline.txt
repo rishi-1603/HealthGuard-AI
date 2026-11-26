@@ -1,0 +1,18 @@
+# Pipeline dependencies (ingestion, Bronze, Silver, Gold, dbt, Airflow)
+pandas>=2.1.0
+pyarrow>=16.0.0
+duckdb>=1.0.0
+dbt-duckdb>=1.7.0
+dbt-core>=1.7.0
+pyyaml>=6.0.1
+python-dotenv>=1.0.0
+structlog>=24.1.0
+sqlglot>=24.0.0
+jsonschema>=4.21.0
+psycopg2-binary>=2.9.9
+sqlalchemy>=2.0.0
+alembic>=1.13.0
+pytest>=8.0.0
+pytest-cov>=4.1.0
+ruff>=0.4.0
+black>=24.0.0

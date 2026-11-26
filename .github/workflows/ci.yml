@@ -1,8 +1,8 @@
 name: HealthGuard 360 CI/CD Pipeline
 
-"on":
+on:
   push:
-    branches: [main, feature/healthguard-360-platform]
+    branches: [main, feature/healthguard-360-fhir-platform]
   pull_request:
     branches: [main]
 
@@ -27,18 +27,16 @@ jobs:
       - name: Install Linting Tools
         run: |
           python -m pip install --upgrade pip
-          pip install ruff black flake8
+          pip install ruff black
 
       - name: Run Ruff Linter
-        run: |
-          ruff check . --exit-zero
+        run: ruff check .
 
       - name: Check Code Formatting
-        run: |
-          black --check --diff . || true
+        run: black --check --diff .
 
-  contracts-and-schemas:
-    name: Data Contracts & Schema Validation
+  contract-validation:
+    name: Resource Contract Validation
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -53,18 +51,22 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements-pipeline.txt
 
-      - name: Verify Schema Registry Contracts
+      - name: Validate Resource Contracts Load
         run: |
-          python -c "from pipeline.streaming.schema_registry import validate_event_payload; print('Schema Registry verified')"
-
-      - name: Verify Warehouse DDL Initializer
-        run: |
-          python -c "from pipeline.warehouse import apply_ddl; from pipeline.config import PipelineConfig; apply_ddl(PipelineConfig()); print('DDL applied successfully')"
+          python -c "
+          import yaml
+          from pathlib import Path
+          contracts = ['patient', 'encounter', 'condition', 'observation']
+          for c in contracts:
+              with open(f'config/resource_contracts/{c}.yaml') as f:
+                  yaml.safe_load(f)
+              print(f'{c}.yaml: OK')
+          print('All contracts valid')
 
   test-suite:
-    name: Full Test Suite (Lakehouse, CDC, Streaming, Copilot)
+    name: Test Suite
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -79,30 +81,18 @@ jobs:
       - name: Install Project Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements-pipeline.txt
           pip install pytest pytest-cov
 
-      - name: Run Full Pytest Suite
-        run: |
-          pytest tests/ -v --durations=10
+      - name: Run Test Suite
+        run: pytest tests/ -v --durations=10
 
-  infra-validation:
-    name: Terraform & Docker Compose Validation
+  docker-validation:
+    name: Docker Compose Validation
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.7.0
-
-      - name: Validate Terraform Syntax
-        run: |
-          cd infra/terraform
-          terraform fmt -check -diff || true
-
       - name: Validate Docker Compose Configuration
-        run: |
-          docker compose config || true
+        run: docker compose config

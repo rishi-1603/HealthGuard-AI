@@ -1,0 +1,155 @@
+# Patient Resource Contract
+# FHIR R4 Patient - https://hl7.org/fhir/R4/patient.html
+# Source: Synthea FHIR R4 Bulk NDJSON Export
+
+resource_type: "Patient"
+source_system: "SYNTHEA_FHIR"
+
+identity:
+  primary_key: "id"
+  source_scoped_prefix: "SYNTHEA_FHIR"
+
+fields:
+  - source: "id"
+    target: "patient_id"
+    required: true
+    type: "string"
+    description: "FHIR resource ID"
+
+  - source: "identifier"
+    target: "identifiers"
+    required: false
+    type: "array"
+    description: "Patient identifiers (MRN, SSN, etc.)"
+    nested: true
+
+  - source: "name"
+    target: "names"
+    required: false
+    type: "array"
+    description: "Patient names (official, usual, etc.)"
+    nested: true
+
+  - source: "gender"
+    target: "gender"
+    required: false
+    type: "string"
+    enum: ["male", "female", "other", "unknown"]
+    description: "Administrative gender"
+
+  - source: "birthDate"
+    target: "birth_date"
+    required: false
+    type: "date"
+    description: "Date of birth"
+
+  - source: "deceasedBoolean"
+    target: "deceased_boolean"
+    required: false
+    type: "boolean"
+    description: "Deceased flag"
+
+  - source: "deceasedDateTime"
+    target: "deceased_datetime"
+    required: false
+    type: "datetime"
+    description: "Date/time of death"
+
+  - source: "address"
+    target: "addresses"
+    required: false
+    type: "array"
+    description: "Patient addresses"
+    nested: true
+
+  - source: "telecom"
+    target: "telecoms"
+    required: false
+    type: "array"
+    description: "Contact information"
+    nested: true
+
+  - source: "maritalStatus"
+    target: "marital_status"
+    required: false
+    type: "object"
+    description: "Marital status coding"
+    nested: true
+
+  - source: "multipleBirthBoolean"
+    target: "multiple_birth_boolean"
+    required: false
+    type: "boolean"
+
+  - source: "multipleBirthInteger"
+    target: "multiple_birth_integer"
+    required: false
+    type: "integer"
+
+  - source: "photo"
+    target: "photos"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "contact"
+    target: "contacts"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "communication"
+    target: "communications"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "generalPractitioner"
+    target: "general_practitioners"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "managingOrganization"
+    target: "managing_organization"
+    required: false
+    type: "object"
+    nested: true
+
+  - source: "link"
+    target: "links"
+    required: false
+    type: "array"
+    nested: true
+
+validation:
+  reject_missing_id: true
+  preserve_unmapped_fields: true
+  required_fhir_fields: ["id"]
+  optional_fhir_fields: ["identifier", "name", "gender", "birthDate", "deceasedBoolean", "deceasedDateTime", "address", "telecom", "maritalStatus", "multipleBirthBoolean", "multipleBirthInteger", "photo", "contact", "communication", "generalPractitioner", "managingOrganization", "link"]
+
+quarantine_policy:
+  missing_id: "REJECT"
+  invalid_id_format: "REJECT"
+  malformed_json: "QUARANTINE"
+  unsupported_field: "PRESERVE_IN_RAW"
+  duplicate_id: "DEDUP_KEEP_LATEST_VERSION"
+
+normalization:
+  - field: "gender"
+    mapping:
+      "M": "male"
+      "F": "female"
+      "male": "male"
+      "female": "female"
+      "other": "other"
+      "unknown": "unknown"
+    default: "unknown"
+
+  - field: "birth_date"
+    format: "YYYY-MM-DD"
+    coerce_errors: "QUARANTINE"
+
+  - field: "deceased_datetime"
+    format: "ISO8601"
+    coerce_errors: "QUARANTINE"

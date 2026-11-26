@@ -7,10 +7,6 @@ networks:
 volumes:
   postgres_data:
     driver: local
-  zookeeper_data:
-    driver: local
-  kafka_data:
-    driver: local
   airflow_logs:
     driver: local
   lakehouse_storage:
@@ -18,16 +14,16 @@ volumes:
 
 services:
   # ----------------------------------------------------------------------------
-  # 1. Operational EHR Database (PostgreSQL 16)
+  # 1. PostgreSQL — Airflow metadata + optional operational DB
   # ----------------------------------------------------------------------------
   postgres:
     image: postgres:16-alpine
     container_name: healthguard-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: healthguard_ehr
-      POSTGRES_USER: healthguard_admin
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-HG360SecurePass2026!}
+      POSTGRES_DB: healthguard_airflow
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -35,126 +31,165 @@ services:
     networks:
       - healthguard-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U healthguard_admin -d healthguard_ehr"]
+      test: ["CMD-SHELL", "pg_isready -U airflow -d healthguard_airflow"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
 
   # ----------------------------------------------------------------------------
-  # 2. Streaming Infrastructure: Zookeeper & Apache Kafka
-  # ----------------------------------------------------------------------------
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
-    container_name: healthguard-zookeeper
-    restart: unless-stopped
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - "2181:2181"
-    volumes:
-      - zookeeper_data:/var/lib/zookeeper/data
-    networks:
-      - healthguard-net
-    healthcheck:
-      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 || exit 0"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  kafka:
-    image: confluentinc/cp-kafka:7.5.0
-    container_name: healthguard-kafka
-    restart: unless-stopped
-    depends_on:
-      zookeeper:
-        condition: service_healthy
-    ports:
-      - "9092:9092"
-      - "29092:29092"
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-    volumes:
-      - kafka_data:/var/lib/kafka/data
-    networks:
-      - healthguard-net
-    healthcheck:
-      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 > /dev/null 2>&1 || exit 0"]
-      interval: 15s
-      timeout: 10s
-      retries: 5
-      start_period: 20s
-
-  # ----------------------------------------------------------------------------
-  # 3. Apache Airflow Orchestration (Webserver & Scheduler)
+  # 2. Airflow 3.4.0 — Real orchestration (API server, scheduler, dag-processor, triggerer)
   # ----------------------------------------------------------------------------
   airflow-init:
-    build: .
+    image: apache/airflow:3.4.0
     container_name: healthguard-airflow-init
-    command: >
-      bash -c "python -m orchestration.airflow_dags"
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        airflow db migrate &&
+        airflow users create \
+          --username admin \
+          --password admin \
+          --firstname Admin \
+          --lastname User \
+          --role Admin \
+          --email admin@healthguard.local
     environment:
-      - PYTHONPATH=/app
-      - AIRFLOW_HOME=/app/orchestration
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:${POSTGRES_PASSWORD}@postgres:5432/healthguard_airflow
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=True
     volumes:
-      - .:/app
-      - airflow_logs:/app/orchestration/logs
+      - ./orchestration/dags:/opt/airflow/dags
+      - ./src:/opt/airflow/src
+      - ./warehouse:/opt/airflow/warehouse
+      - ./scripts:/opt/airflow/scripts
+      - ./config:/opt/airflow/config
+      - airflow_logs:/opt/airflow/logs
     networks:
       - healthguard-net
-
-  airflow-webserver:
-    build: .
-    container_name: healthguard-airflow-webserver
-    restart: unless-stopped
     depends_on:
-      - airflow-init
-      - postgres
+      postgres:
+        condition: service_healthy
+
+  airflow-api-server:
+    image: apache/airflow:3.4.0
+    container_name: healthguard-airflow-api-server
+    restart: unless-stopped
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - airflow api-server
     environment:
-      - PYTHONPATH=/app
-      - AIRFLOW_HOME=/app/orchestration
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:${POSTGRES_PASSWORD}@postgres:5432/healthguard_airflow
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=True
+      - AIRFLOW__WEBSERVER__BASE_URL=http://localhost:8080
     ports:
       - "8080:8080"
-    command: >
-      bash -c "python -c 'print(\"Airflow webserver stub ready at port 8080\"); import time; time.sleep(86400)'"
+    volumes:
+      - ./orchestration/dags:/opt/airflow/dags
+      - ./src:/opt/airflow/src
+      - ./warehouse:/opt/airflow/warehouse
+      - ./scripts:/opt/airflow/scripts
+      - ./config:/opt/airflow/config
+      - airflow_logs:/opt/airflow/logs
     networks:
       - healthguard-net
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
     healthcheck:
-      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 5
+      start_period: 30s
 
   airflow-scheduler:
-    build: .
+    image: apache/airflow:3.4.0
     container_name: healthguard-airflow-scheduler
     restart: unless-stopped
-    depends_on:
-      - airflow-init
-      - postgres
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - airflow scheduler
     environment:
-      - PYTHONPATH=/app
-      - AIRFLOW_HOME=/app/orchestration
-    command: >
-      bash -c "python -c 'print(\"Airflow scheduler active\"); import time; time.sleep(86400)'"
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:${POSTGRES_PASSWORD}@postgres:5432/healthguard_airflow
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+    volumes:
+      - ./orchestration/dags:/opt/airflow/dags
+      - ./src:/opt/airflow/src
+      - ./warehouse:/opt/airflow/warehouse
+      - ./scripts:/opt/airflow/scripts
+      - ./config:/opt/airflow/config
+      - airflow_logs:/opt/airflow/logs
     networks:
       - healthguard-net
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-dag-processor:
+    image: apache/airflow:3.4.0
+    container_name: healthguard-airflow-dag-processor
+    restart: unless-stopped
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - airflow dag-processor
+    environment:
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:${POSTGRES_PASSWORD}@postgres:5432/healthguard_airflow
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+    volumes:
+      - ./orchestration/dags:/opt/airflow/dags
+      - ./src:/opt/airflow/src
+      - ./warehouse:/opt/airflow/warehouse
+      - ./scripts:/opt/airflow/scripts
+      - ./config:/opt/airflow/config
+      - airflow_logs:/opt/airflow/logs
+    networks:
+      - healthguard-net
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-triggerer:
+    image: apache/airflow:3.4.0
+    container_name: healthguard-airflow-triggerer
+    restart: unless-stopped
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - airflow triggerer
+    environment:
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:${POSTGRES_PASSWORD}@postgres:5432/healthguard_airflow
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+    volumes:
+      - ./orchestration/dags:/opt/airflow/dags
+      - ./src:/opt/airflow/src
+      - ./warehouse:/opt/airflow/warehouse
+      - ./scripts:/opt/airflow/scripts
+      - ./config:/opt/airflow/config
+      - airflow_logs:/opt/airflow/logs
+    networks:
+      - healthguard-net
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
 
   # ----------------------------------------------------------------------------
-  # 4. Streamlit HealthGuard 360 Ops & Trust Console
+  # 3. Streamlit Dashboard (reads Gold data)
   # ----------------------------------------------------------------------------
   dashboard:
     build: .
     container_name: healthguard-dashboard
     restart: unless-stopped
-    depends_on:
-      - postgres
     environment:
       - STREAMLIT_SERVER_PORT=8501
       - STREAMLIT_SERVER_ADDRESS=0.0.0.0
@@ -164,11 +199,13 @@ services:
     command: ["streamlit", "run", "app/dashboard/Home.py", "--server.address=0.0.0.0", "--server.port=8501"]
     volumes:
       - .:/app
-      - lakehouse_storage:/app/warehouse
+      - lakehouse_storage:/app/data/lakehouse
     networks:
       - healthguard-net
+    depends_on:
+      - postgres
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8501/_stcore/health || exit 0"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8501/_stcore/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3

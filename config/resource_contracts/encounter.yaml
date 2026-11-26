@@ -1,0 +1,219 @@
+# Encounter Resource Contract
+# FHIR R4 Encounter - https://hl7.org/fhir/R4/encounter.html
+# Source: Synthea FHIR R4 Bulk NDJSON Export
+
+resource_type: "Encounter"
+source_system: "SYNTHEA_FHIR"
+
+identity:
+  primary_key: "id"
+  source_scoped_prefix: "SYNTHEA_FHIR"
+
+fields:
+  - source: "id"
+    target: "encounter_id"
+    required: true
+    type: "string"
+    description: "FHIR resource ID"
+
+  - source: "identifier"
+    target: "identifiers"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "status"
+    target: "status"
+    required: true
+    type: "string"
+    enum: ["planned", "arrived", "triaged", "in-progress", "onleave", "finished", "cancelled", "entered-in-error", "unknown"]
+    description: "Encounter status"
+
+  - source: "class"
+    target: "class"
+    required: false
+    type: "object"
+    description: "Encounter class (inpatient, outpatient, emergency, etc.)"
+    nested: true
+
+  - source: "classHistory"
+    target: "class_history"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "type"
+    target: "types"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "serviceType"
+    target: "service_type"
+    required: false
+    type: "object"
+    nested: true
+
+  - source: "priority"
+    target: "priority"
+    required: false
+    type: "object"
+    nested: true
+
+  - source: "subject"
+    target: "subject"
+    required: true
+    type: "object"
+    description: "Reference to Patient"
+    nested: true
+    reference:
+      target_type: "Patient"
+      extract_id: true
+
+  - source: "episodeOfCare"
+    target: "episode_of_care"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "basedOn"
+    target: "based_on"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "participant"
+    target: "participants"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "appointment"
+    target: "appointment"
+    required: false
+    type: "object"
+    nested: true
+
+  - source: "period"
+    target: "period"
+    required: false
+    type: "object"
+    description: "Encounter period (start/end)"
+    nested: true
+    nested_fields:
+      - source: "start"
+        target: "start_datetime"
+        required: false
+        type: "datetime"
+      - source: "end"
+        target: "end_datetime"
+        required: false
+        type: "datetime"
+
+  - source: "length"
+    target: "length"
+    required: false
+    type: "object"
+    nested: true
+
+  - source: "reasonCode"
+    target: "reason_codes"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "reasonReference"
+    target: "reason_references"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "diagnosis"
+    target: "diagnoses"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "account"
+    target: "accounts"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "hospitalization"
+    target: "hospitalization"
+    required: false
+    type: "object"
+    nested: true
+
+  - source: "location"
+    target: "locations"
+    required: false
+    type: "array"
+    nested: true
+
+  - source: "serviceProvider"
+    target: "service_provider"
+    required: false
+    type: "object"
+    description: "Reference to Organization"
+    nested: true
+
+  - source: "partOf"
+    target: "part_of"
+    required: false
+    type: "object"
+    description: "Reference to another Encounter"
+    nested: true
+
+validation:
+  reject_missing_id: true
+  reject_missing_subject: true
+  preserve_unmapped_fields: true
+  required_fhir_fields: ["id", "status", "subject"]
+  optional_fhir_fields: ["identifier", "class", "classHistory", "type", "serviceType", "priority", "episodeOfCare", "basedOn", "participant", "appointment", "period", "length", "reasonCode", "reasonReference", "diagnosis", "account", "hospitalization", "location", "serviceProvider", "partOf"]
+
+quarantine_policy:
+  missing_id: "REJECT"
+  missing_subject: "REJECT"
+  invalid_reference_format: "QUARANTINE"
+  subject_not_patient: "QUARANTINE"
+  missing_status: "REJECT"
+  malformed_json: "QUARANTINE"
+  duplicate_id: "DEDUP_KEEP_LATEST_VERSION"
+
+normalization:
+  - field: "status"
+    mapping:
+      "planned": "planned"
+      "arrived": "arrived"
+      "triaged": "triaged"
+      "in-progress": "in-progress"
+      "onleave": "onleave"
+      "finished": "finished"
+      "cancelled": "cancelled"
+      "entered-in-error": "entered-in-error"
+      "unknown": "unknown"
+    default: "unknown"
+
+  - field: "period.start"
+    format: "ISO8601"
+    coerce_errors: "QUARANTINE"
+
+  - field: "period.end"
+    format: "ISO8601"
+    coerce_errors: "QUARANTINE"
+
+reference_resolution:
+  subject:
+    target_resource: "Patient"
+    required: true
+    on_missing: "QUARANTINE"
+  serviceProvider:
+    target_resource: "Organization"
+    required: false
+    on_missing: "PRESERVE_AS_NULL"
+  partOf:
+    target_resource: "Encounter"
+    required: false
+    on_missing: "PRESERVE_AS_NULL"
