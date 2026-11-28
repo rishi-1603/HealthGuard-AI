@@ -86,20 +86,21 @@ def validate_resource(
     errors = []
     warnings = []
     
-    # Check required fields
-    required = contract.get_required_fields()
-    for field in required:
-        if field not in resource or resource[field] is None:
-            errors.append(f"Missing required field: {field}")
-    
-    # Validate enum fields
+    # Check required fields (use source field names from contract)
     for field in contract.fields:
-        target = field["target"]
+        if field.get("required", False):
+            source_name = field["source"]
+            if source_name not in resource or resource[source_name] is None:
+                errors.append(f"Missing required field: {source_name}")
+    
+    # Validate enum fields (check source field)
+    for field in contract.fields:
+        source = field["source"]
         enum_values = field.get("enum")
-        if enum_values and target in resource:
-            value = resource[target]
+        if enum_values and source in resource:
+            value = resource[source]
             if value not in enum_values:
-                warnings.append(f"Field '{target}' value '{value}' not in allowed enum: {enum_values}")
+                warnings.append(f"Field '{source}' value '{value}' not in allowed enum: {enum_values}")
     
     # Validate reference formats
     ref_resolution = load_contract(resource_type).reference_resolution

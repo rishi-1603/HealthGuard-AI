@@ -3,14 +3,22 @@ Resource Router — Routes FHIR resources to resource-specific handlers.
 """
 
 import logging
-from typing import Iterator
+from typing import Iterator, Optional
 from pathlib import Path
 from collections import defaultdict
 
 from src.healthguard.ingestion.ndjson_reader import read_ndjson_stream, NDJSONRecord
-from src.healthguard.config.resource_contracts import load_contract
 
 logger = logging.getLogger(__name__)
+
+# Lazy import to avoid circular dependency
+def _get_load_contract():
+    from src.healthguard.ingestion.source_validator import load_contract
+    return load_contract
+
+def load_contract(resource_type: str):
+    """Lazy proxy to load_contract."""
+    return _get_load_contract()(resource_type)
 
 
 # Core resource types we process
